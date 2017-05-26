@@ -30,31 +30,30 @@
 
 
 const seventh = require( '../' ) ;
-//var Promise = require( '../lib/Promise.js' ) ;
+var Promise = require( '../lib/Promise.js' ) ;
 
 var count = 0 ;
 
 
 
-async function asyncConsole( msg )
+function recursive()
 {
 	return new Promise( ( resolve , reject ) => {
 		setTimeout( () => {
-			console.log( msg ) ;
-			resolve( count ++ ) ;
-		} , 200 ) ;
+			console.log( count ++ , p ) ;
+			//resolve( count < 5 ? recursive() : count ) ;
+			reject( count < 5 ? recursive() : count ) ;
+		} , 500 ) ;
 	} ) ;
 }
 
+var p = recursive() ;
 
+p.then( ( value ) => {
+	console.log( 'then!' , value ) ;
+} ) ;
 
-async function exec()
-{
-	var debouncedAsyncConsole = seventh.debounceUpdate( asyncConsole ) ;
-	debouncedAsyncConsole( 'Waiting 1...' ) ;
-	debouncedAsyncConsole( 'Waiting 2...' ) ;
-	debouncedAsyncConsole( 'Waiting 3...' ) ;
-	setTimeout( () => debouncedAsyncConsole( 'Waiting 4...' ) , 250 ) ;
-}
+p.catch( ( value ) => {
+	console.log( 'catch!' , value ) ;
+} ) ;
 
-exec() ;
