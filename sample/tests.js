@@ -30,7 +30,7 @@
 
 
 const seventh = require( '../' ) ;
-//var Promise = require( '../lib/Promise.js' ) ;
+var Promise = require( '../lib/Promise.js' ) ;
 
 var count = 0 ;
 

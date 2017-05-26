@@ -31,6 +31,7 @@
 
 const seventh = require( '../' ) ;
 var Promise = require( '../lib/Promise.js' ) ;
+//var Promise = require( 'bluebird' ) ;
 
 var count = 0 ;
 
@@ -41,19 +42,31 @@ function recursive()
 	return new Promise( ( resolve , reject ) => {
 		setTimeout( () => {
 			console.log( count ++ , p ) ;
-			//resolve( count < 5 ? recursive() : count ) ;
-			reject( count < 5 ? recursive() : count ) ;
-		} , 500 ) ;
+			//resolve( count ) ;
+			//resolve( 10 ) ;
+			resolve( count < 3 ? recursive() : count ) ;
+			//reject( count < 5 ? recursive() : count ) ;
+		} , 250 ) ;
 	} ) ;
 }
 
 var p = recursive() ;
 
 p.then( ( value ) => {
-	console.log( 'then!' , value ) ;
+	console.log( 'then!' , value , p ) ;
+	
+	p.then( ( value ) => {
+		console.log( 'then²!' , value , p ) ;
+		
+		setTimeout( () => {
+			p.then( ( value ) => {
+				console.log( 'then3!' , value , p ) ;
+			} ) ;
+		} , 100 ) ;
+	} ) ;
 } ) ;
 
 p.catch( ( value ) => {
-	console.log( 'catch!' , value ) ;
+	console.log( 'catch!' , value , p ) ;
 } ) ;
 
