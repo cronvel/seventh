@@ -37,6 +37,32 @@ var count = 0 ;
 
 
 
+function normal( txt , delay = 250 )
+{
+	return new Promise( ( resolve , reject ) => {
+		setTimeout( () => {
+			console.log( txt ) ;
+			resolve( txt ) ;
+		} , delay ) ;
+	} ) ;
+}
+
+var p = normal( 'one' ) ;
+p.then( ( value ) => {
+	console.log( 'then two' , value ) ;
+	return normal( 'two' , 1500 ) ;
+} )
+.then( ( value ) => {
+	console.log( 'then three' , value ) ;
+	return normal( 'three' ) ;
+} )
+.then( ( value ) => {
+	console.log( 'then four' , value ) ;
+	return normal( 'four' ) ;
+} )
+
+return ;
+
 function recursive()
 {
 	return new Promise( ( resolve , reject ) => {
