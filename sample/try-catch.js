@@ -30,8 +30,8 @@
 
 
 const seventh = require( '../' ) ;
-//var Promise = require( '../lib/Promise.js' ) ;
-var Promise = require( 'bluebird' ) ;
+var Promise = require( '../lib/Promise.js' ) ;
+//var Promise = require( 'bluebird' ) ;
 
 
 
@@ -39,6 +39,8 @@ function fn( txt , delay = 250 )
 {
 	return new Promise( ( resolve , reject ) => {
 		throw new Error( 'Error!' ) ;
+		//throw 'Error!' ;
+		//throw {} ;
 		setTimeout( () => {
 			console.log( txt ) ;
 			resolve( txt ) ;
@@ -49,4 +51,9 @@ function fn( txt , delay = 250 )
 fn( 'one' )
 .then( ( value ) => console.log( 'then one:' , value ) )
 .catch( ( error ) => console.log( 'catch one:' , error ) )
+
+console.log( "synchronous after" ) ;
+setTimeout( () => console.log( "asynchronous after 0ms" ) , 0 ) ;
+setTimeout( () => console.log( "asynchronous after 10ms" ) , 10 ) ;
+setTimeout( () => console.log( "asynchronous after 100ms" ) , 100 ) ;
 
