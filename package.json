@@ -1,6 +1,6 @@
 {
   "name": "seventh",
-  "version": "0.0.9",
+  "version": "0.0.10",
   "description": "Async utilities for ES7 Promise/Async/Await",
   "main": "lib/seventh.js",
   "engines": {
