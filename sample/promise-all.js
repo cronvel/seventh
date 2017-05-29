@@ -30,7 +30,7 @@
 
 
 const seventh = require( '../' ) ;
-var Promise = require( '../lib/Promise.js' ) ;
+var Promise = seventh.Promise ;
 //var Promise = require( 'bluebird' ) ;
 
 var count = 0 ;
@@ -50,8 +50,8 @@ function normal( txt , shouldReject = false , delay = 250 )
 	} ) ;
 }
 
-Promise.race( [
-	new Promise().reject( 'reject zero' ) ,
+Promise.all( [
+	//new Promise().reject( 'reject zero' ) ,
 	//'static' ,
 	normal( 'one' ) ,
 	normal( 'two' ) ,
