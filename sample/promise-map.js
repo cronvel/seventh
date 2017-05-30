@@ -35,14 +35,23 @@ var Promise = seventh.Promise ;
 
 
 
-Promise.map( [ Promise.reject( 'error...' ) , 100 , 500 , Promise.resolveTimeout( 200 , 50 ) , 200 , Promise.rejectTimeout( 110 , 'error!' ) ] , ( delay , index ) => {
-	return new Promise( ( resolve , reject ) => {
-		setTimeout( () => {
-			console.log( '#' + index + ' -- delay: ' + delay ) ;
-			resolve( delay * 2 ) ;
-		} , delay ) ;
-	} ) ;
-} )
+Promise.map( [
+		//Promise.reject( 'error...' ) ,
+		100 ,
+		500 ,
+		Promise.resolveTimeout( 200 , 50 ) ,
+		200 ,
+		//Promise.rejectTimeout( 110 , 'error!' )
+	] ,
+	( delay , index ) => {
+		return new Promise( ( resolve , reject ) => {
+			setTimeout( () => {
+				console.log( '#' + index + ' -- delay: ' + delay ) ;
+				resolve( delay ) ;
+			} , delay ) ;
+		} ) ;
+	}
+)
 .then( values => console.log( 'Finished!' , values ) )
 .catch( error => console.log( 'Error:' , error ) ) ;
 

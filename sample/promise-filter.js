@@ -33,35 +33,27 @@ const seventh = require( '../' ) ;
 var Promise = seventh.Promise ;
 //var Promise = require( 'bluebird' ) ;
 
-var count = 0 ;
 
 
+Promise.filter( [
+		Promise.reject( 'error...' ) ,
+		600 ,
+		100 ,
+		500 ,
+		Promise.resolveTimeout( 200 , 50 ) ,
+		200 ,
+		Promise.rejectTimeout( 110 , 'error!' )
+	] ,
+	( delay , index ) => {
+		return new Promise( ( resolve , reject ) => {
+			setTimeout( () => {
+				console.log( '#' + index + ' -- delay: ' + delay ) ;
+				resolve( 'd:' + delay ) ;
+			} , delay ) ;
+		} ) ;
+	} , 2
+)
+.then( values => console.log( 'Finished!' , values ) )
+.catch( error => console.log( 'Error:' , error ) ) ;
 
-function normal( txt , shouldReject = false , delay = 250 )
-{
-	return new Promise( ( resolve , reject ) => {
-		setTimeout( () => {
-			console.log( txt ) ;
-			
-			if ( shouldReject ) { reject( txt ) ; }
-			else { resolve( txt ) ; }
-			
-		} , delay ) ;
-	} ) ;
-}
-
-Promise.any( [
-	//new Promise().reject( 'reject zero' ) ,
-	//'static' ,
-	normal( 'one' ) ,
-	normal( 'two' ) ,
-	normal( 'three' ) ,
-	//normal( 'reject' , true , 1000 ) ,
-] )
-.then( ( values ) => {
-	console.log( 'then' , values ) ;
-} )
-.catch( ( error ) => {
-	console.log( 'catch' , error ) ;
-} )
 
