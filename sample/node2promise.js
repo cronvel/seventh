@@ -34,9 +34,11 @@ const seventh = require( '../' ) ;
 //const Promise = seventh.Promise ;
 
 
-var readFile = seventh.node2promise( fs.readFile ) ;
+seventh.promisifyNodeApi( fs ) ;
+var readFile = seventh.promisifyNodeFn( fs.readFile ) ;
 
-readFile( './node2promise.js' , 'utf8' )
+//readFile( './node2promise.js' , 'utf8' )
+fs.readFileAsync( './node2promise.js' , 'utf8' )
 .then( ( content ) => {
 	console.log( content ) ;
 	return 'bob' ;
