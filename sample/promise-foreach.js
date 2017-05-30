@@ -44,3 +44,5 @@ Promise.forEach( [ 100 , 500 , Promise.resolveTimeout( 200 , 50 ) , 200 ] , ( de
 	} ) ;
 } )
 .then( () => console.log( 'Finished!' ) ) ;
+
+

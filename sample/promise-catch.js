@@ -50,10 +50,11 @@ function normal( txt , shouldReject = false , delay = 250 )
 	} ) ;
 }
 
-var p = normal( 'one' , true ) ;
-p.catch( ( value ) => {
-	console.log( 'catch two' , value ) ;
-	return 'catched ' + value ;
+
+Promise
+.then( ( value ) => {
+	console.log( 'then one' , value ) ;
+	return normal( 'one' , true ) ;
 } )
 .then( ( value ) => {
 	console.log( 'then two' , value ) ;
@@ -66,5 +67,9 @@ p.catch( ( value ) => {
 .then( ( value ) => {
 	console.log( 'then four' , value ) ;
 	return normal( 'four' ) ;
+} )
+.catch( ( value ) => {
+	console.log( 'catch' , value ) ;
+	return 'catched ' + value ;
 } )
 
