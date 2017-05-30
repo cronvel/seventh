@@ -1,7 +1,7 @@
 {
   "name": "seventh",
-  "version": "0.1.4",
-  "description": "Async utilities for ES7 Promise/Async/Await",
+  "version": "0.1.5",
+  "description": "A lean Promises and Async lib for ES6/ES7",
   "main": "lib/seventh.js",
   "engines": {
     "node": ">=7.6.0"
@@ -24,6 +24,16 @@
     "async",
     "await",
     "promise",
+    "foreach",
+    "map",
+    "reduce",
+    "filter",
+    "once",
+    "timeout",
+    "retry",
+    "debounce",
+    "serialize",
+    "es6",
     "es7"
   ],
   "author": "Cédric Ronvel",
