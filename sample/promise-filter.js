@@ -51,7 +51,12 @@ Promise.filter( [
 				resolve( 'd:' + delay ) ;
 			} , delay ) ;
 		} ) ;
-	} , 2
+	} ,
+	{
+		fastestFirst: true ,
+		//minCount: 10
+		maxCount: 3
+	}
 )
 .then( values => console.log( 'Finished!' , values ) )
 .catch( error => console.log( 'Error:' , error ) ) ;

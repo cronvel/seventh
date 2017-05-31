@@ -50,7 +50,7 @@ function normal( txt , shouldReject = false , delay = 250 )
 	} ) ;
 }
 
-Promise.any( [
+Promise.all( [
 	//new Promise().reject( 'reject zero' ) ,
 	//'static' ,
 	normal( 'one' ) ,
