@@ -28,7 +28,8 @@
 /* global describe, it, before, after, beforeEach */
 
 
-var seventh = require( '../lib/seventh.js' ) ;
+var seventh = require( '..' ) ;
+var expect = require( 'expect.js' ) ;
 
 
 
@@ -38,8 +39,29 @@ var seventh = require( '../lib/seventh.js' ) ;
 
 describe( "Wrapper/decorator" , function() {
 	
-	it( "debounce" , function( done ) {
-		done() ;
+	it( "debounce" , done => {
+		var results = [] ;
+		
+		const asyncFn = ( value ) => {
+			results.push( value ) ;
+			p = seventh.Promise.resolveTimeout( 20 , value ) ;
+			return p ;
+		} ;
+		
+		const debouncedFn = seventh.debounceUpdate( asyncFn ) ;
+		
+		debouncedFn( 'one' ) ;
+		debouncedFn( 'two' ) ;
+		debouncedFn( 'three' ) ;
+		debouncedFn( 'four' ) ;
+		
+		setTimeout( () => {
+			debouncedFn( 'five' ).then( () => {
+				//console.log( results ) ;
+				expect( results ).to.eql( ['one','four','five'] ) ;
+				done() ;
+			} ).catch( error => done( error ) ) ;
+		} , 40 ) ;
 	} ) ;
 } ) ;
 

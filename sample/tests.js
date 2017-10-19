@@ -29,8 +29,8 @@
 
 
 
-const seventh = require( '../' ) ;
-var Promise = require( '../lib/Promise.js' ) ;
+const seventh = require( '..' ) ;
+var Promise = seventh.Promise ;
 
 var count = 0 ;
 
