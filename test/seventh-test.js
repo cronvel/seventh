@@ -43,6 +43,78 @@ var expect = require( 'expect.js' ) ;
 
 describe( "Basic standard-compliant Promise" , function() {
 	
+	it( ".then() chain" , done => {
+		
+		var thenCount = 0 ;
+		
+		seventh.Promise.resolveTimeout( 10 , 'one' )
+			.then( value => {
+				expect( value ).to.be( 'one' ) ;
+				thenCount ++ ;
+				return seventh.Promise.resolveTimeout( 10 , 'two' ) ;
+			} )
+			.then( value => {
+				expect( value ).to.be( 'two' ) ;
+				thenCount ++ ;
+				return seventh.Promise.resolveTimeout( 10 , 'three' ) ;
+			} )
+			.then( value => {
+				expect( value ).to.be( 'three' ) ;
+				thenCount ++ ;
+			} )
+			.then( () => {
+					expect( thenCount ).to.be( 3 ) ;
+					done() ;
+				} )
+			.catch( error => done( error || new Error() ) ) ;
+	} ) ;
+	
+	it( ".catch() propagation" , done => {
+		
+		var thenCount = 0 , catchCount = 0 ;
+		
+		seventh.Promise.rejectTimeout( 10 , new Error( 'doh!' ) )
+			.then( () => seventh.Promise.resolveTimeout( 10 , thenCount ++ ) )
+			.then( () => seventh.Promise.resolveTimeout( 10 , thenCount ++ ) )
+			.catch( error => {
+				expect( error.message ).to.be( 'doh!' ) ;
+				catchCount ++ ;
+			} )
+			.then( () => {
+					expect( thenCount ).to.be( 0 ) ;
+					expect( catchCount ).to.be( 1 ) ;
+					done() ;
+				} )
+			.catch( error => done( error || new Error() ) ) ;
+	} ) ;
+	
+	it( ".catch() chain" , done => {
+		
+		var thenCount = 0 , catchCount = 0 ;
+		
+		seventh.Promise.rejectTimeout( 10 , new Error( 'doh!' ) )
+			.catch( error => {
+				expect( error.message ).to.be( 'doh!' ) ;
+				catchCount ++ ;
+				return seventh.Promise.rejectTimeout( 10 , new Error( 'dang!' ) )
+			} )
+			.catch( error => {
+				expect( error.message ).to.be( 'dang!' ) ;
+				catchCount ++ ;
+				return seventh.Promise.rejectTimeout( 10 , new Error( 'ooops!' ) )
+			} )
+			.catch( error => {
+				expect( error.message ).to.be( 'ooops!' ) ;
+				catchCount ++ ;
+			} )
+			.then( () => {
+					expect( thenCount ).to.be( 0 ) ;
+					expect( catchCount ).to.be( 3 ) ;
+					done() ;
+				} )
+			.catch( error => done( error || new Error() ) ) ;
+	} ) ;
+	
 	it( "edge case: synchronous throwing should still trigger .catch() asynchronously" , done => {
 		
 		var order = [] ;
@@ -62,6 +134,25 @@ describe( "Basic standard-compliant Promise" , function() {
 				done()
 			}
 		).catch( error => done( error || new Error() ) ) ;
+	} ) ;
+} ) ;
+
+
+
+describe( "Advanced Promise" , function() {
+	
+	it( "Promise.all() with resolve only promises" , done => {
+		
+		seventh.Promise.all( [
+			seventh.Promise.resolveTimeout( 20 , 'one' ) ,
+			seventh.Promise.resolveTimeout( 0 , 'two' ) ,
+			seventh.Promise.resolveTimeout( 10 , 'three' )
+		] )
+		.then( values => {
+			expect( values ).to.eql( [ 'one' , 'two' , 'three' ] ) ;
+				done() ;
+		} )
+		.catch( error => done( error || new Error() ) ) ;
 	} ) ;
 } ) ;
 
