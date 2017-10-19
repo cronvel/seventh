@@ -24,6 +24,10 @@
 	SOFTWARE.
 */
 
+"use strict" ;
+
+
+
 /* jshint unused:false */
 /* global describe, it, before, after, beforeEach */
 
@@ -37,14 +41,92 @@ var expect = require( 'expect.js' ) ;
 
 
 
-describe( "Wrapper/decorator" , function() {
+describe( "Wrappers and decorators" , function() {
 	
-	it( "debounce" , done => {
+	it( "return value interceptor -- .returnValueInterceptor()" , () => {
+		var index = 0 ;
+		var returnArray = [ 'one' , 'two' , 'three' ] ;
+		var results = [] ;
+		
+		const fn = () => {
+			return returnArray[ index ++ ] ;
+		} ;
+		
+		const interceptorFn = value => {
+			results.push( value ) ;
+		} ;
+		
+		const interceptableFn = seventh.returnValueInterceptor( interceptorFn , fn ) ;
+		
+		interceptableFn() ;
+		interceptableFn() ;
+		interceptableFn() ;
+		
+		expect( results ).to.eql( returnArray ) ;
+	} ) ;
+	
+	
+	
+	it( "run once -- .once()" , done => {
 		var results = [] ;
 		
 		const asyncFn = ( value ) => {
 			results.push( value ) ;
-			p = seventh.Promise.resolveTimeout( 20 , value ) ;
+			var p = seventh.Promise.resolveTimeout( 20 , value ) ;
+			return p ;
+		} ;
+		
+		const onceFn = seventh.once( asyncFn ) ;
+		
+		onceFn( 'one' ) ;
+		onceFn( 'two' ) ;
+		onceFn( 'three' ) ;
+		onceFn( 'four' ) ;
+		
+		setTimeout( () => {
+			onceFn( 'five' ).then( () => {
+				//console.log( results ) ;
+				expect( results ).to.eql( ['one'] ) ;
+				done() ;
+			} ).catch( () => done( new Error() ) ) ;
+		} , 40 ) ;
+	} ) ;
+	
+	
+	
+	it( "debounce -- .debounce()" , done => {
+		var results = [] ;
+		
+		const asyncFn = ( value ) => {
+			results.push( value ) ;
+			var p = seventh.Promise.resolveTimeout( 20 , value ) ;
+			return p ;
+		} ;
+		
+		const debouncedFn = seventh.debounce( asyncFn ) ;
+		
+		debouncedFn( 'one' ) ;
+		debouncedFn( 'two' ) ;
+		debouncedFn( 'three' ) ;
+		debouncedFn( 'four' ) ;
+		
+		setTimeout( () => {
+			debouncedFn( 'five' ).then( () => {
+				//console.log( results ) ;
+				expect( results ).to.eql( ['one','five'] ) ;
+				done() ;
+			} ).catch( () => done( new Error() ) ) ;
+		} , 40 ) ;
+	} ) ;
+	
+	
+	
+	it( "debounce update -- .debounceUpdate()" , done => {
+		var results = [] ;
+		
+		const asyncFn = ( value ) => {
+			results.push( value ) ;
+			var p = seventh.Promise.resolveTimeout( 20 , value ) ;
 			return p ;
 		} ;
 		
@@ -60,9 +142,171 @@ describe( "Wrapper/decorator" , function() {
 				//console.log( results ) ;
 				expect( results ).to.eql( ['one','four','five'] ) ;
 				done() ;
-			} ).catch( error => done( error ) ) ;
+			} ).catch( () => done( new Error() ) ) ;
 		} , 40 ) ;
 	} ) ;
+	
+	
+	
+	it( "serialize, execution do not overlap -- .serialize()" , done => {
+		var results = [] ;
+		
+		const asyncFn = ( value ) => {
+			results.push( 'before: ' + value ) ;
+			
+			var p = new seventh.Promise( resolve => {
+				setTimeout( () => {
+					results.push( 'after: ' + value ) ;
+					resolve() ;
+				} , 20 ) ;
+			} ) ;
+			
+			return p ;
+		} ;
+		
+		const serializedFn = seventh.serialize( asyncFn ) ;
+		
+		serializedFn( 'one' ) ;
+		serializedFn( 'two' ) ;
+		serializedFn( 'three' ) ;
+		serializedFn( 'four' ) ;
+		
+		setTimeout( () => {
+			serializedFn( 'five' ).then( () => {
+				//console.log( results ) ;
+				expect( results ).to.eql( [
+					"before: one" ,
+					"after: one" ,
+					"before: two" ,
+					"after: two" ,
+					"before: three" ,
+					"after: three" ,
+					"before: four" ,
+					"after: four" ,
+					"before: five" ,
+					"after: five"
+				] ) ;
+				done() ;
+			} ).catch( () => done( new Error() ) ) ;
+		} , 40 ) ;
+	} ) ;
+	
+	
+	
+	it( "timeout -- .timeout()" , done => {
+		var index = 0 ;
+		var times = [ 0 , 10 , 40 , 10 ] ;
+		var results = [] ;
+		
+		const asyncFn = ( value ) => {
+			var p = seventh.Promise.resolveTimeout( times[ index ++ ] , value ) ;
+			return p ;
+		} ;
+		
+		const timedOutFn = seventh.timeout( 20 , asyncFn ) ;
+		
+		seventh.Promise.map( [
+			timedOutFn().then( () => results[ 0 ] = true , () => results[ 0 ] = false ) ,
+			timedOutFn().then( () => results[ 1 ] = true , () => results[ 1 ] = false ) ,
+			timedOutFn().then( () => results[ 2 ] = true , () => results[ 2 ] = false ) ,
+			timedOutFn().then( () => results[ 3 ] = true , () => results[ 3 ] = false ) ,
+		] ).then( () => {
+			expect( results ).to.eql( [ true , true , false , true ] ) ;
+			done() ;
+		} ).catch( () => done( new Error() ) ) ;
+	} ) ;
+	
+	
+	
+	it( "variable (per call) timeout -- .variableTimeout()" , done => {
+		var index = 0 ;
+		var times = [ 0 , 10 , 40 , 20 ] ;
+		var results = [] ;
+		
+		const asyncFn = ( value ) => {
+			var p = seventh.Promise.resolveTimeout( times[ index ++ ] , value ) ;
+			return p ;
+		} ;
+		
+		const timedOutFn = seventh.variableTimeout( asyncFn ) ;
+		
+		seventh.Promise.map( [
+			timedOutFn( 10 ).then( () => results[ 0 ] = true , () => results[ 0 ] = false ) ,
+			timedOutFn( 0 ).then( () => results[ 1 ] = true , () => results[ 1 ] = false ) ,
+			timedOutFn( 20 ).then( () => results[ 2 ] = true , () => results[ 2 ] = false ) ,
+			timedOutFn( 30 ).then( () => results[ 3 ] = true , () => results[ 3 ] = false ) ,
+		] ).then( () => {
+			expect( results ).to.eql( [ true , false , false , true ] ) ;
+			done() ;
+		} ).catch( () => done( new Error() ) ) ;
+	} ) ;
+	
+	
+	
+	it( "retry after failure -- .retry()" , done => {
+		var count = 0 ;
+		
+		const asyncFn = ( value ) => {
+			var  p ;
+			
+			count ++ ;
+			
+			if ( count < 4 ) { p = seventh.Promise.rejectTimeout( 20 , new Error( 'error!' ) ) ; }
+			else { p = seventh.Promise.resolveTimeout( 20 , 'yay!' ) ; }
+			
+			return p ;
+		} ;
+		
+		// The first one should succeed
+		seventh.retry( 5 , 10 , 1.5 , asyncFn )().then( value => {
+			expect( value ).to.be( 'yay!' ) ;
+			expect( count ).to.be( 4 ) ;
+			
+			count = 0 ;
+			
+			// The second one should throw
+			seventh.retry( 2 , 10 , 1.5 , asyncFn )().then( () => {
+				done( new Error( 'It should throw!' ) ) ;
+			} ).catch( () => done() ) ;
+			
+		} ).catch( () => done( new Error() ) ) ;
+	} ) ;
+	
+	
+	
+	it( "variable retry after failure -- .variableRetry()" , done => {
+		var count = 0 ;
+		
+		const asyncFn = ( value ) => {
+			var  p ;
+			
+			count ++ ;
+			
+			if ( count < 4 ) { p = seventh.Promise.rejectTimeout( 20 , new Error( 'error!' ) ) ; }
+			else { p = seventh.Promise.resolveTimeout( 20 , 'yay!' ) ; }
+			
+			return p ;
+		} ;
+		
+		const retriedFn = seventh.variableRetry( asyncFn ) ;
+		
+		// The first one should succeed
+		retriedFn( 5 , 10 , 1.5 ).then( value => {
+			expect( value ).to.be( 'yay!' ) ;
+			expect( count ).to.be( 4 ) ;
+			
+			count = 0 ;
+			
+			// The second one should throw
+			retriedFn( 2 , 10 , 1.5 ).then( () => {
+				done( new Error( 'It should throw!' ) ) ;
+			} ).catch( () => done() ) ;
+			
+		} ).catch( () => done( new Error() ) ) ;
+	} ) ;
+	
+	it( "promisify node style callback function -- .promisifyNodeFn()" ) ;
+	it( "promisify node style callback function, limit to one argument after the error argument -- .promisifyNodeFnOne()" ) ;
 } ) ;
 
 
