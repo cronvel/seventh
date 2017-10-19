@@ -41,6 +41,32 @@ var expect = require( 'expect.js' ) ;
 
 
 
+describe( "Basic standard-compliant Promise" , function() {
+	
+	it( "edge case: synchronous throwing should still trigger .catch() asynchronously" , done => {
+		
+		var order = [] ;
+		
+		var p = new seventh.Promise( ( resolve , reject ) => {
+			throw new Error( 'Error!' ) ;
+		} ) ;
+		
+		p.catch( () => order.push( 'catch' ) ) ;
+		
+		order.push( 'sync after' ) ;
+		
+		p.then(
+			() => done( new Error( 'Should throw!' ) ) ,
+			() => {
+				expect( order ).to.eql( [ 'sync after' , 'catch' ] ) ;
+				done()
+			}
+		).catch( error => done( error || new Error() ) ) ;
+	} ) ;
+} ) ;
+
+
+
 describe( "Wrappers and decorators" , function() {
 	
 	it( "return value interceptor -- .returnValueInterceptor()" , () => {
@@ -88,7 +114,7 @@ describe( "Wrappers and decorators" , function() {
 				//console.log( results ) ;
 				expect( results ).to.eql( ['one'] ) ;
 				done() ;
-			} ).catch( () => done( new Error() ) ) ;
+			} ).catch( error => done( error ) ) ;
 		} , 40 ) ;
 	} ) ;
 	
@@ -115,7 +141,7 @@ describe( "Wrappers and decorators" , function() {
 				//console.log( results ) ;
 				expect( results ).to.eql( ['one','five'] ) ;
 				done() ;
-			} ).catch( () => done( new Error() ) ) ;
+			} ).catch( error => done( error ) ) ;
 		} , 40 ) ;
 	} ) ;
 	
@@ -142,7 +168,7 @@ describe( "Wrappers and decorators" , function() {
 				//console.log( results ) ;
 				expect( results ).to.eql( ['one','four','five'] ) ;
 				done() ;
-			} ).catch( () => done( new Error() ) ) ;
+			} ).catch( error => done( error ) ) ;
 		} , 40 ) ;
 	} ) ;
 	
@@ -187,7 +213,7 @@ describe( "Wrappers and decorators" , function() {
 					"after: five"
 				] ) ;
 				done() ;
-			} ).catch( () => done( new Error() ) ) ;
+			} ).catch( error => done( error ) ) ;
 		} , 40 ) ;
 	} ) ;
 	
@@ -213,7 +239,7 @@ describe( "Wrappers and decorators" , function() {
 		] ).then( () => {
 			expect( results ).to.eql( [ true , true , false , true ] ) ;
 			done() ;
-		} ).catch( () => done( new Error() ) ) ;
+		} ).catch( error => done( error ) ) ;
 	} ) ;
 	
 	
@@ -238,7 +264,7 @@ describe( "Wrappers and decorators" , function() {
 		] ).then( () => {
 			expect( results ).to.eql( [ true , false , false , true ] ) ;
 			done() ;
-		} ).catch( () => done( new Error() ) ) ;
+		} ).catch( error => done( error ) ) ;
 	} ) ;
 	
 	
@@ -269,7 +295,7 @@ describe( "Wrappers and decorators" , function() {
 				done( new Error( 'It should throw!' ) ) ;
 			} ).catch( () => done() ) ;
 			
-		} ).catch( () => done( new Error() ) ) ;
+		} ).catch( error => done( error || new Error() ) ) ;
 	} ) ;
 	
 	
@@ -302,7 +328,7 @@ describe( "Wrappers and decorators" , function() {
 				done( new Error( 'It should throw!' ) ) ;
 			} ).catch( () => done() ) ;
 			
-		} ).catch( () => done( new Error() ) ) ;
+		} ).catch( error => done( error || new Error() ) ) ;
 	} ) ;
 	
 	it( "promisify node style callback function -- .promisifyNodeFn()" ) ;
