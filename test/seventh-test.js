@@ -44,6 +44,7 @@ var expect = require( 'expect.js' ) ;
 describe( "Basic standard-compliant Promise" , () => {
 	
 	describe( "Then and catch behavior" , () => {
+		
 		it( ".then() chain" , done => {
 			
 			var thenCount = 0 ;
@@ -70,24 +71,7 @@ describe( "Basic standard-compliant Promise" , () => {
 				.catch( error => done( error || new Error() ) ) ;
 		} ) ;
 		
-		it( ".catch() propagation" , done => {
-			
-			var thenCount = 0 , catchCount = 0 ;
-			
-			seventh.Promise.rejectTimeout( 10 , new Error( 'doh!' ) )
-				.then( () => seventh.Promise.resolveTimeout( 10 , thenCount ++ ) )
-				.then( () => seventh.Promise.resolveTimeout( 10 , thenCount ++ ) )
-				.catch( error => {
-					expect( error.message ).to.be( 'doh!' ) ;
-					catchCount ++ ;
-				} )
-				.then( () => {
-						expect( thenCount ).to.be( 0 ) ;
-						expect( catchCount ).to.be( 1 ) ;
-						done() ;
-					} )
-				.catch( error => done( error || new Error() ) ) ;
-		} ) ;
+		it( ".then() returning a promise" ) ;
 		
 		it( ".catch() chain" , done => {
 			
@@ -111,6 +95,25 @@ describe( "Basic standard-compliant Promise" , () => {
 				.then( () => {
 						expect( thenCount ).to.be( 0 ) ;
 						expect( catchCount ).to.be( 3 ) ;
+						done() ;
+					} )
+				.catch( error => done( error || new Error() ) ) ;
+		} ) ;
+		
+		it( ".catch() propagation" , done => {
+			
+			var thenCount = 0 , catchCount = 0 ;
+			
+			seventh.Promise.rejectTimeout( 10 , new Error( 'doh!' ) )
+				.then( () => seventh.Promise.resolveTimeout( 10 , thenCount ++ ) )
+				.then( () => seventh.Promise.resolveTimeout( 10 , thenCount ++ ) )
+				.catch( error => {
+					expect( error.message ).to.be( 'doh!' ) ;
+					catchCount ++ ;
+				} )
+				.then( () => {
+						expect( thenCount ).to.be( 0 ) ;
+						expect( catchCount ).to.be( 1 ) ;
 						done() ;
 					} )
 				.catch( error => done( error || new Error() ) ) ;
@@ -992,6 +995,15 @@ describe( "Wrappers and decorators" , () => {
 
 
 describe( "Thenable support" , () => {
+	
+	it( "Promise.isThenable()" , () => {
+		expect( seventh.Promise.isThenable( new seventh.Promise() ) ).to.be.ok() ;
+		expect( seventh.Promise.isThenable( new Promise( resolve => resolve() ) ) ).to.be.ok() ;
+		expect( seventh.Promise.isThenable( { then: resolve => resolve() } ) ).to.be.ok() ;
+		expect( seventh.Promise.isThenable( { then: 'bob' } ) ).not.to.be.ok() ;
+		expect( seventh.Promise.isThenable( {} ) ).not.to.be.ok() ;
+	} ) ;
+	
 	it( "thenable support tests" ) ;
 } ) ;
 
