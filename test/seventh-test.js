@@ -115,11 +115,55 @@ describe( "Basic standard-compliant Promise" , function() {
 			.catch( error => done( error || new Error() ) ) ;
 	} ) ;
 	
+	it( "edge case: synchronous resolve() should still trigger .then() asynchronously" , done => {
+		
+		var order = [] ;
+		
+		var p = new seventh.Promise( ( resolve , reject ) => {
+			order.push( 'executor' ) ;
+			resolve() ;
+		} ) ;
+		
+		p.then( () => order.push( 'then' ) ) ;
+		
+		order.push( 'sync after' ) ;
+		
+		p.then( () => {
+			expect( order ).to.eql( [ 'executor' , 'sync after' , 'then' ] ) ;
+			done() ;
+		} )
+		.catch( error => done( error || new Error() ) ) ;
+	} ) ;
+	
+	it( "edge case: synchronous reject() should still trigger .catch() asynchronously" , done => {
+		
+		var order = [] ;
+		
+		var p = new seventh.Promise( ( resolve , reject ) => {
+			order.push( 'executor' ) ;
+			reject() ;
+		} ) ;
+		
+		p.catch( () => order.push( 'catch' ) ) ;
+		
+		order.push( 'sync after' ) ;
+		
+		p.then(
+			() => done( new Error( 'Should throw!' ) ) ,
+			() => {
+				expect( order ).to.eql( [ 'executor' , 'sync after' , 'catch' ] ) ;
+				done() ;
+			}
+		)
+		.catch( error => done( error || new Error() ) ) ;
+	} ) ;
+	
 	it( "edge case: synchronous throwing should still trigger .catch() asynchronously" , done => {
 		
 		var order = [] ;
 		
 		var p = new seventh.Promise( ( resolve , reject ) => {
+			order.push( 'executor' ) ;
 			throw new Error( 'Error!' ) ;
 		} ) ;
 		
@@ -130,7 +174,7 @@ describe( "Basic standard-compliant Promise" , function() {
 		p.then(
 			() => done( new Error( 'Should throw!' ) ) ,
 			() => {
-				expect( order ).to.eql( [ 'sync after' , 'catch' ] ) ;
+				expect( order ).to.eql( [ 'executor' , 'sync after' , 'catch' ] ) ;
 				done()
 			}
 		).catch( error => done( error || new Error() ) ) ;
