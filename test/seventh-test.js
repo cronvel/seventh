@@ -576,6 +576,18 @@ describe( "Advanced Promise" , () => {
 			.catch( error => done( error || new Error() ) ) ;
 		} ) ;
 	} ) ;
+	
+	describe( "Promise.filter()" , () => {
+		it( "Promise.filter() tests" ) ;
+	} ) ;
+	
+	describe( "Promise.forEach()" , () => {
+		it( "Promise.forEach() should run the iterator in series" ) ;
+	} ) ;
+	
+	describe( "Promise.reduce()" , () => {
+		it( "Promise.reduce() should run the iterator in series" ) ;
+	} ) ;
 } ) ;
 
 
