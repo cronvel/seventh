@@ -41,168 +41,600 @@ var expect = require( 'expect.js' ) ;
 
 
 
-describe( "Basic standard-compliant Promise" , function() {
+describe( "Basic standard-compliant Promise" , () => {
 	
-	it( ".then() chain" , done => {
-		
-		var thenCount = 0 ;
-		
-		seventh.Promise.resolveTimeout( 10 , 'one' )
-			.then( value => {
-				expect( value ).to.be( 'one' ) ;
-				thenCount ++ ;
-				return seventh.Promise.resolveTimeout( 10 , 'two' ) ;
-			} )
-			.then( value => {
-				expect( value ).to.be( 'two' ) ;
-				thenCount ++ ;
-				return seventh.Promise.resolveTimeout( 10 , 'three' ) ;
-			} )
-			.then( value => {
-				expect( value ).to.be( 'three' ) ;
-				thenCount ++ ;
-			} )
-			.then( () => {
-					expect( thenCount ).to.be( 3 ) ;
-					done() ;
+	describe( "Then and catch behavior" , () => {
+		it( ".then() chain" , done => {
+			
+			var thenCount = 0 ;
+			
+			seventh.Promise.resolveTimeout( 10 , 'one' )
+				.then( value => {
+					expect( value ).to.be( 'one' ) ;
+					thenCount ++ ;
+					return seventh.Promise.resolveTimeout( 10 , 'two' ) ;
 				} )
-			.catch( error => done( error || new Error() ) ) ;
-	} ) ;
-	
-	it( ".catch() propagation" , done => {
-		
-		var thenCount = 0 , catchCount = 0 ;
-		
-		seventh.Promise.rejectTimeout( 10 , new Error( 'doh!' ) )
-			.then( () => seventh.Promise.resolveTimeout( 10 , thenCount ++ ) )
-			.then( () => seventh.Promise.resolveTimeout( 10 , thenCount ++ ) )
-			.catch( error => {
-				expect( error.message ).to.be( 'doh!' ) ;
-				catchCount ++ ;
-			} )
-			.then( () => {
-					expect( thenCount ).to.be( 0 ) ;
-					expect( catchCount ).to.be( 1 ) ;
-					done() ;
+				.then( value => {
+					expect( value ).to.be( 'two' ) ;
+					thenCount ++ ;
+					return seventh.Promise.resolveTimeout( 10 , 'three' ) ;
 				} )
-			.catch( error => done( error || new Error() ) ) ;
-	} ) ;
-	
-	it( ".catch() chain" , done => {
-		
-		var thenCount = 0 , catchCount = 0 ;
-		
-		seventh.Promise.rejectTimeout( 10 , new Error( 'doh!' ) )
-			.catch( error => {
-				expect( error.message ).to.be( 'doh!' ) ;
-				catchCount ++ ;
-				return seventh.Promise.rejectTimeout( 10 , new Error( 'dang!' ) )
-			} )
-			.catch( error => {
-				expect( error.message ).to.be( 'dang!' ) ;
-				catchCount ++ ;
-				return seventh.Promise.rejectTimeout( 10 , new Error( 'ooops!' ) )
-			} )
-			.catch( error => {
-				expect( error.message ).to.be( 'ooops!' ) ;
-				catchCount ++ ;
-			} )
-			.then( () => {
-					expect( thenCount ).to.be( 0 ) ;
-					expect( catchCount ).to.be( 3 ) ;
-					done() ;
+				.then( value => {
+					expect( value ).to.be( 'three' ) ;
+					thenCount ++ ;
 				} )
-			.catch( error => done( error || new Error() ) ) ;
-	} ) ;
-	
-	it( "edge case: synchronous resolve() should still trigger .then() asynchronously" , done => {
-		
-		var order = [] ;
-		
-		var p = new seventh.Promise( ( resolve , reject ) => {
-			order.push( 'executor' ) ;
-			resolve() ;
+				.then( () => {
+						expect( thenCount ).to.be( 3 ) ;
+						done() ;
+					} )
+				.catch( error => done( error || new Error() ) ) ;
 		} ) ;
 		
-		p.then( () => order.push( 'then' ) ) ;
-		
-		order.push( 'sync after' ) ;
-		
-		p.then( () => {
-			expect( order ).to.eql( [ 'executor' , 'sync after' , 'then' ] ) ;
-			done() ;
-		} )
-		.catch( error => done( error || new Error() ) ) ;
-	} ) ;
-	
-	it( "edge case: synchronous reject() should still trigger .catch() asynchronously" , done => {
-		
-		var order = [] ;
-		
-		var p = new seventh.Promise( ( resolve , reject ) => {
-			order.push( 'executor' ) ;
-			reject() ;
+		it( ".catch() propagation" , done => {
+			
+			var thenCount = 0 , catchCount = 0 ;
+			
+			seventh.Promise.rejectTimeout( 10 , new Error( 'doh!' ) )
+				.then( () => seventh.Promise.resolveTimeout( 10 , thenCount ++ ) )
+				.then( () => seventh.Promise.resolveTimeout( 10 , thenCount ++ ) )
+				.catch( error => {
+					expect( error.message ).to.be( 'doh!' ) ;
+					catchCount ++ ;
+				} )
+				.then( () => {
+						expect( thenCount ).to.be( 0 ) ;
+						expect( catchCount ).to.be( 1 ) ;
+						done() ;
+					} )
+				.catch( error => done( error || new Error() ) ) ;
 		} ) ;
 		
-		p.catch( () => order.push( 'catch' ) ) ;
+		it( ".catch() chain" , done => {
+			
+			var thenCount = 0 , catchCount = 0 ;
+			
+			seventh.Promise.rejectTimeout( 10 , new Error( 'doh!' ) )
+				.catch( error => {
+					expect( error.message ).to.be( 'doh!' ) ;
+					catchCount ++ ;
+					return seventh.Promise.rejectTimeout( 10 , new Error( 'dang!' ) )
+				} )
+				.catch( error => {
+					expect( error.message ).to.be( 'dang!' ) ;
+					catchCount ++ ;
+					return seventh.Promise.rejectTimeout( 10 , new Error( 'ooops!' ) )
+				} )
+				.catch( error => {
+					expect( error.message ).to.be( 'ooops!' ) ;
+					catchCount ++ ;
+				} )
+				.then( () => {
+						expect( thenCount ).to.be( 0 ) ;
+						expect( catchCount ).to.be( 3 ) ;
+						done() ;
+					} )
+				.catch( error => done( error || new Error() ) ) ;
+		} ) ;
 		
-		order.push( 'sync after' ) ;
+		it( "executor throwing synchronously should trigger .catch()" , done => {
+			
+			new seventh.Promise( ( resolve , reject ) => {
+				throw new Error( 'throw!' ) ;
+			} )
+			.then(
+				() => { throw new Error( 'Should throw!' ) ; } ,
+				// Catch part:
+				error => {
+					expect( error.message ).to.be( 'throw!' ) ;
+					done()
+				}
+			)
+			.catch( error => done( error || new Error() ) ) ;
+		} ) ;
 		
-		p.then(
-			() => done( new Error( 'Should throw!' ) ) ,
-			() => {
-				expect( order ).to.eql( [ 'executor' , 'sync after' , 'catch' ] ) ;
+		it( "then-handler throwing synchronously should trigger .catch()" , done => {
+			
+			seventh.Promise.resolveTimeout( 0 )
+			.then( () => { throw new Error( 'throw inside then!' ) ; } )
+			.then(
+				() => { throw new Error( 'Should throw!' ) ; } ,
+				// Catch part:
+				error => {
+					expect( error.message ).to.be( 'throw inside then!' ) ;
+					done()
+				}
+			)
+			.catch( error => done( error || new Error() ) ) ;
+		} ) ;
+	} ) ;
+	
+	describe( "Edge case: synchronous settlement" , () => {
+		
+		it( "synchronous resolve() should still trigger .then() asynchronously" , done => {
+			
+			var order = [] ;
+			
+			var p = new seventh.Promise( ( resolve , reject ) => {
+				order.push( 'executor' ) ;
+				resolve() ;
+			} ) ;
+			
+			p.then( () => order.push( 'then' ) ) ;
+			
+			order.push( 'sync after' ) ;
+			
+			p.then( () => {
+				expect( order ).to.eql( [ 'executor' , 'sync after' , 'then' ] ) ;
 				done() ;
-			}
-		)
-		.catch( error => done( error || new Error() ) ) ;
-	} ) ;
-	
-	it( "edge case: synchronous throwing should still trigger .catch() asynchronously" , done => {
-		
-		var order = [] ;
-		
-		var p = new seventh.Promise( ( resolve , reject ) => {
-			order.push( 'executor' ) ;
-			throw new Error( 'Error!' ) ;
+			} )
+			.catch( error => done( error || new Error() ) ) ;
 		} ) ;
 		
-		p.catch( () => order.push( 'catch' ) ) ;
+		it( "synchronous reject() should still trigger .catch() asynchronously" , done => {
+			
+			var order = [] ;
+			
+			var p = new seventh.Promise( ( resolve , reject ) => {
+				order.push( 'executor' ) ;
+				reject() ;
+			} ) ;
+			
+			p.catch( () => order.push( 'catch' ) ) ;
+			
+			order.push( 'sync after' ) ;
+			
+			p.then(
+				() => { throw new Error( 'Should throw!' ) ; } ,
+				() => {
+					expect( order ).to.eql( [ 'executor' , 'sync after' , 'catch' ] ) ;
+					done() ;
+				}
+			)
+			.catch( error => done( error || new Error() ) ) ;
+		} ) ;
 		
-		order.push( 'sync after' ) ;
-		
-		p.then(
-			() => done( new Error( 'Should throw!' ) ) ,
-			() => {
-				expect( order ).to.eql( [ 'executor' , 'sync after' , 'catch' ] ) ;
-				done()
-			}
-		).catch( error => done( error || new Error() ) ) ;
+		it( "synchronous throwing should still trigger .catch() asynchronously" , done => {
+			
+			var order = [] ;
+			
+			var p = new seventh.Promise( ( resolve , reject ) => {
+				order.push( 'executor' ) ;
+				throw new Error( 'Error!' ) ;
+			} ) ;
+			
+			p.catch( () => order.push( 'catch' ) ) ;
+			
+			order.push( 'sync after' ) ;
+			
+			p.then(
+				() => { throw new Error( 'Should throw!' ) ; } ,
+				() => {
+					expect( order ).to.eql( [ 'executor' , 'sync after' , 'catch' ] ) ;
+					done()
+				}
+			).catch( error => done( error || new Error() ) ) ;
+		} ) ;
 	} ) ;
 } ) ;
 
 
 
-describe( "Advanced Promise" , function() {
+describe( "Advanced Promise" , () => {
 	
-	it( "Promise.all() with resolve only promises" , done => {
+	describe( "Promise.all()" , () => {
 		
-		seventh.Promise.all( [
-			seventh.Promise.resolveTimeout( 20 , 'one' ) ,
-			seventh.Promise.resolveTimeout( 0 , 'two' ) ,
-			seventh.Promise.resolveTimeout( 10 , 'three' )
-		] )
-		.then( values => {
-			expect( values ).to.eql( [ 'one' , 'two' , 'three' ] ) ;
+		it( "with resolvable-promises only, it should resolve with an array of values" , done => {
+			
+			seventh.Promise.all( [
+				seventh.Promise.resolveTimeout( 20 , 'one' ) ,
+				seventh.Promise.resolveTimeout( 0 , 'two' ) ,
+				seventh.Promise.resolveTimeout( 10 , 'three' )
+			] )
+			.then( values => {
+				expect( values ).to.eql( [ 'one' , 'two' , 'three' ] ) ;
 				done() ;
-		} )
-		.catch( error => done( error || new Error() ) ) ;
+			} )
+			.catch( error => done( error || new Error() ) ) ;
+		} ) ;
+		
+		it( "starting with a rejected promise, it should reject" , done => {
+			
+			seventh.Promise.all( [
+				seventh.Promise.resolveTimeout( 20 , 'one' ) ,
+				seventh.Promise.rejectTimeout( 0 , new Error( 'rejected!' ) ) ,
+				seventh.Promise.resolveTimeout( 10 , 'three' )
+			] )
+			.then(
+				() => { throw new Error( 'Should throw!' ) ; } ,
+				error => {
+					expect( error.message ).to.be( 'rejected!' ) ;
+					done() ;
+				}
+			)
+			.catch( error => done( error || new Error() ) ) ;
+		} ) ;
+		
+		it( "ending with a rejected promise, it should reject" , done => {
+			
+			seventh.Promise.all( [
+				seventh.Promise.rejectTimeout( 20 , new Error( 'rejected!' ) ) ,
+				seventh.Promise.resolveTimeout( 0 , 'two' ) ,
+				seventh.Promise.resolveTimeout( 10 , 'three' )
+			] )
+			.then(
+				() => { throw new Error( 'Should throw!' ) ; } ,
+				error => {
+					expect( error.message ).to.be( 'rejected!' ) ;
+					done() ;
+				}
+			)
+			.catch( error => done( error || new Error() ) ) ;
+		} ) ;
+		
+		it( "with a rejected promise in the middle, it should reject" , done => {
+			
+			seventh.Promise.all( [
+				seventh.Promise.resolveTimeout( 20 , 'one' ) ,
+				seventh.Promise.resolveTimeout( 0 , 'two' ) ,
+				seventh.Promise.rejectTimeout( 10 , new Error( 'rejected!' ) )
+			] )
+			.then(
+				() => { throw new Error( 'Should throw!' ) ; } ,
+				error => {
+					expect( error.message ).to.be( 'rejected!' ) ;
+					done() ;
+				}
+			)
+			.catch( error => done( error || new Error() ) ) ;
+		} ) ;
+	} ) ;
+	
+	describe( "Promise.map() / Promise.every()" , () => {
+		
+		it( "using a synchronous iterator with resolvable-promises only, it should resolve to an array of values" , done => {
+			
+			var promiseArray = [
+				seventh.Promise.resolveTimeout( 20 , 'one' ) ,
+				seventh.Promise.resolveTimeout( 0 , 'two' ) ,
+				seventh.Promise.resolveTimeout( 10 , 'three' )
+			] ;
+			
+			seventh.Promise.map( promiseArray , str => str + str )
+			.then( values => {
+				expect( values ).to.eql( [ 'oneone' , 'twotwo' , 'threethree' ] ) ;
+				done() ;
+			} )
+			.catch( error => done( error || new Error() ) ) ;
+		} ) ;
+		
+		it( "using an asynchronous iterator with resolvable-promises only, it should resolve to an array of values" , done => {
+			
+			var promiseArray = [
+				seventh.Promise.resolveTimeout( 20 , 'one' ) ,
+				seventh.Promise.resolveTimeout( 0 , 'two' ) ,
+				seventh.Promise.resolveTimeout( 10 , 'three' )
+			] ;
+			
+			seventh.Promise.map( promiseArray , str => seventh.Promise.resolveTimeout( 10 , str + str ) )
+			.then( values => {
+				expect( values ).to.eql( [ 'oneone' , 'twotwo' , 'threethree' ] ) ;
+				done() ;
+			} )
+			.catch( error => done( error || new Error() ) ) ;
+		} ) ;
+		
+		it( "using a synchronous throwing iterator, it should reject" , done => {
+			
+			var promiseArray = [
+				seventh.Promise.resolveTimeout( 20 , 'one' ) ,
+				seventh.Promise.resolveTimeout( 0 , 'two' ) ,
+				seventh.Promise.resolveTimeout( 10 , 'three' )
+			] ;
+			
+			seventh.Promise.map( promiseArray , str => { throw new Error( 'failed!' ) ; } )
+			.then(
+				() => { throw new Error( 'Should throw!' ) ; } ,
+				error => {
+					expect( error.message ).to.be( 'failed!' ) ;
+					done() ;
+				}
+			)
+			.catch( error => done( error || new Error() ) ) ;
+		} ) ;
+		
+		it( "using an asynchronous rejecting iterator, it should reject" , done => {
+			
+			var promiseArray = [
+				seventh.Promise.resolveTimeout( 20 , 'one' ) ,
+				seventh.Promise.resolveTimeout( 0 , 'two' ) ,
+				seventh.Promise.resolveTimeout( 10 , 'three' )
+			] ;
+			
+			seventh.Promise.map( promiseArray , str => seventh.Promise.rejectTimeout( 10 ,  new Error( 'failed!' ) ) )
+			.then(
+				() => { throw new Error( 'Should throw!' ) ; } ,
+				error => {
+					expect( error.message ).to.be( 'failed!' ) ;
+					done() ;
+				}
+			)
+			.catch( error => done( error || new Error() ) ) ;
+		} ) ;
+		
+		it( "using an asynchronous iterator rejecting at the end, it should reject" , done => {
+			
+			var index = 0 ;
+			var promiseArray = [
+				seventh.Promise.resolveTimeout( 20 , 'one' ) ,
+				seventh.Promise.resolveTimeout( 0 , 'two' ) ,
+				seventh.Promise.resolveTimeout( 10 , 'three' )
+			] ;
+			
+			seventh.Promise.map( promiseArray , str => {
+				if ( ++ index === 3 ) { return seventh.Promise.rejectTimeout( 10 ,  new Error( 'failed!' ) ) ; }
+				else { return seventh.Promise.resolveTimeout( 10 , str + str ) ; }
+			} )
+			.then(
+				() => { throw new Error( 'Should throw!' ) ; } ,
+				error => {
+					expect( error.message ).to.be( 'failed!' ) ;
+					done() ;
+				}
+			)
+			.catch( error => done( error || new Error() ) ) ;
+		} ) ;
+		
+		it( "no iterator call should be wasted if the Promise.map() has already failed" , done => {
+			
+			var count = 0 , order = [] , p ;
+			
+			var promiseArray = [
+				( p = seventh.Promise.resolveTimeout( 20 , 'one' ) ) ,
+				seventh.Promise.resolveTimeout( 0 , 'two' ) ,
+				seventh.Promise.rejectTimeout( 10 , new Error( 'failed!' ) )
+			] ;
+			
+			const iterator = str => {
+				count ++ ;
+				order.push( str ) ;
+				return seventh.Promise.resolveTimeout( 10 , str + str ) ;
+			} ;
+			
+			seventh.Promise.map( promiseArray , iterator )
+			.then(
+				() => { throw new Error( 'Should throw!' ) ; } ,
+				error => {
+					expect( error.message ).to.be( 'failed!' ) ;
+					
+					// Wait 20ms after the slowest promise, to ensure the iterator can be called
+					p.then( () => seventh.Promise.resolveTimeout( 20 ) )
+					.then( () => {
+						expect( order ).to.eql( [ 'two' ] ) ;
+						expect( count ).to.be( 1 ) ;
+						done() ;
+					} )
+					.catch( error => done( error || new Error() ) ) ;
+				}
+			)
+			.catch( error => done( error || new Error() ) ) ;
+		} ) ;
+	} ) ;
+	
+	describe( "Promise.any()" , () => {
+		
+		it( "with resolvable-promises only, it should resolve to the fastest promise's value" , done => {
+			
+			seventh.Promise.any( [
+				seventh.Promise.resolveTimeout( 20 , 'one' ) ,
+				seventh.Promise.resolveTimeout( 0 , 'two' ) ,
+				seventh.Promise.resolveTimeout( 10 , 'three' )
+			] )
+			.then( values => {
+				expect( values ).to.be( 'two' ) ;
+				done() ;
+			} )
+			.catch( error => done( error || new Error() ) ) ;
+		} ) ;
+		
+		it( "starting with a rejected promise, it should resolve to the second one" , done => {
+			
+			seventh.Promise.any( [
+				seventh.Promise.resolveTimeout( 20 , 'one' ) ,
+				seventh.Promise.rejectTimeout( 0 , new Error( 'rejected!' ) ) ,
+				seventh.Promise.resolveTimeout( 10 , 'three' )
+			] )
+			.then( values => {
+				expect( values ).to.be( 'three' ) ;
+				done() ;
+			} )
+			.catch( error => done( error || new Error() ) ) ;
+		} ) ;
+		
+		it( "with resolvable-promises only, it should reject with an array of rejection" , done => {
+			
+			seventh.Promise.any( [
+				seventh.Promise.rejectTimeout( 20 , new Error( 'rejection1' ) ) ,
+				seventh.Promise.rejectTimeout( 0 , new Error( 'rejection2' ) ) ,
+				seventh.Promise.rejectTimeout( 10 , new Error( 'rejection3' ) )
+			] )
+			.then(
+				() => { throw new Error( 'Should throw!' ) ; } ,
+				errors => {
+					expect( errors.map( e => e.message ) ).to.eql( [ 'rejection1' , 'rejection2' , 'rejection3' ] ) ;
+					done() ;
+				}
+			)
+			.catch( error => done( error || new Error() ) ) ;
+		} ) ;
+	} ) ;
+	
+	describe( "Promise.some()" , () => {
+		
+		it( "using a synchronous iterator with resolvable-promises only, it should resolve to the fastest promise's value" , done => {
+			
+			var promiseArray = [
+				seventh.Promise.resolveTimeout( 20 , 'one' ) ,
+				seventh.Promise.resolveTimeout( 0 , 'two' ) ,
+				seventh.Promise.resolveTimeout( 10 , 'three' )
+			] ;
+			
+			seventh.Promise.some( promiseArray , str => str + str )
+			.then( values => {
+				expect( values ).to.be( 'twotwo' ) ;
+				done() ;
+			} )
+			.catch( error => done( error || new Error() ) ) ;
+		} ) ;
+		
+		it( "using an asynchronous iterator with resolvable-promises only, it should resolve to the fastest promise's value" , done => {
+			
+			var promiseArray = [
+				seventh.Promise.resolveTimeout( 20 , 'one' ) ,
+				seventh.Promise.resolveTimeout( 0 , 'two' ) ,
+				seventh.Promise.resolveTimeout( 10 , 'three' )
+			] ;
+			
+			seventh.Promise.some( promiseArray , str => seventh.Promise.resolveTimeout( 10 , str + str ) )
+			.then( values => {
+				expect( values ).to.eql( 'twotwo' ) ;
+				done() ;
+			} )
+			.catch( error => done( error || new Error() ) ) ;
+		} ) ;
+		
+		it( "using a synchronous throwing iterator, it should reject" , done => {
+			
+			var index = 0 ;
+			
+			var promiseArray = [
+				seventh.Promise.resolveTimeout( 20 , 'one' ) ,
+				seventh.Promise.resolveTimeout( 0 , 'two' ) ,
+				seventh.Promise.resolveTimeout( 10 , 'three' )
+			] ;
+			
+			seventh.Promise.some( promiseArray , str => { throw new Error( 'failed!' + ( ++ index ) ) ; } )
+			.then(
+				() => { throw new Error( 'Should throw!' ) ; } ,
+				errors => {
+					expect( errors.map( e => e.message ) ).to.eql( [ 'failed!3' , 'failed!1' , 'failed!2' ] ) ;
+					done() ;
+				}
+			)
+			.catch( error => done( error || new Error() ) ) ;
+		} ) ;
+		
+		it( "using an asynchronous rejecting iterator, it should reject" , done => {
+			
+			var index = 0 ;
+			
+			var promiseArray = [
+				seventh.Promise.resolveTimeout( 20 , 'one' ) ,
+				seventh.Promise.resolveTimeout( 0 , 'two' ) ,
+				seventh.Promise.resolveTimeout( 10 , 'three' )
+			] ;
+			
+			seventh.Promise.some( promiseArray , str => seventh.Promise.rejectTimeout( 10 ,  new Error( 'failed!' + ( ++ index ) ) ) )
+			.then(
+				() => { throw new Error( 'Should throw!' ) ; } ,
+				errors => {
+					expect( errors.map( e => e.message ) ).to.eql( [ 'failed!3' , 'failed!1' , 'failed!2' ] ) ;
+					done() ;
+				}
+			)
+			.catch( error => done( error || new Error() ) ) ;
+		} ) ;
+		
+		it( "no iterator call should be wasted if the Promise.some() has already resolved" , done => {
+			
+			var count = 0 , order = [] , p ;
+			
+			var promiseArray = [
+				( p = seventh.Promise.resolveTimeout( 20 , 'one' ) ) ,
+				seventh.Promise.resolveTimeout( 0 , 'two' ) ,
+				seventh.Promise.rejectTimeout( 10 , 'three' )
+			] ;
+			
+			const iterator = str => {
+				count ++ ;
+				order.push( str ) ;
+				return seventh.Promise.resolveTimeout( 10 , str + str ) ;
+			} ;
+			
+			seventh.Promise.some( promiseArray , iterator )
+			.then( value => {
+				expect( value ).to.be( 'twotwo' ) ;
+				
+				// Wait 20ms after the slowest promise, to ensure the iterator can be called
+				p.then( () => seventh.Promise.resolveTimeout( 20 ) )
+				.then( () => {
+					expect( order ).to.eql( [ 'two' ] ) ;
+					expect( count ).to.be( 1 ) ;
+					done() ;
+				} )
+				.catch( error => done( error || new Error() ) ) ;
+			} )
+			.catch( error => done( error || new Error() ) ) ;
+		} ) ;
 	} ) ;
 } ) ;
 
 
 
-describe( "Wrappers and decorators" , function() {
+describe( "Wrappers and decorators" , () => {
+	
+	it( "promisify node style callback function, limit to one argument after the error argument -- .promisifyNodeFnOne()" , done => {
+		const okFn = ( callback ) => {
+			setTimeout( () => callback( undefined , 'arg' , 'trash' ) , 10 ) ;
+		} ;
+		
+		const koFn = ( callback ) => {
+			setTimeout( () => callback( new Error( 'failed!' ) ) , 10 ) ;
+		} ;
+		
+		const promisifiedOkFn = seventh.promisifyNodeFnOne( okFn ) ;
+		const promisifiedKoFn = seventh.promisifyNodeFnOne( koFn ) ;
+		
+		promisifiedOkFn().then( value => {
+			expect( value ).to.be( 'arg' ) ;
+			
+			promisifiedKoFn().then(
+				() => { throw new Error( 'Should throw!' ) ; } ,
+				error => {
+					expect( error.message ).to.be( 'failed!' ) ;
+					done() ;
+				}
+			)
+			.catch( error => done( error || new Error() ) ) ;
+		} )
+		.catch( error => done( error || new Error() ) ) ;
+	} ) ;
+	
+	it( "promisify node style callback function -- .promisifyNodeFn()" , done => {
+		const okFn = ( callback ) => {
+			setTimeout( () => callback( undefined , 'arg1' , 'arg2' , 'arg3' ) , 10 ) ;
+		} ;
+		
+		const koFn = ( callback ) => {
+			setTimeout( () => callback( new Error( 'failed!' ) ) , 10 ) ;
+		} ;
+		
+		const promisifiedOkFn = seventh.promisifyNodeFn( okFn ) ;
+		const promisifiedKoFn = seventh.promisifyNodeFn( koFn ) ;
+		
+		promisifiedOkFn().then( value => {
+			expect( value ).to.eql( [ 'arg1' , 'arg2' , 'arg3' ] ) ;
+			
+			promisifiedKoFn().then(
+				() => { throw new Error( 'Should throw!' ) ; } ,
+				error => {
+					expect( error.message ).to.be( 'failed!' ) ;
+					done() ;
+				}
+			)
+			.catch( error => done( error || new Error() ) ) ;
+		} )
+		.catch( error => done( error || new Error() ) ) ;
+	} ) ;
 	
 	it( "return value interceptor -- .returnValueInterceptor()" , () => {
 		var index = 0 ;
@@ -309,7 +741,7 @@ describe( "Wrappers and decorators" , function() {
 	
 	
 	
-	it( "serialize, execution do not overlap -- .serialize()" , done => {
+	it( "serialize, successive executions never overlap -- .serialize()" , done => {
 		var results = [] ;
 		
 		const asyncFn = ( value ) => {
@@ -466,8 +898,6 @@ describe( "Wrappers and decorators" , function() {
 		} ).catch( error => done( error || new Error() ) ) ;
 	} ) ;
 	
-	it( "promisify node style callback function -- .promisifyNodeFn()" ) ;
-	it( "promisify node style callback function, limit to one argument after the error argument -- .promisifyNodeFnOne()" ) ;
 } ) ;
 
 
