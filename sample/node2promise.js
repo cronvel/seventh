@@ -35,7 +35,7 @@ const seventh = require( '../' ) ;
 
 
 seventh.promisifyNodeApi( fs ) ;
-var readFile = seventh.promisifyNodeFn( fs.readFile ) ;
+var readFile = seventh.promisify( fs.readFile ) ;
 
 //readFile( './node2promise.js' , 'utf8' )
 fs.readFileAsync( './node2promise.js' , 'utf8' )

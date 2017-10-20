@@ -219,7 +219,84 @@ describe( "Basic standard-compliant Promise" , () => {
 
 
 
-describe( "Advanced Promise" , () => {
+describe( "Promise to callback" , done => {
+	
+	it( "Promise#callback() / Promise#callbackify() / Promise#nodeify()" , done => {
+		const okFn = callback => {
+			seventh.Promise.resolveTimeout( 10 , 'value!' ).callback( callback ) ;
+		} ;
+		
+		const koFn = callback => {
+			seventh.Promise.rejectTimeout( 10 , new Error( 'failed!' ) ).callback( callback ) ;
+		} ;
+		
+		okFn( ( error , value ) => {
+			try {
+				expect( error ).to.be( undefined ) ;
+				expect( value ).to.be( 'value!' ) ;
+			}
+			catch ( error ) {
+				done( error ) ;
+				return ;
+			}
+			
+			koFn( ( error , value ) => {
+				try {
+					expect( error ).to.be.ok() ;
+					expect( error.message ).to.be( 'failed!' ) ;
+					expect( value ).to.be( undefined ) ;
+				}
+				catch ( error ) {
+					done( error ) ;
+					return ;
+				}
+				
+				done() ;
+			} ) ;
+		} ) ;
+	} ) ;
+	
+	it( "Promise#callbackAll() / Promise#callbackifyAll() / Promise#nodeifyAll()" , done => {
+		const okFn = callback => {
+			seventh.Promise.resolveTimeout( 10 , [ 'one' , 'two' , 'three' ] ).callbackAll( callback ) ;
+		} ;
+		
+		const koFn = callback => {
+			seventh.Promise.rejectTimeout( 10 , new Error( 'failed!' ) ).callbackAll( callback ) ;
+		} ;
+		
+		okFn( ( error , arg1 , arg2 , arg3 ) => {
+			try {
+				expect( error ).to.be( undefined ) ;
+				expect( arg1 ).to.be( 'one' ) ;
+				expect( arg2 ).to.be( 'two' ) ;
+				expect( arg3 ).to.be( 'three' ) ;
+			}
+			catch ( error ) {
+				done( error ) ;
+				return ;
+			}
+			
+			koFn( ( error , value ) => {
+				try {
+					expect( error ).to.be.ok() ;
+					expect( error.message ).to.be( 'failed!' ) ;
+					expect( value ).to.be( undefined ) ;
+				}
+				catch ( error ) {
+					done( error ) ;
+					return ;
+				}
+				
+				done() ;
+			} ) ;
+		} ) ;
+	} ) ;
+} ) ;
+
+
+	
+describe( "Promise flow control" , () => {
 	
 	describe( "Promise.all()" , () => {
 		
@@ -594,7 +671,7 @@ describe( "Advanced Promise" , () => {
 
 describe( "Wrappers and decorators" , () => {
 	
-	it( "promisify node style callback function, limit to one argument after the error argument -- .promisifyNodeFnOne()" , done => {
+	it( "promisify node style callback function, limit to one argument after the error argument -- .promisify()" , done => {
 		const okFn = ( callback ) => {
 			setTimeout( () => callback( undefined , 'arg' , 'trash' ) , 10 ) ;
 		} ;
@@ -603,8 +680,8 @@ describe( "Wrappers and decorators" , () => {
 			setTimeout( () => callback( new Error( 'failed!' ) ) , 10 ) ;
 		} ;
 		
-		const promisifiedOkFn = seventh.promisifyNodeFnOne( okFn ) ;
-		const promisifiedKoFn = seventh.promisifyNodeFnOne( koFn ) ;
+		const promisifiedOkFn = seventh.promisify( okFn ) ;
+		const promisifiedKoFn = seventh.promisify( koFn ) ;
 		
 		promisifiedOkFn().then( value => {
 			expect( value ).to.be( 'arg' ) ;
@@ -621,7 +698,7 @@ describe( "Wrappers and decorators" , () => {
 		.catch( error => done( error || new Error() ) ) ;
 	} ) ;
 	
-	it( "promisify node style callback function -- .promisifyNodeFn()" , done => {
+	it( "promisify node style callback function -- .promisifyAll()" , done => {
 		const okFn = ( callback ) => {
 			setTimeout( () => callback( undefined , 'arg1' , 'arg2' , 'arg3' ) , 10 ) ;
 		} ;
@@ -630,8 +707,8 @@ describe( "Wrappers and decorators" , () => {
 			setTimeout( () => callback( new Error( 'failed!' ) ) , 10 ) ;
 		} ;
 		
-		const promisifiedOkFn = seventh.promisifyNodeFn( okFn ) ;
-		const promisifiedKoFn = seventh.promisifyNodeFn( koFn ) ;
+		const promisifiedOkFn = seventh.promisifyAll( okFn ) ;
+		const promisifiedKoFn = seventh.promisifyAll( koFn ) ;
 		
 		promisifiedOkFn().then( value => {
 			expect( value ).to.eql( [ 'arg1' , 'arg2' , 'arg3' ] ) ;
@@ -913,3 +990,14 @@ describe( "Wrappers and decorators" , () => {
 } ) ;
 
 
+
+describe( "Thenable support" , () => {
+	it( "thenable support tests" ) ;
+} ) ;
+
+
+
+describe( "Async-try-catch module compatibility" , () => {
+	it( "async-try-catch module compatibility tests" ) ;
+} ) ;
+	

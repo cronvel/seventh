@@ -34,7 +34,6 @@ var Promise = seventh.Promise ;
 //var Promise = require( 'bluebird' ) ;
 
 
-
 Promise.forEach( [ 100 , 500 , Promise.resolveTimeout( 200 , 50 ) , 200 ] , ( delay , index ) => {
 	return new Promise( ( resolve , reject ) => {
 		setTimeout( () => {
