@@ -745,12 +745,269 @@ describe( "Promise flow control" , () => {
 	
 	describe( "Promise.forEach()" , () => {
 		
-		it( "Promise.forEach() should run the iterator in series" ) ;
+		it( "Promise.forEach() should run the iterator in series" , done => {
+			
+			var results = [] ;
+			
+			const iterator = ( value , index ) => {
+				results.push( 'before ' + index + ': ' + value ) ;
+				
+				var p = new seventh.Promise( resolve => {
+					setTimeout( () => {
+						results.push( 'after ' + index + ': ' + value ) ;
+						resolve() ;
+					} , 20 ) ;
+				} ) ;
+				
+				return p ;
+			} ;
+			
+			var array = [
+				1 , 5 , 7 ,
+				seventh.Promise.resolveTimeout( 10 , 2 ) ,
+				seventh.Promise.resolveTimeout( 10 , 8 ) ,
+			] ;
+			
+			seventh.Promise.forEach( array , iterator )
+			.then( () => {
+				expect( results ).to.eql( [
+					"before 0: 1" ,
+					"after 0: 1" ,
+					"before 1: 5" ,
+					"after 1: 5" ,
+					"before 2: 7" ,
+					"after 2: 7" ,
+					"before 3: 2" ,
+					"after 3: 2" ,
+					"before 4: 8" ,
+					"after 4: 8"
+				] ) ;
+				done() ;
+			} )
+			.catch( error => done( error || new Error() ) ) ;
+		} ) ;
+		
+		it( "Promise.forEach() should stop and reject with the first element rejection" , done => {
+			
+			var results = [] ;
+			
+			const iterator = ( value , index ) => {
+				results.push( 'before ' + index + ': ' + value ) ;
+				
+				var p = new seventh.Promise( resolve => {
+					setTimeout( () => {
+						results.push( 'after ' + index + ': ' + value ) ;
+						resolve() ;
+					} , 20 ) ;
+				} ) ;
+				
+				return p ;
+			} ;
+			
+			var array = [
+				seventh.Promise.resolveTimeout( 10 , 1 ) ,
+				seventh.Promise.resolveTimeout( 10 , 5 ) ,
+				seventh.Promise.rejectTimeout( 10 , new Error( 'failed!' ) ) ,
+				seventh.Promise.resolveTimeout( 10 , 2 ) ,
+				seventh.Promise.resolveTimeout( 10 , 8 ) ,
+			] ;
+			
+			seventh.Promise.forEach( array , iterator )
+			.then(
+				() => { throw new Error( 'Should throw!' ) ; } ,
+				error => {
+					expect( error.message ).to.be( 'failed!' ) ;
+					expect( results ).to.eql( [
+						"before 0: 1" ,
+						"after 0: 1" ,
+						"before 1: 5" ,
+						"after 1: 5"
+					] ) ;
+					done() ;
+				}
+			)
+			.catch( error => done( error || new Error() ) ) ;
+		} ) ;
+		
+		it( "Promise.forEach() should stop and reject with the first iterator rejection" , done => {
+			
+			var results = [] ;
+			
+			const iterator = ( value , index ) => {
+				results.push( 'before ' + index + ': ' + value ) ;
+				
+				var p = new seventh.Promise( ( resolve , reject ) => {
+					setTimeout( () => {
+						results.push( 'after ' + index + ': ' + value ) ;
+						if ( index === 2 ) { reject( new Error( 'failed!' ) ) ; }
+						else { resolve() ; }
+					} , 20 ) ;
+				} ) ;
+				
+				return p ;
+			} ;
+			
+			var array = [
+				seventh.Promise.resolveTimeout( 10 , 1 ) ,
+				seventh.Promise.resolveTimeout( 10 , 5 ) ,
+				seventh.Promise.resolveTimeout( 10 , 7 ) ,
+				seventh.Promise.resolveTimeout( 10 , 2 ) ,
+				seventh.Promise.resolveTimeout( 10 , 8 ) ,
+			] ;
+			
+			seventh.Promise.forEach( array , iterator )
+			.then(
+				() => { throw new Error( 'Should throw!' ) ; } ,
+				error => {
+					expect( error.message ).to.be( 'failed!' ) ;
+					expect( results ).to.eql( [
+						"before 0: 1" ,
+						"after 0: 1" ,
+						"before 1: 5" ,
+						"after 1: 5" ,
+						"before 2: 7" ,
+						"after 2: 7"
+					] ) ;
+					done() ;
+				}
+			)
+			.catch( error => done( error || new Error() ) ) ;
+		} ) ;
 	} ) ;
 	
 	describe( "Promise.reduce()" , () => {
 		
-		it( "Promise.reduce() should run the iterator in series" ) ;
+		it( "Promise.reduce() should run the iterator in series" , done => {
+			
+			var results = [] ;
+			
+			const iterator = ( accumulator , value , index ) => {
+				results.push( 'before ' + index + ': ' + value + ' -- ' + accumulator ) ;
+				
+				var p = new seventh.Promise( resolve => {
+					setTimeout( () => {
+						accumulator += value ;
+						results.push( 'after ' + index + ': ' + value + ' -- ' + accumulator ) ;
+						resolve( accumulator ) ;
+					} , 20 ) ;
+				} ) ;
+				
+				return p ;
+			} ;
+			
+			var array = [
+				1 , 5 , 7 ,
+				seventh.Promise.resolveTimeout( 10 , 2 ) ,
+				seventh.Promise.resolveTimeout( 10 , 8 ) ,
+			] ;
+			
+			seventh.Promise.reduce( array , iterator , 3 )
+			.then( () => {
+				expect( results ).to.eql( [
+					"before 0: 1 -- 3" ,
+					"after 0: 1 -- 4" ,
+					"before 1: 5 -- 4" ,
+					"after 1: 5 -- 9" ,
+					"before 2: 7 -- 9" ,
+					"after 2: 7 -- 16" ,
+					"before 3: 2 -- 16" ,
+					"after 3: 2 -- 18" ,
+					"before 4: 8 -- 18" ,
+					"after 4: 8 -- 26"
+				] ) ;
+				done() ;
+			} )
+			.catch( error => done( error || new Error() ) ) ;
+		} ) ;
+		
+		it( "Promise.reduce() should stop and reject with the first element rejection" , done => {
+			
+			var results = [] ;
+			
+			const iterator = ( accumulator , value , index ) => {
+				results.push( 'before ' + index + ': ' + value + ' -- ' + accumulator ) ;
+				
+				var p = new seventh.Promise( resolve => {
+					setTimeout( () => {
+						accumulator += value ;
+						results.push( 'after ' + index + ': ' + value + ' -- ' + accumulator ) ;
+						resolve( accumulator ) ;
+					} , 20 ) ;
+				} ) ;
+				
+				return p ;
+			} ;
+			
+			var array = [
+				seventh.Promise.resolveTimeout( 10 , 1 ) ,
+				seventh.Promise.resolveTimeout( 10 , 5 ) ,
+				seventh.Promise.rejectTimeout( 10 , new Error( 'failed!' ) ) ,
+				seventh.Promise.resolveTimeout( 10 , 2 ) ,
+				seventh.Promise.resolveTimeout( 10 , 8 ) ,
+			] ;
+			
+			seventh.Promise.reduce( array , iterator , 3 )
+			.then(
+				() => { throw new Error( 'Should throw!' ) ; } ,
+				error => {
+					expect( error.message ).to.be( 'failed!' ) ;
+					expect( results ).to.eql( [
+					"before 0: 1 -- 3" ,
+					"after 0: 1 -- 4" ,
+					"before 1: 5 -- 4" ,
+					"after 1: 5 -- 9"
+					] ) ;
+					done() ;
+				}
+			)
+			.catch( error => done( error || new Error() ) ) ;
+		} ) ;
+		
+		it( "Promise.reduce() should stop and reject with the first iterator rejection" , done => {
+			
+			var results = [] ;
+			
+			const iterator = ( accumulator , value , index ) => {
+				results.push( 'before ' + index + ': ' + value + ' -- ' + accumulator ) ;
+				
+				var p = new seventh.Promise( ( resolve , reject ) => {
+					setTimeout( () => {
+						accumulator += value ;
+						results.push( 'after ' + index + ': ' + value + ' -- ' + accumulator ) ;
+						if ( index === 2 ) { reject( new Error( 'failed!' ) ) ; }
+						else { resolve( accumulator ) ; }
+					} , 20 ) ;
+				} ) ;
+				
+				return p ;
+			} ;
+			
+			var array = [
+				seventh.Promise.resolveTimeout( 10 , 1 ) ,
+				seventh.Promise.resolveTimeout( 10 , 5 ) ,
+				seventh.Promise.resolveTimeout( 10 , 7 ) ,
+				seventh.Promise.resolveTimeout( 10 , 2 ) ,
+				seventh.Promise.resolveTimeout( 10 , 8 ) ,
+			] ;
+			
+			seventh.Promise.reduce( array , iterator , 3 )
+			.then(
+				() => { throw new Error( 'Should throw!' ) ; } ,
+				error => {
+					expect( error.message ).to.be( 'failed!' ) ;
+					expect( results ).to.eql( [
+					"before 0: 1 -- 3" ,
+					"after 0: 1 -- 4" ,
+					"before 1: 5 -- 4" ,
+					"after 1: 5 -- 9" ,
+					"before 2: 7 -- 9" ,
+					"after 2: 7 -- 16"
+					] ) ;
+					done() ;
+				}
+			)
+			.catch( error => done( error || new Error() ) ) ;
+		} ) ;
 	} ) ;
 } ) ;
 
@@ -759,6 +1016,7 @@ describe( "Promise flow control" , () => {
 describe( "Wrappers and decorators" , () => {
 	
 	it( "promisify node style callback function, limit to one argument after the error argument -- .promisify()" , done => {
+		
 		const okFn = ( callback ) => {
 			setTimeout( () => callback( undefined , 'arg' , 'trash' ) , 10 ) ;
 		} ;
@@ -786,6 +1044,7 @@ describe( "Wrappers and decorators" , () => {
 	} ) ;
 	
 	it( "promisify node style callback function -- .promisifyAll()" , done => {
+		
 		const okFn = ( callback ) => {
 			setTimeout( () => callback( undefined , 'arg1' , 'arg2' , 'arg3' ) , 10 ) ;
 		} ;
@@ -813,6 +1072,7 @@ describe( "Wrappers and decorators" , () => {
 	} ) ;
 	
 	it( "return value interceptor -- .returnValueInterceptor()" , () => {
+		
 		var index = 0 ;
 		var returnArray = [ 'one' , 'two' , 'three' ] ;
 		var results = [] ;
@@ -834,9 +1094,8 @@ describe( "Wrappers and decorators" , () => {
 		expect( results ).to.eql( returnArray ) ;
 	} ) ;
 	
-	
-	
 	it( "run once -- .once()" , done => {
+		
 		var results = [] ;
 		
 		const asyncFn = ( value ) => {
@@ -861,9 +1120,8 @@ describe( "Wrappers and decorators" , () => {
 		} , 40 ) ;
 	} ) ;
 	
-	
-	
 	it( "debounce -- .debounce()" , done => {
+		
 		var results = [] ;
 		
 		const asyncFn = ( value ) => {
@@ -888,9 +1146,8 @@ describe( "Wrappers and decorators" , () => {
 		} , 40 ) ;
 	} ) ;
 	
-	
-	
 	it( "debounce update -- .debounceUpdate()" , done => {
+		
 		var results = [] ;
 		
 		const asyncFn = ( value ) => {
@@ -915,9 +1172,8 @@ describe( "Wrappers and decorators" , () => {
 		} , 40 ) ;
 	} ) ;
 	
-	
-	
 	it( "serialize, successive executions never overlap -- .serialize()" , done => {
+		
 		var results = [] ;
 		
 		const asyncFn = ( value ) => {
@@ -960,9 +1216,8 @@ describe( "Wrappers and decorators" , () => {
 		} , 40 ) ;
 	} ) ;
 	
-	
-	
 	it( "timeout -- .timeout()" , done => {
+		
 		var index = 0 ;
 		var times = [ 0 , 10 , 40 , 10 ] ;
 		var results = [] ;
@@ -985,9 +1240,8 @@ describe( "Wrappers and decorators" , () => {
 		} ).catch( error => done( error ) ) ;
 	} ) ;
 	
-	
-	
 	it( "variable (per call) timeout -- .variableTimeout()" , done => {
+		
 		var index = 0 ;
 		var times = [ 0 , 10 , 40 , 20 ] ;
 		var results = [] ;
@@ -1010,9 +1264,8 @@ describe( "Wrappers and decorators" , () => {
 		} ).catch( error => done( error ) ) ;
 	} ) ;
 	
-	
-	
 	it( "retry after failure -- .retry()" , done => {
+		
 		var count = 0 ;
 		
 		const asyncFn = ( value ) => {
@@ -1041,9 +1294,8 @@ describe( "Wrappers and decorators" , () => {
 		} ).catch( error => done( error || new Error() ) ) ;
 	} ) ;
 	
-	
-	
 	it( "variable retry after failure -- .variableRetry()" , done => {
+		
 		var count = 0 ;
 		
 		const asyncFn = ( value ) => {
@@ -1073,7 +1325,6 @@ describe( "Wrappers and decorators" , () => {
 			
 		} ).catch( error => done( error || new Error() ) ) ;
 	} ) ;
-	
 } ) ;
 
 
@@ -1081,6 +1332,7 @@ describe( "Wrappers and decorators" , () => {
 describe( "Thenable support" , () => {
 	
 	it( "Promise.isThenable()" , () => {
+		
 		expect( seventh.Promise.isThenable( new seventh.Promise() ) ).to.be.ok() ;
 		expect( seventh.Promise.isThenable( new Promise( resolve => resolve() ) ) ).to.be.ok() ;
 		expect( seventh.Promise.isThenable( { then: resolve => resolve() } ) ).to.be.ok() ;
@@ -1089,6 +1341,7 @@ describe( "Thenable support" , () => {
 	} ) ;
 	
 	it( "Promise.fromThenable() from native promises" , done => {
+		
 		expect( seventh.Promise.fromThenable( new Promise( resolve => resolve() ) ) ).to.be.a( seventh.Promise ) ;
 		
 		seventh.Promise.fromThenable( new Promise( resolve => setTimeout( () => resolve( 'yay' ) , 10 ) ) )
