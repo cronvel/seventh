@@ -53,7 +53,7 @@ describe( "Basic standard-compliant Promise" , () => {
 				.then( value => {
 					expect( value ).to.be( 'one' ) ;
 					thenCount ++ ;
-					return seventh.Promise.resolveTimeout( 10 , 'two' ) ;
+					return 'two' ;
 				} )
 				.then( value => {
 					expect( value ).to.be( 'two' ) ;
@@ -65,13 +65,11 @@ describe( "Basic standard-compliant Promise" , () => {
 					thenCount ++ ;
 				} )
 				.then( () => {
-						expect( thenCount ).to.be( 3 ) ;
-						done() ;
-					} )
+					expect( thenCount ).to.be( 3 ) ;
+					done() ;
+				} )
 				.catch( error => done( error || new Error() ) ) ;
 		} ) ;
-		
-		it( ".then() returning a promise" ) ;
 		
 		it( ".catch() chain" , done => {
 			
@@ -81,12 +79,12 @@ describe( "Basic standard-compliant Promise" , () => {
 				.catch( error => {
 					expect( error.message ).to.be( 'doh!' ) ;
 					catchCount ++ ;
-					return seventh.Promise.rejectTimeout( 10 , new Error( 'dang!' ) )
+					throw new Error( 'dang!' ) ;
 				} )
 				.catch( error => {
 					expect( error.message ).to.be( 'dang!' ) ;
 					catchCount ++ ;
-					return seventh.Promise.rejectTimeout( 10 , new Error( 'ooops!' ) )
+					return seventh.Promise.rejectTimeout( 10 , new Error( 'ooops!' ) ) ;
 				} )
 				.catch( error => {
 					expect( error.message ).to.be( 'ooops!' ) ;
@@ -658,7 +656,9 @@ describe( "Promise flow control" , () => {
 	} ) ;
 	
 	describe( "Promise.filter()" , () => {
-		it( "Promise.filter() tests" ) ;
+		it( "Promise.filter() should filter an array of values using an iterator return value (direct value or promise)" , done => {
+			done() ;
+		} ) ;
 	} ) ;
 	
 	describe( "Promise.forEach()" , () => {
@@ -1004,7 +1004,81 @@ describe( "Thenable support" , () => {
 		expect( seventh.Promise.isThenable( {} ) ).not.to.be.ok() ;
 	} ) ;
 	
-	it( "thenable support tests" ) ;
+	it( "Promise.fromThenable() from native promises" , done => {
+		expect( seventh.Promise.fromThenable( new Promise( resolve => resolve() ) ) ).to.be.a( seventh.Promise ) ;
+		
+		seventh.Promise.fromThenable( new Promise( resolve => setTimeout( () => resolve( 'yay' ) , 10 ) ) )
+		.then( value => {
+			expect( value ).to.be( 'yay' ) ;
+			seventh.Promise.fromThenable(
+				new Promise( ( resolve , reject ) => setTimeout( () => reject( new Error( 'doh!' ) ) , 10 ) )
+			)
+			.then(
+				() => { throw new Error( 'Should throw!' ) ; } ,
+				error => {
+					expect( error.message ).to.be( 'doh!' ) ;
+					done()
+				}
+			)
+			.catch( error => done( error || new Error() ) ) ;
+		} )
+		.catch( error => done( error || new Error() ) ) ;
+	} ) ;
+	
+	
+	// Dummy thenable class
+	function Thenable( isSuccess , value )
+	{
+		this.onResolve = null ;
+		this.onReject = null ;
+		
+		setTimeout( () => {
+			if ( isSuccess && typeof this.onResolve === 'function' ) { this.onResolve( value ) ; }
+			else if ( ! isSuccess && typeof this.onReject === 'function' ) { this.onReject( value ) ; }
+		} , 20 ) ;
+	}
+	
+	// Only support one handler, but it's good enough for this test
+	Thenable.prototype.then = function then( onResolve , onReject )
+	{
+		this.onResolve = onResolve ;
+		this.onReject = onReject ;
+	} ;
+	
+	
+	it( "Promise.fromThenable() from unknown thenable object" , done => {
+		
+		expect( seventh.Promise.fromThenable( new Thenable( true ) ) ).to.be.a( seventh.Promise ) ;
+		
+		seventh.Promise.fromThenable( new Thenable( true , 'yay' ) )
+		.then( value => {
+			expect( value ).to.be( 'yay' ) ;
+			seventh.Promise.fromThenable( new Thenable( false , new Error( 'doh!' ) ) )
+			.then(
+				() => { throw new Error( 'Should throw!' ) ; } ,
+				error => {
+					expect( error.message ).to.be( 'doh!' ) ;
+					done()
+				}
+			)
+			.catch( error => done( error || new Error() ) ) ;
+		} )
+		.catch( error => done( error || new Error() ) ) ;
+	} ) ;
+	
+	it( "Thenable support as .then() return value" , done => {
+		
+		seventh.Promise.resolveTimeout( 10 , 'one' )
+		.then( value => {
+			expect( value ).to.be( 'one' ) ;
+			return new Thenable( true , value + '-two' ) ;
+		} )
+		.then( value => {
+			expect( value ).to.be( 'one-two' ) ;
+			done() ;
+		} )
+		.catch( error => done( error || new Error() ) ) ;
+	} ) ;
 } ) ;
 
 
