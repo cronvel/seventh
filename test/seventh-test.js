@@ -50,25 +50,25 @@ describe( "Basic standard-compliant Promise" , () => {
 			var thenCount = 0 ;
 			
 			seventh.Promise.resolveTimeout( 10 , 'one' )
-				.then( value => {
-					expect( value ).to.be( 'one' ) ;
-					thenCount ++ ;
-					return 'two' ;
-				} )
-				.then( value => {
-					expect( value ).to.be( 'two' ) ;
-					thenCount ++ ;
-					return seventh.Promise.resolveTimeout( 10 , 'three' ) ;
-				} )
-				.then( value => {
-					expect( value ).to.be( 'three' ) ;
-					thenCount ++ ;
-				} )
-				.then( () => {
-					expect( thenCount ).to.be( 3 ) ;
-					done() ;
-				} )
-				.catch( error => done( error || new Error() ) ) ;
+			.then( value => {
+				expect( value ).to.be( 'one' ) ;
+				thenCount ++ ;
+				return 'two' ;
+			} )
+			.then( value => {
+				expect( value ).to.be( 'two' ) ;
+				thenCount ++ ;
+				return seventh.Promise.resolveTimeout( 10 , 'three' ) ;
+			} )
+			.then( value => {
+				expect( value ).to.be( 'three' ) ;
+				thenCount ++ ;
+			} )
+			.then( () => {
+				expect( thenCount ).to.be( 3 ) ;
+				done() ;
+			} )
+			.catch( error => done( error || new Error() ) ) ;
 		} ) ;
 		
 		it( ".catch() chain" , done => {
@@ -656,16 +656,100 @@ describe( "Promise flow control" , () => {
 	} ) ;
 	
 	describe( "Promise.filter()" , () => {
+		
 		it( "Promise.filter() should filter an array of values using an iterator return value (direct value or promise)" , done => {
-			done() ;
+			
+			var array = [
+				1 , 5 , 7 , 3 , 10 ,
+				seventh.Promise.resolveTimeout( 10 , 2 ) ,
+				seventh.Promise.resolveTimeout( 10 , 8 ) ,
+				seventh.Promise.resolveTimeout( 10 , -1 ) ,
+				seventh.Promise.resolveTimeout( 10 , 8 )
+			] ;
+			
+			const filter = v => {
+				if ( v < 6 ) { return seventh.Promise.resolveTimeout( 10 , true ) ; }
+				else { return seventh.Promise.resolveTimeout( 10 , false ) ; }
+			} ;
+			
+			seventh.Promise.filter( array , filter )
+			.then( results => {
+				expect( results ).to.eql( [ 1, 5 , 3 , 2 , -1 ] ) ;
+				done() ;
+			} )
+			.catch( error => done( error || new Error() ) ) ;
+		} ) ;
+		
+		it( "Promise.filter() any error should reject the whole promise" , done => {
+			
+			var array = [
+				seventh.Promise.resolveTimeout( 10 , 2 ) ,
+				seventh.Promise.resolveTimeout( 10 , -1 ) ,
+				seventh.Promise.resolveTimeout( 10 , 8 ) ,
+				seventh.Promise.rejectTimeout( 10 , new Error( 'promise failed!' ) ) ,
+				seventh.Promise.resolveTimeout( 10 , 4 ) ,
+			] ;
+			
+			var array2 = [
+				seventh.Promise.resolveTimeout( 10 , 2 ) ,
+				seventh.Promise.resolveTimeout( 10 , -1 ) ,
+				seventh.Promise.resolveTimeout( 10 , 8 ) ,
+				seventh.Promise.resolveTimeout( 10 , 4 ) ,
+			] ;
+			
+			const filter = v => {
+				if ( v < 6 ) { return seventh.Promise.resolveTimeout( 10 , true ) ; }
+				else { return seventh.Promise.resolveTimeout( 10 , false ) ; }
+			} ;
+			
+			const failFilter = v => {
+				if ( v < 6 ) { return seventh.Promise.resolveTimeout( 10 , true ) ; }
+				else { return seventh.Promise.rejectTimeout( 10 , new Error( 'filter failed!' ) ) ; }
+			} ;
+			
+			const syncFailFilter = v => {
+				if ( v < 6 ) { return seventh.Promise.resolveTimeout( 10 , true ) ; }
+				else { throw new Error( 'filter sync failed!' ) ; }
+				//else { return seventh.Promise.rejectTimeout( 10 , new Error( 'filter sync failed!' ) ) ; }
+			} ;
+			
+			seventh.Promise.filter( array , filter )
+			.then(
+				() => { throw new Error( 'Should throw!' ) ; } ,
+				error => {
+					expect( error.message ).to.be( 'promise failed!' ) ;
+					
+					seventh.Promise.filter( array2 , failFilter )
+					.then(
+						() => { throw new Error( 'Should throw!' ) ; } ,
+						error => {
+							expect( error.message ).to.be( 'filter failed!' ) ;
+							
+							seventh.Promise.filter( array2 , syncFailFilter )
+							.then(
+								() => { throw new Error( 'Should throw!' ) ; } ,
+								error => {
+									expect( error.message ).to.be( 'filter sync failed!' ) ;
+									done() ;
+								}
+							)
+							.catch( error => done( error || new Error() ) ) ;
+						}
+					)
+					.catch( error => done( error || new Error() ) ) ;
+				}
+			)
+			.catch( error => done( error || new Error() ) ) ;
 		} ) ;
 	} ) ;
 	
 	describe( "Promise.forEach()" , () => {
+		
 		it( "Promise.forEach() should run the iterator in series" ) ;
 	} ) ;
 	
 	describe( "Promise.reduce()" , () => {
+		
 		it( "Promise.reduce() should run the iterator in series" ) ;
 	} ) ;
 } ) ;
@@ -1087,3 +1171,63 @@ describe( "Async-try-catch module compatibility" , () => {
 	it( "async-try-catch module compatibility tests" ) ;
 } ) ;
 	
+	
+
+describe( "Historical bugs" , () => {
+	
+	it( ".then() sync chain" , done => {
+		
+		var thenCount = 0 ;
+		
+		seventh.Promise.resolve( 'one' )
+		.then( value => {
+			expect( value ).to.be( 'one' ) ;
+			thenCount ++ ;
+			return 'two' ;
+		} )
+		.then( value => {
+			expect( value ).to.be( 'two' ) ;
+			thenCount ++ ;
+			return 'three' ;
+		} )
+		.then( value => {
+			expect( value ).to.be( 'three' ) ;
+			thenCount ++ ;
+		} )
+		.then( () => {
+			expect( thenCount ).to.be( 3 ) ;
+			done() ;
+		} )
+		.catch( error => done( error || new Error() ) ) ;
+	} ) ;
+	
+	it( ".then() sync chain throwing" , done => {
+		
+		var thenCount = 0 ;
+		
+		seventh.Promise.resolve( 'one' )
+		.then( value => {
+			expect( value ).to.be( 'one' ) ;
+			thenCount ++ ;
+			return 'two' ;
+		} )
+		.then( value => {
+			expect( value ).to.be( 'two' ) ;
+			thenCount ++ ;
+			throw new Error( 'throw!' ) ;
+		} )
+		.then( value => {
+			thenCount ++ ;
+		} )
+		.then(
+			() => { throw new Error( 'Should throw!' ) ; } ,
+			error => {
+				expect( thenCount ).to.be( 2 ) ;
+				expect( error.message ).to.be( 'throw!' ) ;
+				done() ;
+			}
+		)
+		.catch( error => done( error || new Error() ) ) ;
+	} ) ;
+} ) ;
+
