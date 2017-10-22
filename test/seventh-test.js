@@ -1009,6 +1009,138 @@ describe( "Promise flow control" , () => {
 			.catch( error => done( error || new Error() ) ) ;
 		} ) ;
 	} ) ;
+	
+	describe( "Promise.mapObject()" , () => {
+		
+		it( "using a synchronous iterator with resolvable-promises only, it should resolve to an object of values" , done => {
+			
+			var promiseObject = {
+				a: seventh.Promise.resolveTimeout( 20 , 'one' ) ,
+				b: seventh.Promise.resolveTimeout( 0 , 'two' ) ,
+				c: seventh.Promise.resolveTimeout( 10 , 'three' )
+			} ;
+			
+			seventh.Promise.mapObject( promiseObject , str => str + str )
+			.then( values => {
+				expect( values ).to.eql( { a: 'oneone' , b: 'twotwo' , c: 'threethree' } ) ;
+				done() ;
+			} )
+			.catch( error => done( error || new Error() ) ) ;
+		} ) ;
+		
+		it( "using an asynchronous iterator with resolvable-promises only, it should resolve to an object of values" , done => {
+			
+			var promiseObject = {
+				a: seventh.Promise.resolveTimeout( 20 , 'one' ) ,
+				b: seventh.Promise.resolveTimeout( 0 , 'two' ) ,
+				c: seventh.Promise.resolveTimeout( 10 , 'three' )
+			} ;
+			
+			seventh.Promise.mapObject( promiseObject , str => seventh.Promise.resolveTimeout( 10 , str + str ) )
+			.then( values => {
+				expect( values ).to.eql( { a: 'oneone' , b: 'twotwo' , c: 'threethree' } ) ;
+				done() ;
+			} )
+			.catch( error => done( error || new Error() ) ) ;
+		} ) ;
+		
+		it( "using a synchronous throwing iterator, it should reject" , done => {
+			
+			var promiseObject = {
+				a: seventh.Promise.resolveTimeout( 20 , 'one' ) ,
+				b: seventh.Promise.resolveTimeout( 0 , 'two' ) ,
+				c: seventh.Promise.resolveTimeout( 10 , 'three' )
+			} ;
+			
+			seventh.Promise.mapObject( promiseObject , str => { throw new Error( 'failed!' ) ; } )
+			.then(
+				() => { throw new Error( 'Should throw!' ) ; } ,
+				error => {
+					expect( error.message ).to.be( 'failed!' ) ;
+					done() ;
+				}
+			)
+			.catch( error => done( error || new Error() ) ) ;
+		} ) ;
+		
+		it( "using an asynchronous rejecting iterator, it should reject" , done => {
+			
+			var promiseObject = {
+				a: seventh.Promise.resolveTimeout( 20 , 'one' ) ,
+				b: seventh.Promise.resolveTimeout( 0 , 'two' ) ,
+				c: seventh.Promise.resolveTimeout( 10 , 'three' )
+			} ;
+			
+			seventh.Promise.mapObject( promiseObject , str => seventh.Promise.rejectTimeout( 10 ,  new Error( 'failed!' ) ) )
+			.then(
+				() => { throw new Error( 'Should throw!' ) ; } ,
+				error => {
+					expect( error.message ).to.be( 'failed!' ) ;
+					done() ;
+				}
+			)
+			.catch( error => done( error || new Error() ) ) ;
+		} ) ;
+		
+		it( "using an asynchronous iterator rejecting at the end, it should reject" , done => {
+			
+			var index = 0 ;
+			var promiseObject = {
+				a: seventh.Promise.resolveTimeout( 20 , 'one' ) ,
+				b: seventh.Promise.resolveTimeout( 0 , 'two' ) ,
+				c: seventh.Promise.resolveTimeout( 10 , 'three' )
+			} ;
+			
+			seventh.Promise.mapObject( promiseObject , str => {
+				if ( ++ index === 3 ) { return seventh.Promise.rejectTimeout( 10 ,  new Error( 'failed!' ) ) ; }
+				else { return seventh.Promise.resolveTimeout( 10 , str + str ) ; }
+			} )
+			.then(
+				() => { throw new Error( 'Should throw!' ) ; } ,
+				error => {
+					expect( error.message ).to.be( 'failed!' ) ;
+					done() ;
+				}
+			)
+			.catch( error => done( error || new Error() ) ) ;
+		} ) ;
+		
+		it( "no iterator call should be wasted if the Promise.mapObject() has already failed" , done => {
+			
+			var count = 0 , order = [] , p ;
+			
+			var promiseObject = {
+				a: ( p = seventh.Promise.resolveTimeout( 30 , 'one' ) ) ,
+				b: seventh.Promise.resolveTimeout( 0 , 'two' ) ,
+				c: seventh.Promise.rejectTimeout( 20 , new Error( 'failed!' ) ) ,
+				d: seventh.Promise.resolveTimeout( 10 , 'four' )
+			} ;
+			
+			const iterator = ( str , k ) => {
+				count ++ ;
+				order.push( k + ': ' + str ) ;
+				return seventh.Promise.resolveTimeout( 10 , str + str ) ;
+			} ;
+			
+			seventh.Promise.mapObject( promiseObject , iterator )
+			.then(
+				() => { throw new Error( 'Should throw!' ) ; } ,
+				error => {
+					expect( error.message ).to.be( 'failed!' ) ;
+					
+					// Wait 20ms after the slowest promise, to ensure the iterator can be called
+					p.then( () => seventh.Promise.resolveTimeout( 20 ) )
+					.then( () => {
+						expect( order ).to.eql( [ 'b: two' , 'd: four' ] ) ;
+						expect( count ).to.be( 2 ) ;
+						done() ;
+					} )
+					.catch( error => done( error || new Error() ) ) ;
+				}
+			)
+			.catch( error => done( error || new Error() ) ) ;
+		} ) ;
+	} ) ;
 } ) ;
 
 
@@ -1420,11 +1552,17 @@ describe( "Thenable support" , () => {
 
 
 
+describe( "Misc" , () => {
+	it( "asyncExit() TODO" ) ;
+} ) ;
+
+
+
 describe( "Async-try-catch module compatibility" , () => {
 	it( "async-try-catch module compatibility tests" ) ;
 } ) ;
-	
-	
+
+
 
 describe( "Historical bugs" , () => {
 	
