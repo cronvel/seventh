@@ -1552,6 +1552,12 @@ describe( "Thenable support" , () => {
 
 
 
+describe( "Dormant promise" , () => {
+	it( "Promise.dormant()" ) ;
+} ) ;
+
+
+
 describe( "Misc" , () => {
 	it( "asyncExit() TODO" ) ;
 } ) ;
