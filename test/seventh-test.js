@@ -1553,7 +1553,60 @@ describe( "Thenable support" , () => {
 
 
 describe( "Dormant promise" , () => {
-	it( "Promise.dormant()" ) ;
+	
+	it( "Promise.dormant() should execute only once the first fulfill handler is attached" , done => {
+		
+		var order = [] ;
+		
+		var promise = seventh.Promise.dormant( ( resolve , reject ) => {
+			order.push( 'exec' ) ;
+			resolve( 'value' ) ;
+		} ) ;
+		
+		order.push( 'sync after 1' ) ;
+		
+		seventh.Promise.resolveTimeout( 10 )
+		.then( () => {
+			expect( order ).to.eql( [ 'sync after 1' ] ) ;
+			
+			promise.then( result => {
+				order.push( 'then' ) ;
+				expect( result ).to.be( 'value' ) ;
+				expect( order ).to.eql( [ 'sync after 1' , 'exec' , 'sync after 2' , 'then' ] ) ;
+				done() ;
+			} )
+			.catch( error => done( error || new Error() ) ) ;
+			
+			order.push( 'sync after 2' ) ;
+			expect( order ).to.eql( [ 'sync after 1' , 'exec' , 'sync after 2' ] ) ;
+		} )
+		.catch( error => done( error || new Error() ) ) ;
+	} ) ;
+	
+	it( "rejection handlers should not wake up the promise" , done => {
+		
+		var order = [] ;
+		
+		var promise = seventh.Promise.dormant( ( resolve , reject ) => {
+			order.push( 'exec' ) ;
+			resolve( 'value' ) ;
+		} ) ;
+		
+		order.push( 'sync after 1' ) ;
+		
+		seventh.Promise.resolveTimeout( 10 )
+		.then( () => {
+			expect( order ).to.eql( [ 'sync after 1' ] ) ;
+			var p2 = promise.catch( () => null ) ;
+			order.push( 'sync after 2' ) ;
+			expect( order ).to.eql( [ 'sync after 1' , 'sync after 2' ] ) ;
+			p2.then( () => null ) ;
+			order.push( 'sync after 3' ) ;
+			expect( order ).to.eql( [ 'sync after 1' , 'sync after 2' , 'exec' , 'sync after 3' ] ) ;
+			done() ;
+		} )
+		.catch( error => done( error || new Error() ) ) ;
+	} ) ;
 } ) ;
 
 
