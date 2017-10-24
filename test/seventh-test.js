@@ -120,6 +120,7 @@ describe( "Basic standard-compliant Promise" , () => {
 		it( "executor throwing synchronously should trigger .catch()" , done => {
 			
 			new seventh.Promise( ( resolve , reject ) => {
+				//reject( new Error( 'throw!' ) ) ;
 				throw new Error( 'throw!' ) ;
 			} )
 			.then(
