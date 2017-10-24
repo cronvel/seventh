@@ -1554,7 +1554,7 @@ describe( "Thenable support" , () => {
 
 describe( "Dormant promise" , () => {
 	
-	it( "Promise.dormant() should execute only once the first fulfill handler is attached" , done => {
+	it( "Promise.dormant() should execute only once a non-taping-then handler is attached" , done => {
 		
 		var order = [] ;
 		
@@ -1583,7 +1583,7 @@ describe( "Dormant promise" , () => {
 		.catch( error => done( error || new Error() ) ) ;
 	} ) ;
 	
-	it( "rejection handlers should not wake up the promise" , done => {
+	it( "taping handlers should not wake up the promise" , done => {
 		
 		var order = [] ;
 		
@@ -1597,7 +1597,7 @@ describe( "Dormant promise" , () => {
 		seventh.Promise.resolveTimeout( 10 )
 		.then( () => {
 			expect( order ).to.eql( [ 'sync after 1' ] ) ;
-			var p2 = promise.catch( () => null ) ;
+			var p2 = promise.tap( () => null ) ;
 			order.push( 'sync after 2' ) ;
 			expect( order ).to.eql( [ 'sync after 1' , 'sync after 2' ] ) ;
 			p2.then( () => null ) ;
@@ -1611,6 +1611,13 @@ describe( "Dormant promise" , () => {
 
 
 
+describe( "Tap" , () => {
+	it( ".tap()" ) ;
+	it( ".tapCatch()" ) ;
+} ) ;
+
+
+	
 describe( "Misc" , () => {
 	it( "asyncExit() TODO" ) ;
 } ) ;
