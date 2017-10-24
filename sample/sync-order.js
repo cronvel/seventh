@@ -40,21 +40,16 @@ function fn( label )
 	return new Promise( ( resolve , reject ) => {
 		console.log( 'Promise sync:' , label ) ;
 		//throw new Error( 'Error!' ) ;
-		//throw 'Error!' ;
-		//throw {} ;
-		resolve( label ) ;
-		return ;
-		
-		setTimeout( () => {
-			console.log( 'Promise async:' , label ) ;
-			resolve( label ) ;
-		} , 50 ) ;
+		reject( new Error( 'Error!' ) ) ;
+		//resolve( label ) ;
 	} ) ;
 }
 
-fn( 'one' )
-.then( ( value ) => console.log( 'then one:' , value ) )
+var p = fn( 'one' ) ;
+
+p.then( ( value ) => console.log( 'then one:' , value ) )
 .catch( ( error ) => console.log( 'catch one:' , error ) )
 
+//console.log( "promise" , p ) ;
 console.log( "synchronous after" ) ;
 

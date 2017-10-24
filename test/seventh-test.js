@@ -1361,7 +1361,7 @@ describe( "Wrappers and decorators" , () => {
 		
 		const timedOutFn = seventh.timeout( 20 , asyncFn ) ;
 		
-		seventh.Promise.map( [
+		seventh.Promise.all( [
 			timedOutFn().then( () => results[ 0 ] = true , () => results[ 0 ] = false ) ,
 			timedOutFn().then( () => results[ 1 ] = true , () => results[ 1 ] = false ) ,
 			timedOutFn().then( () => results[ 2 ] = true , () => results[ 2 ] = false ) ,
@@ -1385,7 +1385,7 @@ describe( "Wrappers and decorators" , () => {
 		
 		const timedOutFn = seventh.variableTimeout( asyncFn ) ;
 		
-		seventh.Promise.map( [
+		seventh.Promise.all( [
 			timedOutFn( 10 ).then( () => results[ 0 ] = true , () => results[ 0 ] = false ) ,
 			timedOutFn( 0 ).then( () => results[ 1 ] = true , () => results[ 1 ] = false ) ,
 			timedOutFn( 20 ).then( () => results[ 2 ] = true , () => results[ 2 ] = false ) ,
