@@ -1611,9 +1611,10 @@ describe( "Dormant promise" , () => {
 
 
 
-describe( "Tap" , () => {
+describe( "Then alternative" , () => {
 	it( ".tap()" ) ;
 	it( ".tapCatch()" ) ;
+	it( ".done()" ) ;
 } ) ;
 
 
