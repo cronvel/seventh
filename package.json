@@ -1,6 +1,6 @@
 {
   "name": "seventh",
-  "version": "0.5.6",
+  "version": "0.5.7",
   "description": "A lean Promises and Async lib for ES6/ES7",
   "main": "lib/seventh.js",
   "engines": {
