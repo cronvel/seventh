@@ -29,7 +29,7 @@
 
 
 /* jshint unused:false */
-/* global describe, it, before, after, beforeEach */
+/* global describe, it, before, after, beforeEach, asyncTry */
 
 
 
@@ -225,7 +225,8 @@ describe( "Basic standard-compliant Promise" , () => {
 
 describe( "Promise to callback" , done => {
 	
-	it( "Promise#callback() / Promise#callbackify() / Promise#nodeify()" , done => {
+	it( "Promise#callback()" , done => {
+		
 		const okFn = callback => {
 			Promise.resolveTimeout( 10 , 'value!' ).callback( callback ) ;
 		} ;
@@ -260,7 +261,8 @@ describe( "Promise to callback" , done => {
 		} ) ;
 	} ) ;
 	
-	it( "Promise#callbackAll() / Promise#callbackifyAll() / Promise#nodeifyAll()" , done => {
+	it( "Promise#callbackAll()" , done => {
+		
 		const okFn = callback => {
 			Promise.resolveTimeout( 10 , [ 'one' , 'two' , 'three' ] ).callbackAll( callback ) ;
 		} ;
@@ -296,11 +298,22 @@ describe( "Promise to callback" , done => {
 			} ) ;
 		} ) ;
 	} ) ;
+	
+	it( "Throwing callback should not be turned into rejection" , done => {
+		
+		asyncTry( () => {
+			Promise.resolveTimeout( 10 , 'value!' ).callback( () => {
+				throw new Error( 'throw!' ) ;
+			} ) ;
+		} ).catch( error => done() ) ;
+		
+		// Can't figure a clean way to detect non-throwing test, except by letting it timeout
+	} ) ;
 } ) ;
 
 
 	
-describe( "Promise flow control" , () => {
+describe( "Promise batch operations" , () => {
 	
 	describe( "Promise.all()" , () => {
 		
@@ -1555,9 +1568,9 @@ describe( "Thenable support" , () => {
 
 
 
-describe( "Dormant promise" , () => {
+describe( "Dormant promises" , () => {
 	
-	it( "Promise.dormant() should execute only once a non-taping-then handler is attached" , done => {
+	it( "Promise.dormant() should execute only once a then handler is attached" , done => {
 		
 		var order = [] ;
 		
@@ -1586,7 +1599,7 @@ describe( "Dormant promise" , () => {
 		.catch( error => done( error || new Error() ) ) ;
 	} ) ;
 	
-	it( "taping handlers should not wake up the promise" , done => {
+	it( "even rejection handlers should wake it up" , done => {
 		
 		var order = [] ;
 		
@@ -1600,12 +1613,12 @@ describe( "Dormant promise" , () => {
 		Promise.resolveTimeout( 10 )
 		.then( () => {
 			expect( order ).to.eql( [ 'sync after 1' ] ) ;
-			var p2 = promise.tap( () => null ) ;
+			var p2 = promise.catch( () => null ) ;
 			order.push( 'sync after 2' ) ;
-			expect( order ).to.eql( [ 'sync after 1' , 'sync after 2' ] ) ;
+			expect( order ).to.eql( [ 'sync after 1' , 'exec' , 'sync after 2' ] ) ;
 			p2.then( () => null ) ;
 			order.push( 'sync after 3' ) ;
-			expect( order ).to.eql( [ 'sync after 1' , 'sync after 2' , 'exec' , 'sync after 3' ] ) ;
+			expect( order ).to.eql( [ 'sync after 1' , 'exec' , 'sync after 2' , 'sync after 3' ] ) ;
 			done() ;
 		} )
 		.catch( error => done( error || new Error() ) ) ;
@@ -1617,7 +1630,32 @@ describe( "Dormant promise" , () => {
 describe( "Then alternative" , () => {
 	it( ".tap()" ) ;
 	it( ".tapCatch()" ) ;
-	it( ".done()" ) ;
+	
+	it( ".done() should throw any exception" , done => {
+		
+		var thenCount = 0 ;
+		
+		Promise.resolveTimeout( 10 , 'one' )
+		.then( value => {
+			expect( value ).to.be( 'one' ) ;
+			thenCount ++ ;
+			return 'two' ;
+		} )
+		.then( value => {
+			expect( value ).to.be( 'two' ) ;
+			thenCount ++ ;
+			return Promise.resolveTimeout( 10 , 'three' ) ;
+		} )
+		.then( value => {
+			expect( value ).to.be( 'three' ) ;
+			thenCount ++ ;
+		} )
+		.then( () => {
+			expect( thenCount ).to.be( 3 ) ;
+			done() ;
+		} )
+		.catch( error => done( error || new Error() ) ) ;
+	} ) ;
 } ) ;
 
 
