@@ -1568,6 +1568,45 @@ describe( "Thenable support" , () => {
 
 
 
+describe( "Promise.try()" , () => {
+	
+	it( "Promise.try() should be a try-catched version of Promise.reolve( fn() )" , done => {
+		Promise.try( () => { throw new Error( 'throw!' ) ; } )
+		.then(
+			() => { throw new Error( 'Should throw!' ) ; } ,
+			// Catch part:
+			error => {
+				expect( error.message ).to.be( 'throw!' ) ;
+				done()
+			}
+		)
+		.catch( error => done( error || new Error() ) ) ;
+	} ) ;
+	
+	it( "Promise.try() should resolve to a regular value" , done => {
+		Promise.try( () => 'great!' ).then( value => {
+			expect( value ).to.be( 'great!' ) ;
+			done() ;
+		} )
+		.catch( error => done( error || new Error() ) ) ;
+	} ) ;
+	
+	it( "Promise.try() should return the promise returned by its function" , done => {
+		var p1 = Promise.resolveTimeout( 10 , 'great!' ) ;
+		var p2 = Promise.try( () => p1 ) ;
+		
+		expect( p1 ).to.be( p2 ) ;
+		
+		p2.then( value => {
+			expect( value ).to.be( 'great!' ) ;
+			done() ;
+		} )
+		.catch( error => done( error || new Error() ) ) ;
+	} ) ;
+} ) ;
+
+
+
 describe( "Dormant promises" , () => {
 	
 	it( "Promise.dormant() should execute only once a then handler is attached" , done => {
