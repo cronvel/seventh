@@ -1666,9 +1666,10 @@ describe( "Dormant promises" , () => {
 
 
 
-describe( "Then alternative" , () => {
+describe( "Then/catch alternatives" , () => {
 	it( ".tap()" ) ;
 	it( ".tapCatch()" ) ;
+	it( ".fatal()" ) ;
 	
 	it( ".done() should throw any exception" , done => {
 		
@@ -1698,7 +1699,7 @@ describe( "Then alternative" , () => {
 } ) ;
 
 
-	
+
 describe( "Misc" , () => {
 	it( "asyncExit() TODO" ) ;
 } ) ;
@@ -1768,4 +1769,49 @@ describe( "Historical bugs" , () => {
 		.catch( error => done( error || new Error() ) ) ;
 	} ) ;
 } ) ;
+
+
+
+// Should come last, because parasiting the native promise is irreversible
+describe( "Native promise parasiting" , () => {
+	
+	Promise.parasite() ;
+	
+	it( "Promise.parasite() should parasite global native promises, bringing them few 'seventh' features" , done => {
+		
+		var promiseOk = new Promise.Native( ( resolve , reject ) => setTimeout( () => resolve( 'yay!' ) , 10 ) ) ;
+		var promiseKo = new Promise.Native( ( resolve , reject ) => setTimeout( () => reject( new Error( 'doh!' ) ) , 10 ) ) ;
+		
+		promiseOk.callback( ( error , value ) => {
+			expect( error ).not.to.be.ok() ;
+			expect( value ).to.be( 'yay!' ) ;
+			
+			promiseKo.callback( ( error , value ) => {
+				expect( error ).to.be.ok() ;
+				expect( error.message ).to.be( 'doh!' ) ;
+				done() ;
+			} )
+			.catch( error => done( error || new Error() ) ) ;
+		} )
+		.catch( error => done( error || new Error() ) ) ;
+	} ) ;
+	
+	it( "Async/await function should return a promise correctly parasited" , done => {
+		
+		var promiseOk = new Promise.Native( ( resolve , reject ) => setTimeout( () => resolve( 'yay!' ) , 10 ) ) ;
+		
+		var asyncFn = async () => {
+			return await promiseOk ;
+		} ;
+		
+		asyncFn().callback( ( error , value ) => {
+			expect( error ).not.to.be.ok() ;
+			expect( value ).to.be( 'yay!' ) ;
+			done() ;
+		} )
+		.catch( error => done( error || new Error() ) ) ;
+	} ) ;
+} ) ;
+
+
 
