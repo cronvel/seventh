@@ -788,162 +788,6 @@ describe( "Promise batch operations" , () => {
 			.catch( error => done( error || new Error() ) ) ;
 		} ) ;
 		
-		it( "zzz await" , async( done ) => {
-			
-			try {
-				//var val = await Promise.resolve( 'val' ) ;
-				//var val = await { then: resolve => resolve( 'val' ) } ;
-				var val = await { then: resolve => process.nextTick( resolve( 'val' ) ) } ;
-				//var val = await { then: resolve => setTimeout( resolve( 'val' ) , 1000 ) } ;
-				//var val = await NativePromise.resolve( 'val' ) ;
-				//var val = await NativePromise.resolve( 'val' ) ;
-				console.log( "after" ) ;
-				expect( val ).to.be( 'val' ) ;
-				done() ;
-			}
-			catch ( error ) {
-				done( error ) ;
-			}
-			
-		} ) ;
-		
-		it( "zzz await2 MAIN TROUBLE HERE" , async( done ) => {
-			
-			try {
-				var pFn = () => {
-					var lastP = Promise.resolve() ;
-					var p = new Promise() ;
-					lastP.then( () => {
-						console.log( "then" ) ;
-						p.resolve() ;
-					} ) ;
-					console.log( "after lastP" ) ;
-					return p ;
-				} ;
-				
-				await pFn() ;
-				console.log( "after" ) ;
-				//expect( val ).to.be( 'val' ) ;
-				done() ;
-			}
-			catch ( error ) {
-				done( error ) ;
-			}
-			
-		} ) ;
-		
-		it( "zzz await3" , async( done ) => {
-			
-			try {
-				var pFn = () => {
-					var resolve_ ;
-					var lastP = NativePromise.resolve() ;
-					var p = new NativePromise( ( resolve , reject ) => { resolve_ = resolve ; } ) ;
-					lastP.then( () => {
-						console.log( "then" ) ;
-						resolve_()
-					} ) ;
-					console.log( "after lastP" ) ;
-					return p ;
-				} ;
-				
-				await pFn() ;
-				console.log( "after" ) ;
-				//expect( val ).to.be( 'val' ) ;
-				done() ;
-			}
-			catch ( error ) {
-				done( error ) ;
-			}
-			
-		} ) ;
-		
-		it( "zzz await5" , async( done ) => {
-			
-			try {
-				var pFn = () => {
-					var resolved = false ;
-					var handlers = [] ;
-					
-					var resolve = () => {
-						resolved = true ;
-						handlers.forEach( h => h() ) ;
-					} ;
-					
-					var lastP = { then: handler => setTimeout( handler , 0 ) } ;
-					
-					var p = { then: handler => {
-						setTimeout( () => {
-							if ( resolved ) {
-								handler() ;
-							}
-							else {
-								handlers.push( handler ) ;
-							}
-						} , 0 ) ; 
-					} } ;
-					
-					var next = () => {
-						lastP.then( () => resolve() ) ;
-					} ;
-					
-					next() ;
-					return p ;
-				} ;
-				
-				await pFn() ;
-				console.log( "after" ) ;
-				//expect( val ).to.be( 'val' ) ;
-				done() ;
-			}
-			catch ( error ) {
-				done( error ) ;
-			}
-			
-		} ) ;
-		
-		it( "zzz Promise.forEach(), empty array and await" , async( done ) => {
-			
-			var results = [] ;
-			
-			const iterator = ( value , index ) => {
-				results.push( 'before ' + index + ': ' + value ) ;
-				
-				var p = new Promise( resolve => {
-					setTimeout( () => {
-						results.push( 'after ' + index + ': ' + value ) ;
-						resolve() ;
-					} , 20 ) ;
-				} ) ;
-				
-				return p ;
-			} ;
-			
-			var array = [] ;
-			
-			try {
-				//await Promise.forEach( array , iterator ) ;
-				var p = Promise.forEach( array , iterator ) ;
-				p.then(
-					() => console.log( 'then1' ) ,
-					() => console.log( 'catch1' )
-				) ;
-				console.log( "after p.then() 1" ) ;
-				p.then(
-					() => console.log( 'then2' ) ,
-					() => console.log( 'catch2' )
-				) ;
-				console.log( "after p.then() 2" ) ;
-				await p ;
-				console.log( "after await" ) ;
-				expect( results ).to.eql( [] ) ;
-				done() ;
-			}
-			catch ( error ) {
-				done( error ) ;
-			}
-		} ) ;
-		
 		it( "Promise.forEach() should run the iterator in series" , done => {
 			
 			var results = [] ;
@@ -1955,6 +1799,34 @@ describe( "Historical bugs" , () => {
 
 
 
+describe( "Historical bugs" , () => {
+
+	it( "await and .then method mutation bug" , async( done ) => {
+		
+		try {
+			var pFn = () => {
+				var lastP = Promise.resolve() ;
+				var p = new Promise() ;
+				lastP.then( () => {
+					p.resolve( 'val' ) ;
+				} ) ;
+				return p ;
+			} ;
+			
+			var val = await pFn() ;
+			expect( val ).to.be( 'val' ) ;
+			done() ;
+		}
+		catch ( error ) {
+			done( error ) ;
+		}
+		
+	} ) ;
+
+} ) ;
+
+
+
 // Should come last, because parasiting the native promise is irreversible
 describe( "Native promise parasiting" , () => {
 	
@@ -1995,6 +1867,5 @@ describe( "Native promise parasiting" , () => {
 		.catch( error => done( error || new Error() ) ) ;
 	} ) ;
 } ) ;
-
 
 
