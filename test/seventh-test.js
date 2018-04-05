@@ -761,6 +761,33 @@ describe( "Promise batch operations" , () => {
 	
 	describe( "Promise.forEach()" , () => {
 		
+		it( "Promise.forEach() and empty array should resolve" , done => {
+			
+			var results = [] ;
+			
+			const iterator = ( value , index ) => {
+				results.push( 'before ' + index + ': ' + value ) ;
+				
+				var p = new Promise( resolve => {
+					setTimeout( () => {
+						results.push( 'after ' + index + ': ' + value ) ;
+						resolve() ;
+					} , 20 ) ;
+				} ) ;
+				
+				return p ;
+			} ;
+			
+			var array = [] ;
+			
+			Promise.forEach( array , iterator )
+			.then( () => {
+				expect( results ).to.eql( [] ) ;
+				done() ;
+			} )
+			.catch( error => done( error || new Error() ) ) ;
+		} ) ;
+		
 		it( "Promise.forEach() should run the iterator in series" , done => {
 			
 			var results = [] ;
