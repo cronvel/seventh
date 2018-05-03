@@ -1391,6 +1391,7 @@ describe( "Wrappers and decorators" , () => {
 		} , 40 ) ;
 	} ) ;
 	
+	// decorator variant
 	it( "timeout -- .timeout()" , done => {
 		
 		var index = 0 ;
@@ -1439,6 +1440,106 @@ describe( "Wrappers and decorators" , () => {
 		} ).catch( error => done( error ) ) ;
 	} ) ;
 	
+	// wrapper variant
+	it( "timeout -- .timeLimit()" , done => {
+		
+		var index = 0 ;
+		var times = [ 0 , 10 , 40 , 10 ] ;
+		var results = [] ;
+		
+		const asyncFn = ( value ) => {
+			return Promise.resolveTimeout( times[ index ++ ] , value ) ;
+		} ;
+		
+		Promise.all( [
+			Promise.timeLimit( 20 , () => asyncFn() ).then( () => results[ 0 ] = true , () => results[ 0 ] = false ) ,
+			Promise.timeLimit( 20 , () => asyncFn() ).then( () => results[ 1 ] = true , () => results[ 1 ] = false ) ,
+			Promise.timeLimit( 20 , () => asyncFn() ).then( () => results[ 2 ] = true , () => results[ 2 ] = false ) ,
+			Promise.timeLimit( 20 , () => asyncFn() ).then( () => results[ 3 ] = true , () => results[ 3 ] = false ) ,
+		] ).then( () => {
+			expect( results ).to.eql( [ true , true , false , true ] ) ;
+			done() ;
+		} ).catch( error => done( error ) ) ;
+	} ) ;
+	
+	// wrapper variant
+	it( "retry after failure -- .retry()" , done => {
+		
+		var count = 0 ;
+		
+		const asyncFn = () => {
+			count ++ ;
+			if ( count < 4 ) { return Promise.rejectTimeout( 20 , new Error( 'error!' ) ) ; }
+			else { return Promise.resolveTimeout( 20 , 'yay!' ) ; }
+		} ;
+		
+		// The first one should succeed
+		Promise.retry( { retries: 5 , delay: 10 , factor: 1.5 } , asyncFn ).then( value => {
+			expect( value ).to.be( 'yay!' ) ;
+			expect( count ).to.be( 4 ) ;
+			
+			count = 0 ;
+			
+			// The second one should throw
+			Promise.retry( { retries: 2 , delay: 10 , factor: 1.5 } , asyncFn ).then( () => {
+				done( new Error( 'It should throw!' ) ) ;
+			} ).catch( () => done() ) ;
+			
+		} ).catch( error => done( error || new Error() ) ) ;
+	} ) ;
+	
+	it( "retry with timeout -- .retry()" , done => {
+		
+		var count = 0 ;
+		
+		const asyncFn = () => {
+			count ++ ;
+			if ( count < 4 ) { return Promise.rejectTimeout( 20 , new Error( 'error!wsd' ) ) ; }
+			else { return Promise.resolveTimeout( 20 , 'yay!' ) ; }
+		} ;
+		
+		// The first one should succeed
+		Promise.retry( { retries: 5 , delay: 10 , factor: 1.5 , timeout: 40 } , asyncFn ).then( value => {
+			expect( value ).to.be( 'yay!' ) ;
+			expect( count ).to.be( 4 ) ;
+			
+			count = 0 ;
+			
+			// The second one should throw
+			Promise.retry( { retries: 5 , delay: 10 , factor: 1.5 , timeout: 5 } , asyncFn ).then( () => {
+				done( new Error( 'It should throw!' ) ) ;
+			} ).catch( () => done() ) ;
+			
+		} ).catch( error => done( error || new Error() ) ) ;
+	} ) ;
+	
+	it( "retry with retryTest -- .retry()" , done => {
+		
+		var count = 0 ;
+		
+		const asyncFn = () => {
+			count ++ ;
+			if ( count < 4 ) { return Promise.rejectTimeout( 20 , new Error( 'error!' ) ) ; }
+			else { return Promise.resolveTimeout( 20 , 'yay!' ) ; }
+		} ;
+		
+		// The first one should succeed
+		Promise.retry( { retries: 5 , catch: error => { if ( error.message !== 'error!' ) { throw error ; } } } , asyncFn ).then( value => {
+			expect( value ).to.be( 'yay!' ) ;
+			expect( count ).to.be( 4 ) ;
+			
+			count = 0 ;
+			
+			// The second one should throw
+			Promise.retry( { retries: 5 , catch: error => { if ( error.message === 'error!' ) { throw error ; } } } , asyncFn ).then( () => {
+				done( new Error( 'It should throw!' ) ) ;
+			} ).catch( () => done() ) ;
+			
+		} ).catch( error => done( error || new Error() ) ) ;
+	} ) ;
+	
+	/*
+	// decorator variant
 	it( "retry after failure -- .retry()" , done => {
 		
 		var count = 0 ;
@@ -1500,6 +1601,7 @@ describe( "Wrappers and decorators" , () => {
 			
 		} ).catch( error => done( error || new Error() ) ) ;
 	} ) ;
+	*/
 } ) ;
 
 
