@@ -1184,6 +1184,10 @@ describe( "Promise batch operations" , () => {
 			.catch( error => done( error || new Error() ) ) ;
 		} ) ;
 	} ) ;
+	
+	describe( "Promise.concurrent()" , () => {
+		it( "TODO" ) ;
+	} ) ;
 } ) ;
 
 
