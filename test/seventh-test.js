@@ -1695,7 +1695,7 @@ describe( "Wrappers and decorators" , () => {
 		} ).catch( error => done( error || new Error() ) ) ;
 	} ) ;
 	
-	it( "retry with retryTest -- .retry()" , done => {
+	it( "retry with catch -- .retry()" , done => {
 		
 		var count = 0 ;
 		
