@@ -1656,14 +1656,14 @@ describe( "Wrappers and decorators" , () => {
 		} ;
 		
 		// The first one should succeed
-		Promise.retry( { retries: 5 , delay: 10 , factor: 1.5 } , asyncFn ).then( value => {
+		Promise.retry( { retries: 5 , delay: 10 , raiseFactor: 1.5 } , asyncFn ).then( value => {
 			expect( value ).to.be( 'yay!' ) ;
 			expect( count ).to.be( 4 ) ;
 			
 			count = 0 ;
 			
 			// The second one should throw
-			Promise.retry( { retries: 2 , delay: 10 , factor: 1.5 } , asyncFn ).then( () => {
+			Promise.retry( { retries: 2 , delay: 10 , raiseFactor: 1.5 } , asyncFn ).then( () => {
 				done( new Error( 'It should throw!' ) ) ;
 			} ).catch( () => done() ) ;
 			
@@ -1681,14 +1681,14 @@ describe( "Wrappers and decorators" , () => {
 		} ;
 		
 		// The first one should succeed
-		Promise.retry( { retries: 5 , delay: 10 , factor: 1.5 , timeout: 40 } , asyncFn ).then( value => {
+		Promise.retry( { retries: 5 , delay: 10 , raiseFactor: 1.5 , timeout: 40 } , asyncFn ).then( value => {
 			expect( value ).to.be( 'yay!' ) ;
 			expect( count ).to.be( 4 ) ;
 			
 			count = 0 ;
 			
 			// The second one should throw
-			Promise.retry( { retries: 5 , delay: 10 , factor: 1.5 , timeout: 5 } , asyncFn ).then( () => {
+			Promise.retry( { retries: 5 , delay: 10 , raiseFactor: 1.5 , timeout: 5 } , asyncFn ).then( () => {
 				done( new Error( 'It should throw!' ) ) ;
 			} ).catch( () => done() ) ;
 			
