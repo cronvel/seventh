@@ -1,6 +1,6 @@
 {
   "name": "seventh",
-  "version": "0.7.1",
+  "version": "0.7.2",
   "description": "A lean Promises and Async lib for ES6/ES7",
   "main": "lib/seventh.js",
   "engines": {
@@ -53,7 +53,8 @@
   "copyright": {
     "title": "Seventh",
     "years": [
-      2017
+      2017,
+      2018
     ],
     "owner": "Cédric Ronvel"
   }

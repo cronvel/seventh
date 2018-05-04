@@ -1,20 +1,20 @@
 /*
 	Seventh
-	
-	Copyright (c) 2017 Cédric Ronvel
-	
+
+	Copyright (c) 2017 - 2018 Cédric Ronvel
+
 	The MIT License (MIT)
-	
+
 	Permission is hereby granted, free of charge, to any person obtaining a copy
 	of this software and associated documentation files (the "Software"), to deal
 	in the Software without restriction, including without limitation the rights
 	to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
 	copies of the Software, and to permit persons to whom the Software is
 	furnished to do so, subject to the following conditions:
-	
+
 	The above copyright notice and this permission notice shall be included in all
 	copies or substantial portions of the Software.
-	
+
 	THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 	IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
 	FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -1186,7 +1186,185 @@ describe( "Promise batch operations" , () => {
 	} ) ;
 	
 	describe( "Promise.concurrent()" , () => {
-		it( "TODO" ) ;
+		
+		it( "using an asynchronous iterator with resolvable-promises only, it should respect concurrency limit" , done => {
+			
+			var runData = [ 'wait' , 'wait' , 'wait' , 'wait' , 'wait' , 'wait' , 'wait' ] ;
+			
+			var iterator = async ( str , index ) => {
+				//console.log( "before:" , str , index , runData ) ;
+				switch ( index ) {
+					case 0 :
+						expect( runData ).to.eql( [ 'wait' , 'run' , 'wait' , 'wait' , 'wait' , 'wait' , 'wait' ] ) ;
+						break ;
+					case 1 :
+						expect( runData ).to.eql( [ 'wait' , 'wait' , 'wait' , 'wait' , 'wait' , 'wait' , 'wait' ] ) ;
+						break ;
+					case 2 :
+						expect( runData ).to.eql( [ 'run' , 'end' , 'wait' , 'run' , 'wait' , 'wait' , 'wait' ] ) ;
+						break ;
+					case 3 :
+						expect( runData ).to.eql( [ 'run', 'end', 'wait', 'wait', 'wait', 'wait', 'wait' ] ) ;
+						break ;
+					case 4 :
+						expect( runData ).to.eql( [ 'end', 'end', 'run', 'run', 'wait', 'wait', 'wait' ] ) ;
+						break ;
+					case 5 :
+						expect( runData ).to.eql( [ 'end', 'end', 'run', 'end', 'run', 'wait', 'wait' ] ) ;
+						break ;
+					case 6 :
+						expect( runData ).to.eql( [ 'end', 'end', 'end', 'end', 'run', 'run', 'wait' ] ) ;
+						break ;
+				}
+				
+				runData[ index ] = 'run' ;
+				
+				await Promise.resolveTimeout( 60 ) ;
+				
+				//console.log( "after:" , str , index , runData ) ;
+				switch ( index ) {
+					case 0 :
+						expect( runData ).to.eql( [ 'run', 'end', 'run', 'run', 'wait', 'wait', 'wait' ] ) ;
+						break ;
+					case 1 :
+						expect( runData ).to.eql( [ 'run', 'run', 'wait', 'wait', 'wait', 'wait', 'wait' ] ) ;
+						break ;
+					case 2 :
+						expect( runData ).to.eql( [ 'end', 'end', 'run', 'end', 'run', 'run', 'wait' ] ) ;
+						break ;
+					case 3 :
+						expect( runData ).to.eql( [ 'end', 'end', 'run', 'run', 'run', 'wait', 'wait' ] ) ;
+						break ;
+					case 4 :
+						expect( runData ).to.eql( [ 'end', 'end', 'end', 'end', 'run', 'run', 'run' ] ) ;
+						break ;
+					case 5 :
+						expect( runData ).to.eql( [ 'end', 'end', 'end', 'end', 'end', 'run', 'run' ] ) ;
+						break ;
+					case 6 :
+						expect( runData ).to.eql( [ 'end', 'end', 'end', 'end', 'end', 'end', 'run' ] ) ;
+						break ;
+				}
+				
+				runData[ index ] = 'end' ;
+				return str + str ;
+			} ;
+			
+			var promiseArray = [
+				Promise.resolveTimeout( 40 , 'zero' ) ,		// start at 0, done at 100
+				Promise.resolveTimeout( 0 , 'one' ) ,		// 0/60
+				Promise.resolveTimeout( 80 , 'two' ) ,		// 0/140
+				Promise.resolveTimeout( 40 , 'three' ) ,	// 60/160
+				Promise.resolveTimeout( 20 , 'four' ) ,		// 100/180
+				Promise.resolveTimeout( 40 , 'five' ) ,		// 140/240
+				Promise.resolveTimeout( 40 , 'six' ) ,		// 160/260
+			] ;
+			
+			Promise.concurrent( 3 , promiseArray , iterator )
+			.then( values => {
+				expect( values ).to.eql( [ 'zerozero' , 'oneone' , 'twotwo' , 'threethree' , 'fourfour' , 'fivefive' , 'sixsix' ] ) ;
+				done() ;
+			} )
+			.catch( error => done( error || new Error() ) ) ;
+		} ) ;
+		
+		it( "using a synchronous throwing iterator, it should reject" , done => {
+			
+			var promiseArray = [
+				Promise.resolveTimeout( 20 , 'one' ) ,
+				Promise.resolveTimeout( 0 , 'two' ) ,
+				Promise.resolveTimeout( 10 , 'three' )
+			] ;
+			
+			Promise.concurrent( 2 , promiseArray , str => { throw new Error( 'failed!' ) ; } )
+			.then(
+				() => { throw new Error( 'Should throw!' ) ; } ,
+				error => {
+					expect( error.message ).to.be( 'failed!' ) ;
+					done() ;
+				}
+			)
+			.catch( error => done( error || new Error() ) ) ;
+		} ) ;
+		
+		it( "using an asynchronous rejecting iterator, it should reject" , done => {
+			
+			var promiseArray = [
+				Promise.resolveTimeout( 20 , 'one' ) ,
+				Promise.resolveTimeout( 0 , 'two' ) ,
+				Promise.resolveTimeout( 10 , 'three' ) ,
+				Promise.resolveTimeout( 0 , 'four' ) ,
+				Promise.resolveTimeout( 10 , 'five' )
+			] ;
+			
+			Promise.concurrent( 2 , promiseArray , str => Promise.rejectTimeout( 10 ,  new Error( 'failed!' ) ) )
+			.then(
+				() => { throw new Error( 'Should throw!' ) ; } ,
+				error => {
+					expect( error.message ).to.be( 'failed!' ) ;
+					done() ;
+				}
+			)
+			.catch( error => done( error || new Error() ) ) ;
+		} ) ;
+		
+		it( "using an asynchronous iterator rejecting at the end, it should reject" , done => {
+			
+			var index = 0 ;
+			var promiseArray = [
+				Promise.resolveTimeout( 20 , 'one' ) ,
+				Promise.resolveTimeout( 0 , 'two' ) ,
+				Promise.resolveTimeout( 10 , 'three' )
+			] ;
+			
+			Promise.concurrent( 2 , promiseArray , str => {
+				if ( ++ index === 3 ) { return Promise.rejectTimeout( 10 ,  new Error( 'failed!' ) ) ; }
+				else { return Promise.resolveTimeout( 10 , str + str ) ; }
+			} )
+			.then(
+				() => { throw new Error( 'Should throw!' ) ; } ,
+				error => {
+					expect( error.message ).to.be( 'failed!' ) ;
+					done() ;
+				}
+			)
+			.catch( error => done( error || new Error() ) ) ;
+		} ) ;
+		
+		it( "no iterator call should be wasted if the Promise.map() has already failed" , done => {
+			
+			var count = 0 , order = [] , p ;
+			
+			var promiseArray = [
+				( p = Promise.resolveTimeout( 20 , 'one' ) ) ,
+				Promise.resolveTimeout( 0 , 'two' ) ,
+				Promise.rejectTimeout( 10 , new Error( 'failed!' ) )
+			] ;
+			
+			const iterator = str => {
+				count ++ ;
+				order.push( str ) ;
+				return Promise.resolveTimeout( 10 , str + str ) ;
+			} ;
+			
+			Promise.concurrent( 2 , promiseArray , iterator )
+			.then(
+				() => { throw new Error( 'Should throw!' ) ; } ,
+				error => {
+					expect( error.message ).to.be( 'failed!' ) ;
+					
+					// Wait 20ms after the slowest promise, to ensure the iterator can be called
+					p.then( () => Promise.resolveTimeout( 20 ) )
+					.then( () => {
+						expect( order ).to.eql( [ 'two' ] ) ;
+						expect( count ).to.be( 1 ) ;
+						done() ;
+					} )
+					.catch( error => done( error || new Error() ) ) ;
+				}
+			)
+			.catch( error => done( error || new Error() ) ) ;
+		} ) ;
 	} ) ;
 } ) ;
 
