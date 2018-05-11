@@ -28,14 +28,8 @@
 
 
 
-/* jshint unused:false */
-/* global describe, it, before, after, beforeEach, asyncTry */
-
-
-
 var NativePromise = global.Promise ;
 var Promise = require( '..' ) ;
-var expect = require( 'expect.js' ) ;
 
 
 
@@ -158,7 +152,7 @@ describe( "Basic standard-compliant Promise" , () => {
 			order.push( 'sync after' ) ;
 
 			return p.then( () => {
-				expect( order ).to.eql( [ 'executor' , 'sync after' , 'then' ] ) ;
+				expect( order ).to.equal( [ 'executor' , 'sync after' , 'then' ] ) ;
 			} ) ;
 		} ) ;
 
@@ -178,7 +172,7 @@ describe( "Basic standard-compliant Promise" , () => {
 			return p.then(
 				() => { throw new Error( 'Should throw!' ) ; } ,
 				() => {
-					expect( order ).to.eql( [ 'executor' , 'sync after' , 'catch' ] ) ;
+					expect( order ).to.equal( [ 'executor' , 'sync after' , 'catch' ] ) ;
 				}
 			) ;
 		} ) ;
@@ -199,7 +193,7 @@ describe( "Basic standard-compliant Promise" , () => {
 			return p.then(
 				() => { throw new Error( 'Should throw!' ) ; } ,
 				() => {
-					expect( order ).to.eql( [ 'executor' , 'sync after' , 'catch' ] ) ;
+					expect( order ).to.equal( [ 'executor' , 'sync after' , 'catch' ] ) ;
 				}
 			) ;
 		} ) ;
@@ -310,7 +304,7 @@ describe( "Promise batch operations" , () => {
 				Promise.resolveTimeout( 10 , 'three' )
 			] )
 			.then( values => {
-				expect( values ).to.eql( [ 'one' , 'two' , 'three' ] ) ;
+				expect( values ).to.equal( [ 'one' , 'two' , 'three' ] ) ;
 			} ) ;
 		} ) ;
 
@@ -372,7 +366,7 @@ describe( "Promise batch operations" , () => {
 
 			return Promise.map( promiseArray , str => str + str )
 			.then( values => {
-				expect( values ).to.eql( [ 'oneone' , 'twotwo' , 'threethree' ] ) ;
+				expect( values ).to.equal( [ 'oneone' , 'twotwo' , 'threethree' ] ) ;
 			} ) ;
 		} ) ;
 
@@ -386,7 +380,7 @@ describe( "Promise batch operations" , () => {
 
 			return Promise.map( promiseArray , str => Promise.resolveTimeout( 10 , str + str ) )
 			.then( values => {
-				expect( values ).to.eql( [ 'oneone' , 'twotwo' , 'threethree' ] ) ;
+				expect( values ).to.equal( [ 'oneone' , 'twotwo' , 'threethree' ] ) ;
 			} ) ;
 		} ) ;
 
@@ -470,7 +464,7 @@ describe( "Promise batch operations" , () => {
 					// Wait 20ms after the slowest promise, to ensure the iterator can be called
 					p.then( () => Promise.resolveTimeout( 20 ) )
 					.then( () => {
-						expect( order ).to.eql( [ 'two' ] ) ;
+						expect( order ).to.equal( [ 'two' ] ) ;
 						expect( count ).to.be( 1 ) ;
 						done() ;
 					} )
@@ -517,7 +511,7 @@ describe( "Promise batch operations" , () => {
 			.then(
 				() => { throw new Error( 'Should throw!' ) ; } ,
 				errors => {
-					expect( errors.map( e => e.message ) ).to.eql( [ 'rejection1' , 'rejection2' , 'rejection3' ] ) ;
+					expect( errors.map( e => e.message ) ).to.equal( [ 'rejection1' , 'rejection2' , 'rejection3' ] ) ;
 				}
 			) ;
 		} ) ;
@@ -549,7 +543,7 @@ describe( "Promise batch operations" , () => {
 
 			return Promise.some( promiseArray , str => Promise.resolveTimeout( 10 , str + str ) )
 			.then( values => {
-				expect( values ).to.eql( 'twotwo' ) ;
+				expect( values ).to.be( 'twotwo' ) ;
 			} ) ;
 		} ) ;
 
@@ -567,7 +561,7 @@ describe( "Promise batch operations" , () => {
 			.then(
 				() => { throw new Error( 'Should throw!' ) ; } ,
 				errors => {
-					expect( errors.map( e => e.message ) ).to.eql( [ 'failed!3' , 'failed!1' , 'failed!2' ] ) ;
+					expect( errors.map( e => e.message ) ).to.equal( [ 'failed!3' , 'failed!1' , 'failed!2' ] ) ;
 				}
 			) ;
 		} ) ;
@@ -586,7 +580,7 @@ describe( "Promise batch operations" , () => {
 			.then(
 				() => { throw new Error( 'Should throw!' ) ; } ,
 				errors => {
-					expect( errors.map( e => e.message ) ).to.eql( [ 'failed!3' , 'failed!1' , 'failed!2' ] ) ;
+					expect( errors.map( e => e.message ) ).to.equal( [ 'failed!3' , 'failed!1' , 'failed!2' ] ) ;
 				}
 			) ;
 		} ) ;
@@ -614,7 +608,7 @@ describe( "Promise batch operations" , () => {
 				// Wait 20ms after the slowest promise, to ensure the iterator can be called
 				p.then( () => Promise.resolveTimeout( 20 ) )
 				.then( () => {
-					expect( order ).to.eql( [ 'two' ] ) ;
+					expect( order ).to.equal( [ 'two' ] ) ;
 					expect( count ).to.be( 1 ) ;
 					done() ;
 				} )
@@ -643,7 +637,7 @@ describe( "Promise batch operations" , () => {
 
 			return Promise.filter( array , filter )
 			.then( results => {
-				expect( results ).to.eql( [ 1 , 5 , 3 , 2 , -1 ] ) ;
+				expect( results ).to.equal( [ 1 , 5 , 3 , 2 , -1 ] ) ;
 			} ) ;
 		} ) ;
 
@@ -733,7 +727,7 @@ describe( "Promise batch operations" , () => {
 
 			return Promise.forEach( array , iterator )
 			.then( () => {
-				expect( results ).to.eql( [] ) ;
+				expect( results ).to.equal( [] ) ;
 			} ) ;
 		} ) ;
 
@@ -762,7 +756,7 @@ describe( "Promise batch operations" , () => {
 
 			return Promise.forEach( array , iterator )
 			.then( () => {
-				expect( results ).to.eql( [
+				expect( results ).to.equal( [
 					"before 0: 1" ,
 					"after 0: 1" ,
 					"before 1: 5" ,
@@ -807,7 +801,7 @@ describe( "Promise batch operations" , () => {
 				() => { throw new Error( 'Should throw!' ) ; } ,
 				error => {
 					expect( error.message ).to.be( 'failed!' ) ;
-					expect( results ).to.eql( [
+					expect( results ).to.equal( [
 						"before 0: 1" ,
 						"after 0: 1" ,
 						"before 1: 5" ,
@@ -848,7 +842,7 @@ describe( "Promise batch operations" , () => {
 				() => { throw new Error( 'Should throw!' ) ; } ,
 				error => {
 					expect( error.message ).to.be( 'failed!' ) ;
-					expect( results ).to.eql( [
+					expect( results ).to.equal( [
 						"before 0: 1" ,
 						"after 0: 1" ,
 						"before 1: 5" ,
@@ -889,7 +883,7 @@ describe( "Promise batch operations" , () => {
 
 			return Promise.reduce( array , iterator , 3 )
 			.then( () => {
-				expect( results ).to.eql( [
+				expect( results ).to.equal( [
 					"before 0: 1 -- 3" ,
 					"after 0: 1 -- 4" ,
 					"before 1: 5 -- 4" ,
@@ -935,7 +929,7 @@ describe( "Promise batch operations" , () => {
 				() => { throw new Error( 'Should throw!' ) ; } ,
 				error => {
 					expect( error.message ).to.be( 'failed!' ) ;
-					expect( results ).to.eql( [
+					expect( results ).to.equal( [
 						"before 0: 1 -- 3" ,
 						"after 0: 1 -- 4" ,
 						"before 1: 5 -- 4" ,
@@ -977,7 +971,7 @@ describe( "Promise batch operations" , () => {
 				() => { throw new Error( 'Should throw!' ) ; } ,
 				error => {
 					expect( error.message ).to.be( 'failed!' ) ;
-					expect( results ).to.eql( [
+					expect( results ).to.equal( [
 						"before 0: 1 -- 3" ,
 						"after 0: 1 -- 4" ,
 						"before 1: 5 -- 4" ,
@@ -1002,7 +996,7 @@ describe( "Promise batch operations" , () => {
 
 			return Promise.mapObject( promiseObject , str => str + str )
 			.then( values => {
-				expect( values ).to.eql( { a: 'oneone' , b: 'twotwo' , c: 'threethree' } ) ;
+				expect( values ).to.equal( { a: 'oneone' , b: 'twotwo' , c: 'threethree' } ) ;
 			} ) ;
 		} ) ;
 
@@ -1016,7 +1010,7 @@ describe( "Promise batch operations" , () => {
 
 			return Promise.mapObject( promiseObject , str => Promise.resolveTimeout( 10 , str + str ) )
 			.then( values => {
-				expect( values ).to.eql( { a: 'oneone' , b: 'twotwo' , c: 'threethree' } ) ;
+				expect( values ).to.equal( { a: 'oneone' , b: 'twotwo' , c: 'threethree' } ) ;
 			} ) ;
 		} ) ;
 
@@ -1101,7 +1095,7 @@ describe( "Promise batch operations" , () => {
 					// Wait 20ms after the slowest promise, to ensure the iterator can be called
 					p.then( () => Promise.resolveTimeout( 20 ) )
 					.then( () => {
-						expect( order ).to.eql( [ 'b: two' , 'd: four' ] ) ;
+						expect( order ).to.equal( [ 'b: two' , 'd: four' ] ) ;
 						expect( count ).to.be( 2 ) ;
 						done() ;
 					} )
@@ -1122,25 +1116,25 @@ describe( "Promise batch operations" , () => {
 				//console.log( "before:" , str , index , runData ) ;
 				switch ( index ) {
 					case 0 :
-						expect( runData ).to.eql( [ 'wait' , 'run' , 'wait' , 'wait' , 'wait' , 'wait' , 'wait' ] ) ;
+						expect( runData ).to.equal( [ 'wait' , 'run' , 'wait' , 'wait' , 'wait' , 'wait' , 'wait' ] ) ;
 						break ;
 					case 1 :
-						expect( runData ).to.eql( [ 'wait' , 'wait' , 'wait' , 'wait' , 'wait' , 'wait' , 'wait' ] ) ;
+						expect( runData ).to.equal( [ 'wait' , 'wait' , 'wait' , 'wait' , 'wait' , 'wait' , 'wait' ] ) ;
 						break ;
 					case 2 :
-						expect( runData ).to.eql( [ 'run' , 'end' , 'wait' , 'run' , 'wait' , 'wait' , 'wait' ] ) ;
+						expect( runData ).to.equal( [ 'run' , 'end' , 'wait' , 'run' , 'wait' , 'wait' , 'wait' ] ) ;
 						break ;
 					case 3 :
-						expect( runData ).to.eql( [ 'run' , 'end' , 'wait' , 'wait' , 'wait' , 'wait' , 'wait' ] ) ;
+						expect( runData ).to.equal( [ 'run' , 'end' , 'wait' , 'wait' , 'wait' , 'wait' , 'wait' ] ) ;
 						break ;
 					case 4 :
-						expect( runData ).to.eql( [ 'end' , 'end' , 'run' , 'run' , 'wait' , 'wait' , 'wait' ] ) ;
+						expect( runData ).to.equal( [ 'end' , 'end' , 'run' , 'run' , 'wait' , 'wait' , 'wait' ] ) ;
 						break ;
 					case 5 :
-						expect( runData ).to.eql( [ 'end' , 'end' , 'run' , 'end' , 'run' , 'wait' , 'wait' ] ) ;
+						expect( runData ).to.equal( [ 'end' , 'end' , 'run' , 'end' , 'run' , 'wait' , 'wait' ] ) ;
 						break ;
 					case 6 :
-						expect( runData ).to.eql( [ 'end' , 'end' , 'end' , 'end' , 'run' , 'run' , 'wait' ] ) ;
+						expect( runData ).to.equal( [ 'end' , 'end' , 'end' , 'end' , 'run' , 'run' , 'wait' ] ) ;
 						break ;
 				}
 
@@ -1151,25 +1145,25 @@ describe( "Promise batch operations" , () => {
 				//console.log( "after:" , str , index , runData ) ;
 				switch ( index ) {
 					case 0 :
-						expect( runData ).to.eql( [ 'run' , 'end' , 'run' , 'run' , 'wait' , 'wait' , 'wait' ] ) ;
+						expect( runData ).to.equal( [ 'run' , 'end' , 'run' , 'run' , 'wait' , 'wait' , 'wait' ] ) ;
 						break ;
 					case 1 :
-						expect( runData ).to.eql( [ 'run' , 'run' , 'wait' , 'wait' , 'wait' , 'wait' , 'wait' ] ) ;
+						expect( runData ).to.equal( [ 'run' , 'run' , 'wait' , 'wait' , 'wait' , 'wait' , 'wait' ] ) ;
 						break ;
 					case 2 :
-						expect( runData ).to.eql( [ 'end' , 'end' , 'run' , 'end' , 'run' , 'run' , 'wait' ] ) ;
+						expect( runData ).to.equal( [ 'end' , 'end' , 'run' , 'end' , 'run' , 'run' , 'wait' ] ) ;
 						break ;
 					case 3 :
-						expect( runData ).to.eql( [ 'end' , 'end' , 'run' , 'run' , 'run' , 'wait' , 'wait' ] ) ;
+						expect( runData ).to.equal( [ 'end' , 'end' , 'run' , 'run' , 'run' , 'wait' , 'wait' ] ) ;
 						break ;
 					case 4 :
-						expect( runData ).to.eql( [ 'end' , 'end' , 'end' , 'end' , 'run' , 'run' , 'run' ] ) ;
+						expect( runData ).to.equal( [ 'end' , 'end' , 'end' , 'end' , 'run' , 'run' , 'run' ] ) ;
 						break ;
 					case 5 :
-						expect( runData ).to.eql( [ 'end' , 'end' , 'end' , 'end' , 'end' , 'run' , 'run' ] ) ;
+						expect( runData ).to.equal( [ 'end' , 'end' , 'end' , 'end' , 'end' , 'run' , 'run' ] ) ;
 						break ;
 					case 6 :
-						expect( runData ).to.eql( [ 'end' , 'end' , 'end' , 'end' , 'end' , 'end' , 'run' ] ) ;
+						expect( runData ).to.equal( [ 'end' , 'end' , 'end' , 'end' , 'end' , 'end' , 'run' ] ) ;
 						break ;
 				}
 
@@ -1189,7 +1183,7 @@ describe( "Promise batch operations" , () => {
 
 			return Promise.concurrent( 3 , promiseArray , iterator )
 			.then( values => {
-				expect( values ).to.eql( [ 'zerozero' , 'oneone' , 'twotwo' , 'threethree' , 'fourfour' , 'fivefive' , 'sixsix' ] ) ;
+				expect( values ).to.equal( [ 'zerozero' , 'oneone' , 'twotwo' , 'threethree' , 'fourfour' , 'fivefive' , 'sixsix' ] ) ;
 			} ) ;
 		} ) ;
 
@@ -1275,7 +1269,7 @@ describe( "Promise batch operations" , () => {
 					// Wait 20ms after the slowest promise, to ensure the iterator can be called
 					p.then( () => Promise.resolveTimeout( 20 ) )
 					.then( () => {
-						expect( order ).to.eql( [ 'two' ] ) ;
+						expect( order ).to.equal( [ 'two' ] ) ;
 						expect( count ).to.be( 1 ) ;
 						done() ;
 					} )
@@ -1333,7 +1327,7 @@ describe( "Wrappers and decorators" , () => {
 		const promisifiedKoFn = Promise.promisifyAll( koFn ) ;
 
 		promisifiedOkFn().then( value => {
-			expect( value ).to.eql( [ 'arg1' , 'arg2' , 'arg3' ] ) ;
+			expect( value ).to.equal( [ 'arg1' , 'arg2' , 'arg3' ] ) ;
 
 			promisifiedKoFn().then(
 				() => { throw new Error( 'Should throw!' ) ; } ,
@@ -1367,7 +1361,7 @@ describe( "Wrappers and decorators" , () => {
 		interceptableFn() ;
 		interceptableFn() ;
 
-		expect( results ).to.eql( returnArray ) ;
+		expect( results ).to.equal( returnArray ) ;
 	} ) ;
 
 	it( "run once -- .once()" , done => {
@@ -1390,7 +1384,7 @@ describe( "Wrappers and decorators" , () => {
 		setTimeout( () => {
 			onceFn( 'five' ).then( () => {
 				//console.log( results ) ;
-				expect( results ).to.eql( [ 'one' ] ) ;
+				expect( results ).to.equal( [ 'one' ] ) ;
 				done() ;
 			} ).catch( error => done( error ) ) ;
 		} , 40 ) ;
@@ -1416,7 +1410,7 @@ describe( "Wrappers and decorators" , () => {
 		setTimeout( () => {
 			debouncedFn( 'five' ).then( () => {
 				//console.log( results ) ;
-				expect( results ).to.eql( [ 'one' , 'five' ] ) ;
+				expect( results ).to.equal( [ 'one' , 'five' ] ) ;
 				done() ;
 			} ).catch( error => done( error ) ) ;
 		} , 40 ) ;
@@ -1442,7 +1436,7 @@ describe( "Wrappers and decorators" , () => {
 		setTimeout( () => {
 			debouncedFn( 'five' ).then( () => {
 				//console.log( results ) ;
-				expect( results ).to.eql( [ 'one' , 'four' , 'five' ] ) ;
+				expect( results ).to.equal( [ 'one' , 'four' , 'five' ] ) ;
 				done() ;
 			} ).catch( error => done( error ) ) ;
 		} , 40 ) ;
@@ -1475,7 +1469,7 @@ describe( "Wrappers and decorators" , () => {
 		setTimeout( () => {
 			serializedFn( 'five' ).then( () => {
 				//console.log( results ) ;
-				expect( results ).to.eql( [
+				expect( results ).to.equal( [
 					"before: one" ,
 					"after: one" ,
 					"before: two" ,
@@ -1512,7 +1506,7 @@ describe( "Wrappers and decorators" , () => {
 			timedOutFn().then( () => results[ 2 ] = true , () => results[ 2 ] = false ) ,
 			timedOutFn().then( () => results[ 3 ] = true , () => results[ 3 ] = false )
 		] ).then( () => {
-			expect( results ).to.eql( [ true , true , false , true ] ) ;
+			expect( results ).to.equal( [ true , true , false , true ] ) ;
 		} ) ;
 	} ) ;
 
@@ -1535,7 +1529,7 @@ describe( "Wrappers and decorators" , () => {
 			timedOutFn( 20 ).then( () => results[ 2 ] = true , () => results[ 2 ] = false ) ,
 			timedOutFn( 30 ).then( () => results[ 3 ] = true , () => results[ 3 ] = false )
 		] ).then( () => {
-			expect( results ).to.eql( [ true , false , false , true ] ) ;
+			expect( results ).to.equal( [ true , false , false , true ] ) ;
 		} ) ;
 	} ) ;
 
@@ -1556,7 +1550,7 @@ describe( "Wrappers and decorators" , () => {
 			Promise.timeLimit( 20 , () => asyncFn() ).then( () => results[ 2 ] = true , () => results[ 2 ] = false ) ,
 			Promise.timeLimit( 20 , () => asyncFn() ).then( () => results[ 3 ] = true , () => results[ 3 ] = false )
 		] ).then( () => {
-			expect( results ).to.eql( [ true , true , false , true ] ) ;
+			expect( results ).to.equal( [ true , true , false , true ] ) ;
 		} ) ;
 	} ) ;
 
@@ -1843,18 +1837,18 @@ describe( "Dormant promises" , () => {
 
 		Promise.resolveTimeout( 10 )
 		.then( () => {
-			expect( order ).to.eql( [ 'sync after 1' ] ) ;
+			expect( order ).to.equal( [ 'sync after 1' ] ) ;
 
 			promise.then( result => {
 				order.push( 'then' ) ;
 				expect( result ).to.be( 'value' ) ;
-				expect( order ).to.eql( [ 'sync after 1' , 'exec' , 'sync after 2' , 'then' ] ) ;
+				expect( order ).to.equal( [ 'sync after 1' , 'exec' , 'sync after 2' , 'then' ] ) ;
 				done() ;
 			} )
 			.catch( error => done( error || new Error() ) ) ;
 
 			order.push( 'sync after 2' ) ;
-			expect( order ).to.eql( [ 'sync after 1' , 'exec' , 'sync after 2' ] ) ;
+			expect( order ).to.equal( [ 'sync after 1' , 'exec' , 'sync after 2' ] ) ;
 		} )
 		.catch( error => done( error || new Error() ) ) ;
 	} ) ;
@@ -1872,13 +1866,13 @@ describe( "Dormant promises" , () => {
 
 		return Promise.resolveTimeout( 10 )
 		.then( () => {
-			expect( order ).to.eql( [ 'sync after 1' ] ) ;
+			expect( order ).to.equal( [ 'sync after 1' ] ) ;
 			var p2 = promise.catch( () => null ) ;
 			order.push( 'sync after 2' ) ;
-			expect( order ).to.eql( [ 'sync after 1' , 'exec' , 'sync after 2' ] ) ;
+			expect( order ).to.equal( [ 'sync after 1' , 'exec' , 'sync after 2' ] ) ;
 			p2.then( () => null ) ;
 			order.push( 'sync after 3' ) ;
-			expect( order ).to.eql( [ 'sync after 1' , 'exec' , 'sync after 2' , 'sync after 3' ] ) ;
+			expect( order ).to.equal( [ 'sync after 1' , 'exec' , 'sync after 2' , 'sync after 3' ] ) ;
 		} ) ;
 	} ) ;
 } ) ;
