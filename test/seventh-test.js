@@ -1791,7 +1791,7 @@ describe( "Thenable support" , () => {
 
 describe( "Promise.try()" , () => {
 
-	it( "Promise.try() should be a try-catched version of Promise.reolve( fn() )" , () => {
+	it( "Promise.try() should be a try-catched version of Promise.resolve( fn() )" , () => {
 		return Promise.try( () => { throw new Error( 'throw!' ) ; } )
 		.then(
 			() => { throw new Error( 'Should throw!' ) ; } ,
