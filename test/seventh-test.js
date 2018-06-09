@@ -1912,7 +1912,12 @@ describe( "Then/catch alternatives" , () => {
 
 
 describe( "Misc" , () => {
-	it( "asyncExit() TODO" ) ;
+	it( ".asyncExit() TODO" ) ;
+	
+	it( ".resolveSafeTimeout()" , async () => {
+		// Hard to test it correctly
+		expect( await Promise.resolveSafeTimeout( 50 , 'value' ) ).to.be( 'value' ) ;
+	} ) ;
 } ) ;
 
 
