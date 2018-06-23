@@ -1278,6 +1278,23 @@ describe( "Promise batch operations" , () => {
 			)
 			.catch( error => done( error || new Error() ) ) ;
 		} ) ;
+
+		it( "Historical bug, when only one item exist" , () => {
+
+			var index = 0 ;
+			var promiseArray = [
+				Promise.resolveTimeout( 20 , 'one' ) ,
+			] ;
+
+			return Promise.concurrent( 2 , promiseArray , str => {
+				return Promise.resolveTimeout( 10 , str + str ) ;
+			} )
+			.then(
+				( values ) => {
+					expect( values ).to.equal( [ 'oneone' ] ) ;
+				}
+			) ;
+		} ) ;
 	} ) ;
 } ) ;
 
