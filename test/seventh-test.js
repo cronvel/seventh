@@ -1278,23 +1278,6 @@ describe( "Promise batch operations" , () => {
 			)
 			.catch( error => done( error || new Error() ) ) ;
 		} ) ;
-
-		it( "Historical bug, when only one item exist" , () => {
-
-			var index = 0 ;
-			var promiseArray = [
-				Promise.resolveTimeout( 20 , 'one' ) ,
-			] ;
-
-			return Promise.concurrent( 2 , promiseArray , str => {
-				return Promise.resolveTimeout( 10 , str + str ) ;
-			} )
-			.then(
-				( values ) => {
-					expect( values ).to.equal( [ 'oneone' ] ) ;
-				}
-			) ;
-		} ) ;
 	} ) ;
 } ) ;
 
@@ -1948,7 +1931,6 @@ describe( "Async-try-catch module compatibility" , () => {
 describe( "Historical bugs" , () => {
 
 	it( ".then() sync chain" , () => {
-
 		var thenCount = 0 ;
 
 		return Promise.resolve( 'one' )
@@ -1972,7 +1954,6 @@ describe( "Historical bugs" , () => {
 	} ) ;
 
 	it( ".then() sync chain throwing" , () => {
-
 		var thenCount = 0 ;
 
 		return Promise.resolve( 'one' )
@@ -1999,7 +1980,6 @@ describe( "Historical bugs" , () => {
 	} ) ;
 
 	it( "await and .then method mutation bug" , async() => {
-
 		var pFn = () => {
 			var lastP = Promise.resolve() ;
 			var p = new Promise() ;
@@ -2013,6 +1993,21 @@ describe( "Historical bugs" , () => {
 		expect( val ).to.be( 'val' ) ;
 	} ) ;
 
+	it( ".concurrent() with only 1 item and concurrency set to 1" , () => {
+		var index = 0 ;
+		var promiseArray = [
+			Promise.resolveTimeout( 20 , 'one' ) ,
+		] ;
+
+		return Promise.concurrent( 1 , promiseArray , str => {
+			return Promise.resolveTimeout( 10 , str + str ) ;
+		} )
+		.then(
+			( values ) => {
+				expect( values ).to.equal( [ 'oneone' ] ) ;
+			}
+		) ;
+	} ) ;
 } ) ;
 
 
