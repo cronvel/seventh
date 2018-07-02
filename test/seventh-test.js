@@ -1634,70 +1634,22 @@ describe( "Wrappers and decorators" , () => {
 		} ).catch( error => done( error || new Error() ) ) ;
 	} ) ;
 
-	/*
-	// decorator variant
-	it( "retry after failure -- .retry()" , done => {
-
-		var count = 0 ;
-
-		const asyncFn = ( value ) => {
-			var  p ;
-
-			count ++ ;
-
-			if ( count < 4 ) { p = Promise.rejectTimeout( 20 , new Error( 'error!' ) ) ; }
-			else { p = Promise.resolveTimeout( 20 , 'yay!' ) ; }
-
-			return p ;
-		} ;
-
-		// The first one should succeed
-		Promise.retry( 5 , 10 , 1.5 , asyncFn )().then( value => {
-			expect( value ).to.be( 'yay!' ) ;
-			expect( count ).to.be( 4 ) ;
-
-			count = 0 ;
-
-			// The second one should throw
-			Promise.retry( 2 , 10 , 1.5 , asyncFn )().then( () => {
-				done( new Error( 'It should throw!' ) ) ;
-			} ).catch( () => done() ) ;
-
-		} ).catch( error => done( error || new Error() ) ) ;
+	it( ".onceEvent()" , async () => {
+		var results ;
+		var bus = Object.create( require( 'events' ).prototype ) ;
+		
+		setTimeout( () => bus.emit( 'data' ) , 10 ) ;
+		results = await Promise.onceEvent( bus , 'data' ) ;
+		expect( results ).to.be( undefined ) ;
+		
+		setTimeout( () => bus.emit( 'data' , 1 , 2 , 3 ) , 10 ) ;
+		results = await Promise.onceEvent( bus , 'data' ) ;
+		expect( results ).to.be( 1 ) ;
+		
+		setTimeout( () => bus.emit( 'data' , 1 , 2 , 3 ) , 10 ) ;
+		results = await Promise.onceEventAll( bus , 'data' ) ;
+		expect( results ).to.equal( [ 1 , 2 , 3 ] ) ;
 	} ) ;
-
-	it( "variable retry after failure -- .variableRetry()" , done => {
-
-		var count = 0 ;
-
-		const asyncFn = ( value ) => {
-			var  p ;
-
-			count ++ ;
-
-			if ( count < 4 ) { p = Promise.rejectTimeout( 20 , new Error( 'error!' ) ) ; }
-			else { p = Promise.resolveTimeout( 20 , 'yay!' ) ; }
-
-			return p ;
-		} ;
-
-		const retriedFn = Promise.variableRetry( asyncFn ) ;
-
-		// The first one should succeed
-		retriedFn( 5 , 10 , 1.5 ).then( value => {
-			expect( value ).to.be( 'yay!' ) ;
-			expect( count ).to.be( 4 ) ;
-
-			count = 0 ;
-
-			// The second one should throw
-			retriedFn( 2 , 10 , 1.5 ).then( () => {
-				done( new Error( 'It should throw!' ) ) ;
-			} ).catch( () => done() ) ;
-
-		} ).catch( error => done( error || new Error() ) ) ;
-	} ) ;
-	*/
 } ) ;
 
 
