@@ -202,6 +202,12 @@ describe( "Basic standard-compliant Promise" , () => {
 
 
 
+describe( "Promise to/from another promise" , () => {
+	it( "Promise#toPromise()" ) ;
+} ) ;
+
+
+
 describe( "Promise to callback" , () => {
 
 	it( "Promise#callback()" , done => {
