@@ -1876,6 +1876,11 @@ describe( "Misc" , () => {
 		// Hard to test it correctly
 		expect( await Promise.resolveSafeTimeout( 50 , 'value' ) ).to.be( 'value' ) ;
 	} ) ;
+	
+	it( "Promise.dummy, Promise.resolved" , async () => {
+		expect( Promise.resolved ).to.be( Promise.dummy ) ;
+		expect( await Promise.resolved ).to.be( undefined ) ;
+	} ) ;
 } ) ;
 
 
