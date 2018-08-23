@@ -1560,6 +1560,22 @@ describe( "Wrappers and decorators" , () => {
 		} ) ;
 	} ) ;
 
+	it( "timeout -- .timeLimit() promise variant" , async () => {
+
+		var index = 0 ;
+		var times = [ 0 , 10 , 40 , 10 ] ;
+		var results = [] ;
+
+		return Promise.all( [
+			Promise.timeLimit( 20 , Promise.resolveTimeout( times[ index ++ ] ) ).then( () => results[ 0 ] = true , () => results[ 0 ] = false ) ,
+			Promise.timeLimit( 20 , Promise.resolveTimeout( times[ index ++ ] ) ).then( () => results[ 1 ] = true , () => results[ 1 ] = false ) ,
+			Promise.timeLimit( 20 , Promise.resolveTimeout( times[ index ++ ] ) ).then( () => results[ 2 ] = true , () => results[ 2 ] = false ) ,
+			Promise.timeLimit( 20 , Promise.resolveTimeout( times[ index ++ ] ) ).then( () => results[ 3 ] = true , () => results[ 3 ] = false )
+		] ).then( () => {
+			expect( results ).to.equal( [ true , true , false , true ] ) ;
+		} ) ;
+	} ) ;
+
 	// wrapper variant
 	it( "retry after failure -- .retry()" , done => {
 
