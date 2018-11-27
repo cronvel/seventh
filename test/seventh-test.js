@@ -1854,6 +1854,11 @@ describe( "Dormant promises" , () => {
 
 
 describe( "Then/catch alternatives" , () => {
+	
+	it( ".catch() without arguments" , () => {
+		return Promise.rejectTimeout( 10 , new Error( 'Error!' ) ).catch() ;
+	} ) ;
+	
 	it( ".tap()" ) ;
 	it( ".tapCatch()" ) ;
 	it( ".fatal()" ) ;
