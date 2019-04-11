@@ -1,7 +1,7 @@
 /*
 	Seventh
 
-	Copyright (c) 2017 - 2018 Cédric Ronvel
+	Copyright (c) 2017 - 2019 Cédric Ronvel
 
 	The MIT License (MIT)
 
@@ -1667,10 +1667,39 @@ describe( "Wrappers and decorators" , () => {
 		setTimeout( () => bus.emit( 'data' , 1 , 2 , 3 ) , 10 ) ;
 		results = await Promise.onceEvent( bus , 'data' ) ;
 		expect( results ).to.be( 1 ) ;
+	} ) ;
+
+	it( ".onceEventAll()" , async () => {
+		var results ;
+		var bus = Object.create( require( 'events' ).prototype ) ;
 		
 		setTimeout( () => bus.emit( 'data' , 1 , 2 , 3 ) , 10 ) ;
 		results = await Promise.onceEventAll( bus , 'data' ) ;
 		expect( results ).to.equal( [ 1 , 2 , 3 ] ) ;
+	} ) ;
+
+	it( ".onceEventOrError()" , async () => {
+		var results ;
+		var bus = Object.create( require( 'events' ).prototype ) ;
+		
+		setTimeout( () => bus.emit( 'data' , 1 , 2 , 3 ) , 10 ) ;
+		results = await Promise.onceEventOrError( bus , 'data' ) ;
+		expect( results ).to.be( 1 ) ;
+		
+		setTimeout( () => bus.emit( 'error' , new Error( 'Doh!' ) ) , 10 ) ;
+		await expect( () => Promise.onceEventOrError( bus , 'data' ) ).to.reject.with.an( Error , { message: 'Doh!' } ) ;
+	} ) ;
+
+	it( ".onceEventAllOrError()" , async () => {
+		var results ;
+		var bus = Object.create( require( 'events' ).prototype ) ;
+		
+		setTimeout( () => bus.emit( 'data' , 1 , 2 , 3 ) , 10 ) ;
+		results = await Promise.onceEventAllOrError( bus , 'data' ) ;
+		expect( results ).to.equal( [ 1 , 2 , 3 ] ) ;
+		
+		setTimeout( () => bus.emit( 'error' , new Error( 'Doh!' ) ) , 10 ) ;
+		await expect( () => Promise.onceEventAllOrError( bus , 'data' ) ).to.reject.with.an( Error , { message: 'Doh!' } ) ;
 	} ) ;
 } ) ;
 
