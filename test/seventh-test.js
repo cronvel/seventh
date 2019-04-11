@@ -1701,6 +1701,62 @@ describe( "Wrappers and decorators" , () => {
 		setTimeout( () => bus.emit( 'error' , new Error( 'Doh!' ) ) , 10 ) ;
 		await expect( () => Promise.onceEventAllOrError( bus , 'data' ) ).to.reject.with.an( Error , { message: 'Doh!' } ) ;
 	} ) ;
+
+	it( ".onceEventOrError() with event exclusion" , async () => {
+		var results ;
+		var bus = Object.create( require( 'events' ).prototype ) ;
+		
+		setTimeout( () => bus.emit( 'data' , 1 , 2 , 3 ) , 10 ) ;
+		results = await Promise.onceEventOrError( bus , 'data' , 'close' ) ;
+		expect( results ).to.be( 1 ) ;
+		
+		setTimeout( () => bus.emit( 'error' , new Error( 'Doh!' ) ) , 10 ) ;
+		await expect( () => Promise.onceEventOrError( bus , 'data' , 'close' ) ).to.reject.with.an( Error , { message: 'Doh!' } ) ;
+		
+		setTimeout( () => bus.emit( 'close' , 10 ) ) ;
+		await expect( () => Promise.onceEventOrError( bus , 'data' , 'close' ) ).to.reject.with.an( Error , { message: 'Received an excluded event: close' , event: 'close' } ) ;
+		
+		setTimeout( () => bus.emit( 'data' , 1 , 2 , 3 ) , 10 ) ;
+		results = await Promise.onceEventOrError( bus , 'data' , [ 'close' , 'end' ] ) ;
+		expect( results ).to.be( 1 ) ;
+		
+		setTimeout( () => bus.emit( 'error' , new Error( 'Doh!' ) ) , 10 ) ;
+		await expect( () => Promise.onceEventOrError( bus , 'data' , [ 'close' , 'end' ] ) ).to.reject.with.an( Error , { message: 'Doh!' } ) ;
+		
+		setTimeout( () => bus.emit( 'close' , 10 ) ) ;
+		await expect( () => Promise.onceEventOrError( bus , 'data' , [ 'close' , 'end' ] ) ).to.reject.with.an( Error , { message: 'Received an excluded event: close' , event: 'close' } ) ;
+		
+		setTimeout( () => bus.emit( 'end' , 10 ) ) ;
+		await expect( () => Promise.onceEventOrError( bus , 'data' , [ 'close' , 'end' ] ) ).to.reject.with.an( Error , { message: 'Received an excluded event: end' , event: 'end' } ) ;
+	} ) ;
+
+	it( ".onceEventAllOrError() with event exclusion" , async () => {
+		var results ;
+		var bus = Object.create( require( 'events' ).prototype ) ;
+		
+		setTimeout( () => bus.emit( 'data' , 1 , 2 , 3 ) , 10 ) ;
+		results = await Promise.onceEventAllOrError( bus , 'data' , 'close' ) ;
+		expect( results ).to.equal( [ 1 , 2 , 3 ] ) ;
+		
+		setTimeout( () => bus.emit( 'error' , new Error( 'Doh!' ) ) , 10 ) ;
+		await expect( () => Promise.onceEventAllOrError( bus , 'data' , 'close' ) ).to.reject.with.an( Error , { message: 'Doh!' } ) ;
+		
+		setTimeout( () => bus.emit( 'close' , 10 ) ) ;
+		await expect( () => Promise.onceEventAllOrError( bus , 'data' , 'close' ) ).to.reject.with.an( Error , { message: 'Received an excluded event: close' , event: 'close' } ) ;
+		
+		setTimeout( () => bus.emit( 'data' , 1 , 2 , 3 ) , 10 ) ;
+		results = await Promise.onceEventAllOrError( bus , 'data' , [ 'close' , 'end' ] ) ;
+		expect( results ).to.equal( [ 1 , 2 , 3 ] ) ;
+		
+		setTimeout( () => bus.emit( 'error' , new Error( 'Doh!' ) ) , 10 ) ;
+		await expect( () => Promise.onceEventAllOrError( bus , 'data' , [ 'close' , 'end' ] ) ).to.reject.with.an( Error , { message: 'Doh!' } ) ;
+		
+		setTimeout( () => bus.emit( 'close' , 10 ) ) ;
+		await expect( () => Promise.onceEventAllOrError( bus , 'data' , [ 'close' , 'end' ] ) ).to.reject.with.an( Error , { message: 'Received an excluded event: close' , event: 'close' } ) ;
+		
+		setTimeout( () => bus.emit( 'end' , 10 ) ) ;
+		await expect( () => Promise.onceEventAllOrError( bus , 'data' , [ 'close' , 'end' ] ) ).to.reject.with.an( Error , { message: 'Received an excluded event: end' , event: 'end' } ) ;
+	} ) ;
 } ) ;
 
 
