@@ -24,6 +24,8 @@
 	SOFTWARE.
 */
 
+/* global describe, it, expect, asyncTry */
+
 "use strict" ;
 
 
@@ -42,104 +44,98 @@ describe( "Basic standard-compliant Promise" , () => {
 	describe( "Then and catch behavior" , () => {
 
 		it( ".then() chain" , () => {
-
 			var thenCount = 0 ;
 
 			return Promise.resolveTimeout( 10 , 'one' )
-			.then( value => {
-				expect( value ).to.be( 'one' ) ;
-				thenCount ++ ;
-				return 'two' ;
-			} )
-			.then( value => {
-				expect( value ).to.be( 'two' ) ;
-				thenCount ++ ;
-				return Promise.resolveTimeout( 10 , 'three' ) ;
-			} )
-			.then( value => {
-				expect( value ).to.be( 'three' ) ;
-				thenCount ++ ;
-			} )
-			.then( () => {
-				expect( thenCount ).to.be( 3 ) ;
-			} ) ;
+				.then( value => {
+					expect( value ).to.be( 'one' ) ;
+					thenCount ++ ;
+					return 'two' ;
+				} )
+				.then( value => {
+					expect( value ).to.be( 'two' ) ;
+					thenCount ++ ;
+					return Promise.resolveTimeout( 10 , 'three' ) ;
+				} )
+				.then( value => {
+					expect( value ).to.be( 'three' ) ;
+					thenCount ++ ;
+				} )
+				.then( () => {
+					expect( thenCount ).to.be( 3 ) ;
+				} ) ;
 		} ) ;
 
 		it( ".catch() chain" , () => {
-
 			var thenCount = 0 , catchCount = 0 ;
 
 			return Promise.rejectTimeout( 10 , new Error( 'doh!' ) )
-			.catch( error => {
-				expect( error.message ).to.be( 'doh!' ) ;
-				catchCount ++ ;
-				throw new Error( 'dang!' ) ;
-			} )
-			.catch( error => {
-				expect( error.message ).to.be( 'dang!' ) ;
-				catchCount ++ ;
-				return Promise.rejectTimeout( 10 , new Error( 'ooops!' ) ) ;
-			} )
-			.catch( error => {
-				expect( error.message ).to.be( 'ooops!' ) ;
-				catchCount ++ ;
-			} )
-			.then( () => {
-				expect( thenCount ).to.be( 0 ) ;
-				expect( catchCount ).to.be( 3 ) ;
-			} ) ;
+				.catch( error => {
+					expect( error.message ).to.be( 'doh!' ) ;
+					catchCount ++ ;
+					throw new Error( 'dang!' ) ;
+				} )
+				.catch( error => {
+					expect( error.message ).to.be( 'dang!' ) ;
+					catchCount ++ ;
+					return Promise.rejectTimeout( 10 , new Error( 'ooops!' ) ) ;
+				} )
+				.catch( error => {
+					expect( error.message ).to.be( 'ooops!' ) ;
+					catchCount ++ ;
+				} )
+				.then( () => {
+					expect( thenCount ).to.be( 0 ) ;
+					expect( catchCount ).to.be( 3 ) ;
+				} ) ;
 		} ) ;
 
 		it( ".catch() propagation" , () => {
-
 			var thenCount = 0 , catchCount = 0 ;
 
 			return Promise.rejectTimeout( 10 , new Error( 'doh!' ) )
-			.then( () => Promise.resolveTimeout( 10 , thenCount ++ ) )
-			.then( () => Promise.resolveTimeout( 10 , thenCount ++ ) )
-			.catch( error => {
-				expect( error.message ).to.be( 'doh!' ) ;
-				catchCount ++ ;
-			} )
-			.then( () => {
-				expect( thenCount ).to.be( 0 ) ;
-				expect( catchCount ).to.be( 1 ) ;
-			} ) ;
+				.then( () => Promise.resolveTimeout( 10 , thenCount ++ ) )
+				.then( () => Promise.resolveTimeout( 10 , thenCount ++ ) )
+				.catch( error => {
+					expect( error.message ).to.be( 'doh!' ) ;
+					catchCount ++ ;
+				} )
+				.then( () => {
+					expect( thenCount ).to.be( 0 ) ;
+					expect( catchCount ).to.be( 1 ) ;
+				} ) ;
 		} ) ;
 
 		it( "executor throwing synchronously should trigger .catch()" , () => {
-
 			return new Promise( ( resolve , reject ) => {
 				//reject( new Error( 'throw!' ) ) ;
 				throw new Error( 'throw!' ) ;
 			} )
-			.then(
-				() => { throw new Error( 'Should throw!' ) ; } ,
-				// Catch part:
-				error => {
-					expect( error.message ).to.be( 'throw!' ) ;
-				}
-			) ;
+				.then(
+					() => { throw new Error( 'Should throw!' ) ; } ,
+					// Catch part:
+					error => {
+						expect( error.message ).to.be( 'throw!' ) ;
+					}
+				) ;
 		} ) ;
 
 		it( "then-handler throwing synchronously should trigger .catch()" , () => {
-
 			return Promise.resolveTimeout( 0 )
-			.then( () => { throw new Error( 'throw inside then!' ) ; } )
-			.then(
-				() => { throw new Error( 'Should throw!' ) ; } ,
-				// Catch part:
-				error => {
-					expect( error.message ).to.be( 'throw inside then!' ) ;
-				}
-			) ;
+				.then( () => { throw new Error( 'throw inside then!' ) ; } )
+				.then(
+					() => { throw new Error( 'Should throw!' ) ; } ,
+					// Catch part:
+					error => {
+						expect( error.message ).to.be( 'throw inside then!' ) ;
+					}
+				) ;
 		} ) ;
 	} ) ;
 
 	describe( "Edge case: synchronous settlement" , () => {
 
 		it( "synchronous resolve() should still trigger .then() asynchronously" , () => {
-
 			var order = [] ;
 
 			var p = new Promise( ( resolve , reject ) => {
@@ -157,7 +153,6 @@ describe( "Basic standard-compliant Promise" , () => {
 		} ) ;
 
 		it( "synchronous reject() should still trigger .catch() asynchronously" , () => {
-
 			var order = [] ;
 
 			var p = new Promise( ( resolve , reject ) => {
@@ -178,7 +173,6 @@ describe( "Basic standard-compliant Promise" , () => {
 		} ) ;
 
 		it( "synchronous throwing should still trigger .catch() asynchronously" , () => {
-
 			var order = [] ;
 
 			var p = new Promise( ( resolve , reject ) => {
@@ -211,7 +205,6 @@ describe( "Promise to/from another promise" , () => {
 describe( "Promise to callback" , () => {
 
 	it( "Promise#callback()" , done => {
-
 		const okFn = callback => {
 			Promise.resolveTimeout( 10 , 'value!' ).callback( callback ) ;
 		} ;
@@ -247,7 +240,6 @@ describe( "Promise to callback" , () => {
 	} ) ;
 
 	it( "Promise#callbackAll()" , done => {
-
 		const okFn = callback => {
 			Promise.resolveTimeout( 10 , [ 'one' , 'two' , 'three' ] ).callbackAll( callback ) ;
 		} ;
@@ -285,7 +277,6 @@ describe( "Promise to callback" , () => {
 	} ) ;
 
 	it( "Throwing callback should not be turned into rejection" , done => {
-
 		asyncTry( () => {
 			Promise.resolveTimeout( 10 , 'value!' ).callback( () => {
 				throw new Error( 'throw!' ) ;
@@ -303,67 +294,62 @@ describe( "Promise batch operations" , () => {
 	describe( "Promise.all()" , () => {
 
 		it( "with resolvable-promises only, it should resolve with an array of values" , () => {
-
 			return Promise.all( [
 				Promise.resolveTimeout( 20 , 'one' ) ,
 				Promise.resolveTimeout( 0 , 'two' ) ,
 				Promise.resolveTimeout( 10 , 'three' )
 			] )
-			.then( values => {
-				expect( values ).to.equal( [ 'one' , 'two' , 'three' ] ) ;
-			} ) ;
+				.then( values => {
+					expect( values ).to.equal( [ 'one' , 'two' , 'three' ] ) ;
+				} ) ;
 		} ) ;
 
 		it( "starting with a rejected promise, it should reject" , () => {
-
 			return Promise.all( [
 				Promise.resolveTimeout( 20 , 'one' ) ,
 				Promise.rejectTimeout( 0 , new Error( 'rejected!' ) ) ,
 				Promise.resolveTimeout( 10 , 'three' )
 			] )
-			.then(
-				() => { throw new Error( 'Should throw!' ) ; } ,
-				error => {
-					expect( error.message ).to.be( 'rejected!' ) ;
-				}
-			) ;
+				.then(
+					() => { throw new Error( 'Should throw!' ) ; } ,
+					error => {
+						expect( error.message ).to.be( 'rejected!' ) ;
+					}
+				) ;
 		} ) ;
 
 		it( "ending with a rejected promise, it should reject" , () => {
-
 			return Promise.all( [
 				Promise.rejectTimeout( 20 , new Error( 'rejected!' ) ) ,
 				Promise.resolveTimeout( 0 , 'two' ) ,
 				Promise.resolveTimeout( 10 , 'three' )
 			] )
-			.then(
-				() => { throw new Error( 'Should throw!' ) ; } ,
-				error => {
-					expect( error.message ).to.be( 'rejected!' ) ;
-				}
-			) ;
+				.then(
+					() => { throw new Error( 'Should throw!' ) ; } ,
+					error => {
+						expect( error.message ).to.be( 'rejected!' ) ;
+					}
+				) ;
 		} ) ;
 
 		it( "with a rejected promise in the middle, it should reject" , () => {
-
 			return Promise.all( [
 				Promise.resolveTimeout( 20 , 'one' ) ,
 				Promise.resolveTimeout( 0 , 'two' ) ,
 				Promise.rejectTimeout( 10 , new Error( 'rejected!' ) )
 			] )
-			.then(
-				() => { throw new Error( 'Should throw!' ) ; } ,
-				error => {
-					expect( error.message ).to.be( 'rejected!' ) ;
-				}
-			) ;
+				.then(
+					() => { throw new Error( 'Should throw!' ) ; } ,
+					error => {
+						expect( error.message ).to.be( 'rejected!' ) ;
+					}
+				) ;
 		} ) ;
 	} ) ;
 
 	describe( "Promise.map() / Promise.every()" , () => {
 
 		it( "using a synchronous iterator with resolvable-promises only, it should resolve to an array of values" , () => {
-
 			var promiseArray = [
 				Promise.resolveTimeout( 20 , 'one' ) ,
 				Promise.resolveTimeout( 0 , 'two' ) ,
@@ -371,13 +357,12 @@ describe( "Promise batch operations" , () => {
 			] ;
 
 			return Promise.map( promiseArray , str => str + str )
-			.then( values => {
-				expect( values ).to.equal( [ 'oneone' , 'twotwo' , 'threethree' ] ) ;
-			} ) ;
+				.then( values => {
+					expect( values ).to.equal( [ 'oneone' , 'twotwo' , 'threethree' ] ) ;
+				} ) ;
 		} ) ;
 
 		it( "using an asynchronous iterator with resolvable-promises only, it should resolve to an array of values" , () => {
-
 			var promiseArray = [
 				Promise.resolveTimeout( 20 , 'one' ) ,
 				Promise.resolveTimeout( 0 , 'two' ) ,
@@ -385,13 +370,12 @@ describe( "Promise batch operations" , () => {
 			] ;
 
 			return Promise.map( promiseArray , str => Promise.resolveTimeout( 10 , str + str ) )
-			.then( values => {
-				expect( values ).to.equal( [ 'oneone' , 'twotwo' , 'threethree' ] ) ;
-			} ) ;
+				.then( values => {
+					expect( values ).to.equal( [ 'oneone' , 'twotwo' , 'threethree' ] ) ;
+				} ) ;
 		} ) ;
 
 		it( "using a synchronous throwing iterator, it should reject" , () => {
-
 			var promiseArray = [
 				Promise.resolveTimeout( 20 , 'one' ) ,
 				Promise.resolveTimeout( 0 , 'two' ) ,
@@ -399,16 +383,15 @@ describe( "Promise batch operations" , () => {
 			] ;
 
 			return Promise.map( promiseArray , str => { throw new Error( 'failed!' ) ; } )
-			.then(
-				() => { throw new Error( 'Should throw!' ) ; } ,
-				error => {
-					expect( error.message ).to.be( 'failed!' ) ;
-				}
-			) ;
+				.then(
+					() => { throw new Error( 'Should throw!' ) ; } ,
+					error => {
+						expect( error.message ).to.be( 'failed!' ) ;
+					}
+				) ;
 		} ) ;
 
 		it( "using an asynchronous rejecting iterator, it should reject" , () => {
-
 			var promiseArray = [
 				Promise.resolveTimeout( 20 , 'one' ) ,
 				Promise.resolveTimeout( 0 , 'two' ) ,
@@ -416,16 +399,15 @@ describe( "Promise batch operations" , () => {
 			] ;
 
 			return Promise.map( promiseArray , str => Promise.rejectTimeout( 10 ,  new Error( 'failed!' ) ) )
-			.then(
-				() => { throw new Error( 'Should throw!' ) ; } ,
-				error => {
-					expect( error.message ).to.be( 'failed!' ) ;
-				}
-			) ;
+				.then(
+					() => { throw new Error( 'Should throw!' ) ; } ,
+					error => {
+						expect( error.message ).to.be( 'failed!' ) ;
+					}
+				) ;
 		} ) ;
 
 		it( "using an asynchronous iterator rejecting at the end, it should reject" , () => {
-
 			var index = 0 ;
 			var promiseArray = [
 				Promise.resolveTimeout( 20 , 'one' ) ,
@@ -435,18 +417,17 @@ describe( "Promise batch operations" , () => {
 
 			return Promise.map( promiseArray , str => {
 				if ( ++ index === 3 ) { return Promise.rejectTimeout( 10 ,  new Error( 'failed!' ) ) ; }
-				 return Promise.resolveTimeout( 10 , str + str ) ;
+				return Promise.resolveTimeout( 10 , str + str ) ;
 			} )
-			.then(
-				() => { throw new Error( 'Should throw!' ) ; } ,
-				error => {
-					expect( error.message ).to.be( 'failed!' ) ;
-				}
-			) ;
+				.then(
+					() => { throw new Error( 'Should throw!' ) ; } ,
+					error => {
+						expect( error.message ).to.be( 'failed!' ) ;
+					}
+				) ;
 		} ) ;
 
 		it( "no iterator call should be wasted if the Promise.map() has already failed" , done => {
-
 			var count = 0 , order = [] , p ;
 
 			var promiseArray = [
@@ -462,71 +443,67 @@ describe( "Promise batch operations" , () => {
 			} ;
 
 			Promise.map( promiseArray , iterator )
-			.then(
-				() => { throw new Error( 'Should throw!' ) ; } ,
-				error => {
-					expect( error.message ).to.be( 'failed!' ) ;
+				.then(
+					() => { throw new Error( 'Should throw!' ) ; } ,
+					error => {
+						expect( error.message ).to.be( 'failed!' ) ;
 
-					// Wait 20ms after the slowest promise, to ensure the iterator can be called
-					p.then( () => Promise.resolveTimeout( 20 ) )
-					.then( () => {
-						expect( order ).to.equal( [ 'two' ] ) ;
-						expect( count ).to.be( 1 ) ;
-						done() ;
-					} )
-					.catch( error => done( error || new Error() ) ) ;
-				}
-			)
-			.catch( error => done( error || new Error() ) ) ;
+						// Wait 20ms after the slowest promise, to ensure the iterator can be called
+						p.then( () => Promise.resolveTimeout( 20 ) )
+							.then( () => {
+								expect( order ).to.equal( [ 'two' ] ) ;
+								expect( count ).to.be( 1 ) ;
+								done() ;
+							} )
+							.catch( error => done( error || new Error() ) ) ;
+					}
+				)
+				.catch( error => done( error || new Error() ) ) ;
 		} ) ;
 	} ) ;
 
 	describe( "Promise.any()" , () => {
 
 		it( "with resolvable-promises only, it should resolve to the fastest promise's value" , () => {
-
 			return Promise.any( [
 				Promise.resolveTimeout( 20 , 'one' ) ,
 				Promise.resolveTimeout( 0 , 'two' ) ,
 				Promise.resolveTimeout( 10 , 'three' )
 			] )
-			.then( values => {
-				expect( values ).to.be( 'two' ) ;
-			} ) ;
+				.then( values => {
+					expect( values ).to.be( 'two' ) ;
+				} ) ;
 		} ) ;
 
 		it( "starting with a rejected promise, it should resolve to the second one" , () => {
-
 			return Promise.any( [
 				Promise.resolveTimeout( 20 , 'one' ) ,
 				Promise.rejectTimeout( 0 , new Error( 'rejected!' ) ) ,
 				Promise.resolveTimeout( 10 , 'three' )
 			] )
-			.then( values => {
-				expect( values ).to.be( 'three' ) ;
-			} ) ;
+				.then( values => {
+					expect( values ).to.be( 'three' ) ;
+				} ) ;
 		} ) ;
 
-		it( "with resolvable-promises only, it should reject with an array of rejection" , () => {
-
+		it( "with rejectable-promises only, it should reject with an array of rejection" , () => {
 			return Promise.any( [
 				Promise.rejectTimeout( 20 , new Error( 'rejection1' ) ) ,
 				Promise.rejectTimeout( 0 , new Error( 'rejection2' ) ) ,
 				Promise.rejectTimeout( 10 , new Error( 'rejection3' ) )
 			] )
-			.then(
-				() => { throw new Error( 'Should throw!' ) ; } ,
-				errors => {
-					expect( errors.map( e => e.message ) ).to.equal( [ 'rejection1' , 'rejection2' , 'rejection3' ] ) ;
-				}
-			) ;
+				.then(
+					() => { throw new Error( 'Should throw!' ) ; } ,
+					errors => {
+						expect( errors.map( e => e.message ) ).to.equal( [ 'rejection1' , 'rejection2' , 'rejection3' ] ) ;
+					}
+				) ;
 		} ) ;
 	} ) ;
 
 	describe( "Promise.some()" , () => {
 
 		it( "using a synchronous iterator with resolvable-promises only, it should resolve to the fastest promise's value" , () => {
-
 			var promiseArray = [
 				Promise.resolveTimeout( 20 , 'one' ) ,
 				Promise.resolveTimeout( 0 , 'two' ) ,
@@ -534,13 +511,12 @@ describe( "Promise batch operations" , () => {
 			] ;
 
 			return Promise.some( promiseArray , str => str + str )
-			.then( values => {
-				expect( values ).to.be( 'twotwo' ) ;
-			} ) ;
+				.then( values => {
+					expect( values ).to.be( 'twotwo' ) ;
+				} ) ;
 		} ) ;
 
 		it( "using an asynchronous iterator with resolvable-promises only, it should resolve to the fastest promise's value" , () => {
-
 			var promiseArray = [
 				Promise.resolveTimeout( 20 , 'one' ) ,
 				Promise.resolveTimeout( 0 , 'two' ) ,
@@ -548,13 +524,12 @@ describe( "Promise batch operations" , () => {
 			] ;
 
 			return Promise.some( promiseArray , str => Promise.resolveTimeout( 10 , str + str ) )
-			.then( values => {
-				expect( values ).to.be( 'twotwo' ) ;
-			} ) ;
+				.then( values => {
+					expect( values ).to.be( 'twotwo' ) ;
+				} ) ;
 		} ) ;
 
 		it( "using a synchronous throwing iterator, it should reject" , () => {
-
 			var index = 0 ;
 
 			var promiseArray = [
@@ -564,16 +539,15 @@ describe( "Promise batch operations" , () => {
 			] ;
 
 			return Promise.some( promiseArray , str => { throw new Error( 'failed!' + ( ++ index ) ) ; } )
-			.then(
-				() => { throw new Error( 'Should throw!' ) ; } ,
-				errors => {
-					expect( errors.map( e => e.message ) ).to.equal( [ 'failed!3' , 'failed!1' , 'failed!2' ] ) ;
-				}
-			) ;
+				.then(
+					() => { throw new Error( 'Should throw!' ) ; } ,
+					errors => {
+						expect( errors.map( e => e.message ) ).to.equal( [ 'failed!3' , 'failed!1' , 'failed!2' ] ) ;
+					}
+				) ;
 		} ) ;
 
 		it( "using an asynchronous rejecting iterator, it should reject" , () => {
-
 			var index = 0 ;
 
 			var promiseArray = [
@@ -583,16 +557,15 @@ describe( "Promise batch operations" , () => {
 			] ;
 
 			return Promise.some( promiseArray , str => Promise.rejectTimeout( 10 ,  new Error( 'failed!' + ( ++ index ) ) ) )
-			.then(
-				() => { throw new Error( 'Should throw!' ) ; } ,
-				errors => {
-					expect( errors.map( e => e.message ) ).to.equal( [ 'failed!3' , 'failed!1' , 'failed!2' ] ) ;
-				}
-			) ;
+				.then(
+					() => { throw new Error( 'Should throw!' ) ; } ,
+					errors => {
+						expect( errors.map( e => e.message ) ).to.equal( [ 'failed!3' , 'failed!1' , 'failed!2' ] ) ;
+					}
+				) ;
 		} ) ;
 
 		it( "no iterator call should be wasted if the Promise.some() has already resolved" , done => {
-
 			var count = 0 , order = [] , p ;
 
 			var promiseArray = [
@@ -608,26 +581,25 @@ describe( "Promise batch operations" , () => {
 			} ;
 
 			Promise.some( promiseArray , iterator )
-			.then( value => {
-				expect( value ).to.be( 'twotwo' ) ;
+				.then( value => {
+					expect( value ).to.be( 'twotwo' ) ;
 
-				// Wait 20ms after the slowest promise, to ensure the iterator can be called
-				p.then( () => Promise.resolveTimeout( 20 ) )
-				.then( () => {
-					expect( order ).to.equal( [ 'two' ] ) ;
-					expect( count ).to.be( 1 ) ;
-					done() ;
+					// Wait 20ms after the slowest promise, to ensure the iterator can be called
+					p.then( () => Promise.resolveTimeout( 20 ) )
+						.then( () => {
+							expect( order ).to.equal( [ 'two' ] ) ;
+							expect( count ).to.be( 1 ) ;
+							done() ;
+						} )
+						.catch( error => done( error || new Error() ) ) ;
 				} )
 				.catch( error => done( error || new Error() ) ) ;
-			} )
-			.catch( error => done( error || new Error() ) ) ;
 		} ) ;
 	} ) ;
 
 	describe( "Promise.filter()" , () => {
 
 		it( "Promise.filter() should filter an array of values using an iterator return value (direct value or promise)" , () => {
-
 			var array = [
 				1 , 5 , 7 , 3 , 10 ,
 				Promise.resolveTimeout( 10 , 2 ) ,
@@ -638,17 +610,16 @@ describe( "Promise batch operations" , () => {
 
 			const filter = v => {
 				if ( v < 6 ) { return Promise.resolveTimeout( 10 , true ) ; }
-				 return Promise.resolveTimeout( 10 , false ) ;
+				return Promise.resolveTimeout( 10 , false ) ;
 			} ;
 
 			return Promise.filter( array , filter )
-			.then( results => {
-				expect( results ).to.equal( [ 1 , 5 , 3 , 2 , -1 ] ) ;
-			} ) ;
+				.then( results => {
+					expect( results ).to.equal( [ 1 , 5 , 3 , 2 , -1 ] ) ;
+				} ) ;
 		} ) ;
 
 		it( "Promise.filter() any error should reject the whole promise" , done => {
-
 			var array = [
 				Promise.resolveTimeout( 10 , 2 ) ,
 				Promise.resolveTimeout( 10 , -1 ) ,
@@ -666,54 +637,53 @@ describe( "Promise batch operations" , () => {
 
 			const filter = v => {
 				if ( v < 6 ) { return Promise.resolveTimeout( 10 , true ) ; }
-				 return Promise.resolveTimeout( 10 , false ) ;
+				return Promise.resolveTimeout( 10 , false ) ;
 			} ;
 
 			const failFilter = v => {
 				if ( v < 6 ) { return Promise.resolveTimeout( 10 , true ) ; }
-				 return Promise.rejectTimeout( 10 , new Error( 'filter failed!' ) ) ;
+				return Promise.rejectTimeout( 10 , new Error( 'filter failed!' ) ) ;
 			} ;
 
 			const syncFailFilter = v => {
 				if ( v < 6 ) { return Promise.resolveTimeout( 10 , true ) ; }
-				 throw new Error( 'filter sync failed!' ) ;
+				throw new Error( 'filter sync failed!' ) ;
 				//else { return Promise.rejectTimeout( 10 , new Error( 'filter sync failed!' ) ) ; }
 			} ;
 
 			Promise.filter( array , filter )
-			.then(
-				() => { throw new Error( 'Should throw!' ) ; } ,
-				error => {
-					expect( error.message ).to.be( 'promise failed!' ) ;
+				.then(
+					() => { throw new Error( 'Should throw!' ) ; } ,
+					error => {
+						expect( error.message ).to.be( 'promise failed!' ) ;
 
-					Promise.filter( array2 , failFilter )
-					.then(
-						() => { throw new Error( 'Should throw!' ) ; } ,
-						error => {
-							expect( error.message ).to.be( 'filter failed!' ) ;
-
-							Promise.filter( array2 , syncFailFilter )
+						Promise.filter( array2 , failFilter )
 							.then(
 								() => { throw new Error( 'Should throw!' ) ; } ,
 								error => {
-									expect( error.message ).to.be( 'filter sync failed!' ) ;
-									done() ;
+									expect( error.message ).to.be( 'filter failed!' ) ;
+
+									Promise.filter( array2 , syncFailFilter )
+										.then(
+											() => { throw new Error( 'Should throw!' ) ; } ,
+											error => {
+												expect( error.message ).to.be( 'filter sync failed!' ) ;
+												done() ;
+											}
+										)
+										.catch( error => done( error || new Error() ) ) ;
 								}
 							)
 							.catch( error => done( error || new Error() ) ) ;
-						}
-					)
-					.catch( error => done( error || new Error() ) ) ;
-				}
-			)
-			.catch( error => done( error || new Error() ) ) ;
+					}
+				)
+				.catch( error => done( error || new Error() ) ) ;
 		} ) ;
 	} ) ;
 
 	describe( "Promise.forEach()" , () => {
 
 		it( "Promise.forEach() and empty array should resolve" , () => {
-
 			var results = [] ;
 
 			const iterator = ( value , index ) => {
@@ -732,13 +702,12 @@ describe( "Promise batch operations" , () => {
 			var array = [] ;
 
 			return Promise.forEach( array , iterator )
-			.then( () => {
-				expect( results ).to.equal( [] ) ;
-			} ) ;
+				.then( () => {
+					expect( results ).to.equal( [] ) ;
+				} ) ;
 		} ) ;
 
 		it( "Promise.forEach() should run the iterator in series" , () => {
-
 			var results = [] ;
 
 			const iterator = ( value , index ) => {
@@ -761,24 +730,23 @@ describe( "Promise batch operations" , () => {
 			] ;
 
 			return Promise.forEach( array , iterator )
-			.then( () => {
-				expect( results ).to.equal( [
-					"before 0: 1" ,
-					"after 0: 1" ,
-					"before 1: 5" ,
-					"after 1: 5" ,
-					"before 2: 7" ,
-					"after 2: 7" ,
-					"before 3: 2" ,
-					"after 3: 2" ,
-					"before 4: 8" ,
-					"after 4: 8"
-				] ) ;
-			} ) ;
+				.then( () => {
+					expect( results ).to.equal( [
+						"before 0: 1" ,
+						"after 0: 1" ,
+						"before 1: 5" ,
+						"after 1: 5" ,
+						"before 2: 7" ,
+						"after 2: 7" ,
+						"before 3: 2" ,
+						"after 3: 2" ,
+						"before 4: 8" ,
+						"after 4: 8"
+					] ) ;
+				} ) ;
 		} ) ;
 
 		it( "Promise.forEach() should stop and reject with the first element rejection" , () => {
-
 			var results = [] ;
 
 			const iterator = ( value , index ) => {
@@ -803,22 +771,21 @@ describe( "Promise batch operations" , () => {
 			] ;
 
 			return Promise.forEach( array , iterator )
-			.then(
-				() => { throw new Error( 'Should throw!' ) ; } ,
-				error => {
-					expect( error.message ).to.be( 'failed!' ) ;
-					expect( results ).to.equal( [
-						"before 0: 1" ,
-						"after 0: 1" ,
-						"before 1: 5" ,
-						"after 1: 5"
-					] ) ;
-				}
-			) ;
+				.then(
+					() => { throw new Error( 'Should throw!' ) ; } ,
+					error => {
+						expect( error.message ).to.be( 'failed!' ) ;
+						expect( results ).to.equal( [
+							"before 0: 1" ,
+							"after 0: 1" ,
+							"before 1: 5" ,
+							"after 1: 5"
+						] ) ;
+					}
+				) ;
 		} ) ;
 
 		it( "Promise.forEach() should stop and reject with the first iterator rejection" , () => {
-
 			var results = [] ;
 
 			const iterator = ( value , index ) => {
@@ -844,27 +811,26 @@ describe( "Promise batch operations" , () => {
 			] ;
 
 			return Promise.forEach( array , iterator )
-			.then(
-				() => { throw new Error( 'Should throw!' ) ; } ,
-				error => {
-					expect( error.message ).to.be( 'failed!' ) ;
-					expect( results ).to.equal( [
-						"before 0: 1" ,
-						"after 0: 1" ,
-						"before 1: 5" ,
-						"after 1: 5" ,
-						"before 2: 7" ,
-						"after 2: 7"
-					] ) ;
-				}
-			) ;
+				.then(
+					() => { throw new Error( 'Should throw!' ) ; } ,
+					error => {
+						expect( error.message ).to.be( 'failed!' ) ;
+						expect( results ).to.equal( [
+							"before 0: 1" ,
+							"after 0: 1" ,
+							"before 1: 5" ,
+							"after 1: 5" ,
+							"before 2: 7" ,
+							"after 2: 7"
+						] ) ;
+					}
+				) ;
 		} ) ;
 	} ) ;
 
 	describe( "Promise.reduce()" , () => {
 
 		it( "Promise.reduce() should run the iterator in series" , () => {
-
 			var results = [] ;
 
 			const iterator = ( accumulator , value , index ) => {
@@ -888,24 +854,23 @@ describe( "Promise batch operations" , () => {
 			] ;
 
 			return Promise.reduce( array , iterator , 3 )
-			.then( () => {
-				expect( results ).to.equal( [
-					"before 0: 1 -- 3" ,
-					"after 0: 1 -- 4" ,
-					"before 1: 5 -- 4" ,
-					"after 1: 5 -- 9" ,
-					"before 2: 7 -- 9" ,
-					"after 2: 7 -- 16" ,
-					"before 3: 2 -- 16" ,
-					"after 3: 2 -- 18" ,
-					"before 4: 8 -- 18" ,
-					"after 4: 8 -- 26"
-				] ) ;
-			} ) ;
+				.then( () => {
+					expect( results ).to.equal( [
+						"before 0: 1 -- 3" ,
+						"after 0: 1 -- 4" ,
+						"before 1: 5 -- 4" ,
+						"after 1: 5 -- 9" ,
+						"before 2: 7 -- 9" ,
+						"after 2: 7 -- 16" ,
+						"before 3: 2 -- 16" ,
+						"after 3: 2 -- 18" ,
+						"before 4: 8 -- 18" ,
+						"after 4: 8 -- 26"
+					] ) ;
+				} ) ;
 		} ) ;
 
 		it( "Promise.reduce() should stop and reject with the first element rejection" , () => {
-
 			var results = [] ;
 
 			const iterator = ( accumulator , value , index ) => {
@@ -931,22 +896,21 @@ describe( "Promise batch operations" , () => {
 			] ;
 
 			return Promise.reduce( array , iterator , 3 )
-			.then(
-				() => { throw new Error( 'Should throw!' ) ; } ,
-				error => {
-					expect( error.message ).to.be( 'failed!' ) ;
-					expect( results ).to.equal( [
-						"before 0: 1 -- 3" ,
-						"after 0: 1 -- 4" ,
-						"before 1: 5 -- 4" ,
-						"after 1: 5 -- 9"
-					] ) ;
-				}
-			) ;
+				.then(
+					() => { throw new Error( 'Should throw!' ) ; } ,
+					error => {
+						expect( error.message ).to.be( 'failed!' ) ;
+						expect( results ).to.equal( [
+							"before 0: 1 -- 3" ,
+							"after 0: 1 -- 4" ,
+							"before 1: 5 -- 4" ,
+							"after 1: 5 -- 9"
+						] ) ;
+					}
+				) ;
 		} ) ;
 
 		it( "Promise.reduce() should stop and reject with the first iterator rejection" , () => {
-
 			var results = [] ;
 
 			const iterator = ( accumulator , value , index ) => {
@@ -973,27 +937,26 @@ describe( "Promise batch operations" , () => {
 			] ;
 
 			return Promise.reduce( array , iterator , 3 )
-			.then(
-				() => { throw new Error( 'Should throw!' ) ; } ,
-				error => {
-					expect( error.message ).to.be( 'failed!' ) ;
-					expect( results ).to.equal( [
-						"before 0: 1 -- 3" ,
-						"after 0: 1 -- 4" ,
-						"before 1: 5 -- 4" ,
-						"after 1: 5 -- 9" ,
-						"before 2: 7 -- 9" ,
-						"after 2: 7 -- 16"
-					] ) ;
-				}
-			) ;
+				.then(
+					() => { throw new Error( 'Should throw!' ) ; } ,
+					error => {
+						expect( error.message ).to.be( 'failed!' ) ;
+						expect( results ).to.equal( [
+							"before 0: 1 -- 3" ,
+							"after 0: 1 -- 4" ,
+							"before 1: 5 -- 4" ,
+							"after 1: 5 -- 9" ,
+							"before 2: 7 -- 9" ,
+							"after 2: 7 -- 16"
+						] ) ;
+					}
+				) ;
 		} ) ;
 	} ) ;
 
 	describe( "Promise.mapObject()" , () => {
 
 		it( "using a synchronous iterator with resolvable-promises only, it should resolve to an object of values" , () => {
-
 			var promiseObject = {
 				a: Promise.resolveTimeout( 20 , 'one' ) ,
 				b: Promise.resolveTimeout( 0 , 'two' ) ,
@@ -1001,13 +964,12 @@ describe( "Promise batch operations" , () => {
 			} ;
 
 			return Promise.mapObject( promiseObject , str => str + str )
-			.then( values => {
-				expect( values ).to.equal( { a: 'oneone' , b: 'twotwo' , c: 'threethree' } ) ;
-			} ) ;
+				.then( values => {
+					expect( values ).to.equal( { a: 'oneone' , b: 'twotwo' , c: 'threethree' } ) ;
+				} ) ;
 		} ) ;
 
 		it( "using an asynchronous iterator with resolvable-promises only, it should resolve to an object of values" , () => {
-
 			var promiseObject = {
 				a: Promise.resolveTimeout( 20 , 'one' ) ,
 				b: Promise.resolveTimeout( 0 , 'two' ) ,
@@ -1015,13 +977,12 @@ describe( "Promise batch operations" , () => {
 			} ;
 
 			return Promise.mapObject( promiseObject , str => Promise.resolveTimeout( 10 , str + str ) )
-			.then( values => {
-				expect( values ).to.equal( { a: 'oneone' , b: 'twotwo' , c: 'threethree' } ) ;
-			} ) ;
+				.then( values => {
+					expect( values ).to.equal( { a: 'oneone' , b: 'twotwo' , c: 'threethree' } ) ;
+				} ) ;
 		} ) ;
 
 		it( "using a synchronous throwing iterator, it should reject" , () => {
-
 			var promiseObject = {
 				a: Promise.resolveTimeout( 20 , 'one' ) ,
 				b: Promise.resolveTimeout( 0 , 'two' ) ,
@@ -1029,16 +990,15 @@ describe( "Promise batch operations" , () => {
 			} ;
 
 			return Promise.mapObject( promiseObject , str => { throw new Error( 'failed!' ) ; } )
-			.then(
-				() => { throw new Error( 'Should throw!' ) ; } ,
-				error => {
-					expect( error.message ).to.be( 'failed!' ) ;
-				}
-			) ;
+				.then(
+					() => { throw new Error( 'Should throw!' ) ; } ,
+					error => {
+						expect( error.message ).to.be( 'failed!' ) ;
+					}
+				) ;
 		} ) ;
 
 		it( "using an asynchronous rejecting iterator, it should reject" , () => {
-
 			var promiseObject = {
 				a: Promise.resolveTimeout( 20 , 'one' ) ,
 				b: Promise.resolveTimeout( 0 , 'two' ) ,
@@ -1046,16 +1006,15 @@ describe( "Promise batch operations" , () => {
 			} ;
 
 			return Promise.mapObject( promiseObject , str => Promise.rejectTimeout( 10 ,  new Error( 'failed!' ) ) )
-			.then(
-				() => { throw new Error( 'Should throw!' ) ; } ,
-				error => {
-					expect( error.message ).to.be( 'failed!' ) ;
-				}
-			) ;
+				.then(
+					() => { throw new Error( 'Should throw!' ) ; } ,
+					error => {
+						expect( error.message ).to.be( 'failed!' ) ;
+					}
+				) ;
 		} ) ;
 
 		it( "using an asynchronous iterator rejecting at the end, it should reject" , () => {
-
 			var index = 0 ;
 			var promiseObject = {
 				a: Promise.resolveTimeout( 20 , 'one' ) ,
@@ -1065,18 +1024,17 @@ describe( "Promise batch operations" , () => {
 
 			return Promise.mapObject( promiseObject , str => {
 				if ( ++ index === 3 ) { return Promise.rejectTimeout( 10 ,  new Error( 'failed!' ) ) ; }
-				 return Promise.resolveTimeout( 10 , str + str ) ;
+				return Promise.resolveTimeout( 10 , str + str ) ;
 			} )
-			.then(
-				() => { throw new Error( 'Should throw!' ) ; } ,
-				error => {
-					expect( error.message ).to.be( 'failed!' ) ;
-				}
-			) ;
+				.then(
+					() => { throw new Error( 'Should throw!' ) ; } ,
+					error => {
+						expect( error.message ).to.be( 'failed!' ) ;
+					}
+				) ;
 		} ) ;
 
 		it( "no iterator call should be wasted if the Promise.mapObject() has already failed" , done => {
-
 			var count = 0 , order = [] , p ;
 
 			var promiseObject = {
@@ -1093,32 +1051,31 @@ describe( "Promise batch operations" , () => {
 			} ;
 
 			Promise.mapObject( promiseObject , iterator )
-			.then(
-				() => { throw new Error( 'Should throw!' ) ; } ,
-				error => {
-					expect( error.message ).to.be( 'failed!' ) ;
+				.then(
+					() => { throw new Error( 'Should throw!' ) ; } ,
+					error => {
+						expect( error.message ).to.be( 'failed!' ) ;
 
-					// Wait 20ms after the slowest promise, to ensure the iterator can be called
-					p.then( () => Promise.resolveTimeout( 20 ) )
-					.then( () => {
-						expect( order ).to.equal( [ 'b: two' , 'd: four' ] ) ;
-						expect( count ).to.be( 2 ) ;
-						done() ;
-					} )
-					.catch( error => done( error || new Error() ) ) ;
-				}
-			)
-			.catch( error => done( error || new Error() ) ) ;
+						// Wait 20ms after the slowest promise, to ensure the iterator can be called
+						p.then( () => Promise.resolveTimeout( 20 ) )
+							.then( () => {
+								expect( order ).to.equal( [ 'b: two' , 'd: four' ] ) ;
+								expect( count ).to.be( 2 ) ;
+								done() ;
+							} )
+							.catch( error => done( error || new Error() ) ) ;
+					}
+				)
+				.catch( error => done( error || new Error() ) ) ;
 		} ) ;
 	} ) ;
 
 	describe( "Promise.concurrent()" , () => {
 
 		it( "using an asynchronous iterator with resolvable-promises only, it should respect concurrency limit" , () => {
-
 			var runData = [ 'wait' , 'wait' , 'wait' , 'wait' , 'wait' , 'wait' , 'wait' ] ;
 
-			var iterator = async( str , index ) => {
+			var iterator = async ( str , index ) => {
 				//console.log( "before:" , str , index , runData ) ;
 				switch ( index ) {
 					case 0 :
@@ -1188,13 +1145,12 @@ describe( "Promise batch operations" , () => {
 			] ;
 
 			return Promise.concurrent( 3 , promiseArray , iterator )
-			.then( values => {
-				expect( values ).to.equal( [ 'zerozero' , 'oneone' , 'twotwo' , 'threethree' , 'fourfour' , 'fivefive' , 'sixsix' ] ) ;
-			} ) ;
+				.then( values => {
+					expect( values ).to.equal( [ 'zerozero' , 'oneone' , 'twotwo' , 'threethree' , 'fourfour' , 'fivefive' , 'sixsix' ] ) ;
+				} ) ;
 		} ) ;
 
 		it( "using a synchronous throwing iterator, it should reject" , () => {
-
 			var promiseArray = [
 				Promise.resolveTimeout( 20 , 'one' ) ,
 				Promise.resolveTimeout( 0 , 'two' ) ,
@@ -1202,16 +1158,15 @@ describe( "Promise batch operations" , () => {
 			] ;
 
 			return Promise.concurrent( 2 , promiseArray , str => { throw new Error( 'failed!' ) ; } )
-			.then(
-				() => { throw new Error( 'Should throw!' ) ; } ,
-				error => {
-					expect( error.message ).to.be( 'failed!' ) ;
-				}
-			) ;
+				.then(
+					() => { throw new Error( 'Should throw!' ) ; } ,
+					error => {
+						expect( error.message ).to.be( 'failed!' ) ;
+					}
+				) ;
 		} ) ;
 
 		it( "using an asynchronous rejecting iterator, it should reject" , () => {
-
 			var promiseArray = [
 				Promise.resolveTimeout( 20 , 'one' ) ,
 				Promise.resolveTimeout( 0 , 'two' ) ,
@@ -1221,16 +1176,15 @@ describe( "Promise batch operations" , () => {
 			] ;
 
 			return Promise.concurrent( 2 , promiseArray , str => Promise.rejectTimeout( 10 ,  new Error( 'failed!' ) ) )
-			.then(
-				() => { throw new Error( 'Should throw!' ) ; } ,
-				error => {
-					expect( error.message ).to.be( 'failed!' ) ;
-				}
-			) ;
+				.then(
+					() => { throw new Error( 'Should throw!' ) ; } ,
+					error => {
+						expect( error.message ).to.be( 'failed!' ) ;
+					}
+				) ;
 		} ) ;
 
 		it( "using an asynchronous iterator rejecting at the end, it should reject" , () => {
-
 			var index = 0 ;
 			var promiseArray = [
 				Promise.resolveTimeout( 20 , 'one' ) ,
@@ -1240,18 +1194,17 @@ describe( "Promise batch operations" , () => {
 
 			return Promise.concurrent( 2 , promiseArray , str => {
 				if ( ++ index === 3 ) { return Promise.rejectTimeout( 10 ,  new Error( 'failed!' ) ) ; }
-				 return Promise.resolveTimeout( 10 , str + str ) ;
+				return Promise.resolveTimeout( 10 , str + str ) ;
 			} )
-			.then(
-				() => { throw new Error( 'Should throw!' ) ; } ,
-				error => {
-					expect( error.message ).to.be( 'failed!' ) ;
-				}
-			) ;
+				.then(
+					() => { throw new Error( 'Should throw!' ) ; } ,
+					error => {
+						expect( error.message ).to.be( 'failed!' ) ;
+					}
+				) ;
 		} ) ;
 
 		it( "no iterator call should be wasted if the Promise.map() has already failed" , done => {
-
 			var count = 0 , order = [] , p ;
 
 			var promiseArray = [
@@ -1267,24 +1220,81 @@ describe( "Promise batch operations" , () => {
 			} ;
 
 			Promise.concurrent( 2 , promiseArray , iterator )
-			.then(
-				() => { throw new Error( 'Should throw!' ) ; } ,
-				error => {
-					expect( error.message ).to.be( 'failed!' ) ;
+				.then(
+					() => { throw new Error( 'Should throw!' ) ; } ,
+					error => {
+						expect( error.message ).to.be( 'failed!' ) ;
 
-					// Wait 20ms after the slowest promise, to ensure the iterator can be called
-					p.then( () => Promise.resolveTimeout( 20 ) )
-					.then( () => {
-						expect( order ).to.equal( [ 'two' ] ) ;
-						expect( count ).to.be( 1 ) ;
-						done() ;
-					} )
-					.catch( error => done( error || new Error() ) ) ;
-				}
-			)
-			.catch( error => done( error || new Error() ) ) ;
+						// Wait 20ms after the slowest promise, to ensure the iterator can be called
+						p.then( () => Promise.resolveTimeout( 20 ) )
+							.then( () => {
+								expect( order ).to.equal( [ 'two' ] ) ;
+								expect( count ).to.be( 1 ) ;
+								done() ;
+							} )
+							.catch( error => done( error || new Error() ) ) ;
+					}
+				)
+				.catch( error => done( error || new Error() ) ) ;
 		} ) ;
 	} ) ;
+
+	describe( "Promise.race()" , () => {
+
+		it( "with resolvable-promises only, it should resolve to the fastest promise's value" , () => {
+			return Promise.race( [
+				Promise.resolveTimeout( 20 , 'one' ) ,
+				Promise.resolveTimeout( 0 , 'two' ) ,
+				Promise.resolveTimeout( 10 , 'three' )
+			] )
+				.then( value => {
+					expect( value ).to.be( 'two' ) ;
+				} ) ;
+		} ) ;
+
+		it( "with rejectable-promises only, it should reject with the first rejection" , () => {
+			return Promise.race( [
+				Promise.rejectTimeout( 20 , new Error( 'rejection1' ) ) ,
+				Promise.rejectTimeout( 0 , new Error( 'rejection2' ) ) ,
+				Promise.rejectTimeout( 10 , new Error( 'rejection3' ) )
+			] )
+				.then(
+					() => { throw new Error( 'Should throw!' ) ; } ,
+					error => {
+						expect( error.message ).to.equal( 'rejection2' ) ;
+					}
+				) ;
+		} ) ;
+
+		it( "with a mix of resolvable and rejectable, it should be settled by whichever promise resolve or reject first" , async () => {
+			await Promise.race( [
+				Promise.rejectTimeout( 20 , new Error( 'rejection1' ) ) ,
+				Promise.resolveTimeout( 0 , 'two' ) ,
+				Promise.resolveTimeout( 10 , 'three' )
+			] )
+				.then( value => {
+					expect( value ).to.be( 'two' ) ;
+				} ) ;
+
+			await Promise.race( [
+				Promise.resolveTimeout( 20 , 'one' ) ,
+				Promise.rejectTimeout( 0 , new Error( 'rejection2' ) ) ,
+				Promise.resolveTimeout( 10 , 'three' )
+			] )
+				.then(
+					() => { throw new Error( 'Should throw!' ) ; } ,
+					error => {
+						expect( error.message ).to.equal( 'rejection2' ) ;
+					} ) ;
+		} ) ;
+
+		it( "with en empty array, it should hang forever" , async () => {
+			var promise = Promise.race( [] ) ;
+			await Promise.resolveTimeout( 500 ) ;
+			expect( promise.getStatus() ).to.be( 'dormant' ) ;
+		} ) ;
+	} ) ;
+
 } ) ;
 
 
@@ -1292,7 +1302,6 @@ describe( "Promise batch operations" , () => {
 describe( "Wrappers and decorators" , () => {
 
 	it( "promisify node style callback function, limit to one argument after the error argument -- .promisify()" , done => {
-
 		const okFn = ( callback ) => {
 			setTimeout( () => callback( undefined , 'arg' , 'trash' ) , 10 ) ;
 		} ;
@@ -1314,13 +1323,12 @@ describe( "Wrappers and decorators" , () => {
 					done() ;
 				}
 			)
-			.catch( error => done( error || new Error() ) ) ;
+				.catch( error => done( error || new Error() ) ) ;
 		} )
-		.catch( error => done( error || new Error() ) ) ;
+			.catch( error => done( error || new Error() ) ) ;
 	} ) ;
 
 	it( "promisify node style callback function -- .promisifyAll()" , done => {
-
 		const okFn = ( callback ) => {
 			setTimeout( () => callback( undefined , 'arg1' , 'arg2' , 'arg3' ) , 10 ) ;
 		} ;
@@ -1342,13 +1350,12 @@ describe( "Wrappers and decorators" , () => {
 					done() ;
 				}
 			)
-			.catch( error => done( error || new Error() ) ) ;
+				.catch( error => done( error || new Error() ) ) ;
 		} )
-		.catch( error => done( error || new Error() ) ) ;
+			.catch( error => done( error || new Error() ) ) ;
 	} ) ;
 
 	it( "return value interceptor -- .returnValueInterceptor()" , () => {
-
 		var index = 0 ;
 		var returnArray = [ 'one' , 'two' , 'three' ] ;
 		var results = [] ;
@@ -1371,7 +1378,6 @@ describe( "Wrappers and decorators" , () => {
 	} ) ;
 
 	it( "run once -- .once()" , done => {
-
 		var results = [] ;
 
 		const asyncFn = ( value ) => {
@@ -1392,12 +1398,12 @@ describe( "Wrappers and decorators" , () => {
 				//console.log( results ) ;
 				expect( results ).to.equal( [ 'one' ] ) ;
 				done() ;
-			} ).catch( error => done( error ) ) ;
+			} )
+				.catch( error => done( error ) ) ;
 		} , 40 ) ;
 	} ) ;
 
 	it( "debounce -- .debounce()" , done => {
-
 		var results = [] ;
 
 		const asyncFn = ( value ) => {
@@ -1418,12 +1424,12 @@ describe( "Wrappers and decorators" , () => {
 				//console.log( results ) ;
 				expect( results ).to.equal( [ 'one' , 'five' ] ) ;
 				done() ;
-			} ).catch( error => done( error ) ) ;
+			} )
+				.catch( error => done( error ) ) ;
 		} , 40 ) ;
 	} ) ;
 
 	it( "debounce update -- .debounceUpdate()" , done => {
-
 		var results = [] ;
 
 		const asyncFn = ( value ) => {
@@ -1444,12 +1450,12 @@ describe( "Wrappers and decorators" , () => {
 				//console.log( results ) ;
 				expect( results ).to.equal( [ 'one' , 'four' , 'five' ] ) ;
 				done() ;
-			} ).catch( error => done( error ) ) ;
+			} )
+				.catch( error => done( error ) ) ;
 		} , 40 ) ;
 	} ) ;
 
 	it( "serialize, successive executions never overlap -- .serialize()" , done => {
-
 		var results = [] ;
 
 		const asyncFn = ( value ) => {
@@ -1488,13 +1494,13 @@ describe( "Wrappers and decorators" , () => {
 					"after: five"
 				] ) ;
 				done() ;
-			} ).catch( error => done( error ) ) ;
+			} )
+				.catch( error => done( error ) ) ;
 		} , 40 ) ;
 	} ) ;
 
 	// decorator variant
 	it( "timeout -- .timeout()" , () => {
-
 		var index = 0 ;
 		var times = [ 0 , 10 , 40 , 10 ] ;
 		var results = [] ;
@@ -1517,7 +1523,6 @@ describe( "Wrappers and decorators" , () => {
 	} ) ;
 
 	it( "variable (per call) timeout -- .variableTimeout()" , () => {
-
 		var index = 0 ;
 		var times = [ 0 , 10 , 40 , 20 ] ;
 		var results = [] ;
@@ -1541,7 +1546,6 @@ describe( "Wrappers and decorators" , () => {
 
 	// wrapper variant
 	it( "timeout -- .timeLimit()" , () => {
-
 		var index = 0 ;
 		var times = [ 0 , 10 , 40 , 10 ] ;
 		var results = [] ;
@@ -1561,7 +1565,6 @@ describe( "Wrappers and decorators" , () => {
 	} ) ;
 
 	it( "timeout -- .timeLimit() promise variant" , async () => {
-
 		var index = 0 ;
 		var times = [ 0 , 10 , 40 , 10 ] ;
 		var results = [] ;
@@ -1578,13 +1581,12 @@ describe( "Wrappers and decorators" , () => {
 
 	// wrapper variant
 	it( "retry after failure -- .retry()" , done => {
-
 		var count = 0 ;
 
 		const asyncFn = () => {
 			count ++ ;
 			if ( count < 4 ) { return Promise.rejectTimeout( 20 , new Error( 'error!' ) ) ; }
-			 return Promise.resolveTimeout( 20 , 'yay!' ) ;
+			return Promise.resolveTimeout( 20 , 'yay!' ) ;
 		} ;
 
 		// The first one should succeed
@@ -1597,19 +1599,20 @@ describe( "Wrappers and decorators" , () => {
 			// The second one should throw
 			Promise.retry( { retries: 2 , delay: 10 , raiseFactor: 1.5 } , asyncFn ).then( () => {
 				done( new Error( 'It should throw!' ) ) ;
-			} ).catch( () => done() ) ;
+			} )
+				.catch( () => done() ) ;
 
-		} ).catch( error => done( error || new Error() ) ) ;
+		} )
+			.catch( error => done( error || new Error() ) ) ;
 	} ) ;
 
 	it( "retry with timeout -- .retry()" , done => {
-
 		var count = 0 ;
 
 		const asyncFn = () => {
 			count ++ ;
 			if ( count < 4 ) { return Promise.rejectTimeout( 20 , new Error( 'error!wsd' ) ) ; }
-			 return Promise.resolveTimeout( 20 , 'yay!' ) ;
+			return Promise.resolveTimeout( 20 , 'yay!' ) ;
 		} ;
 
 		// The first one should succeed
@@ -1626,19 +1629,20 @@ describe( "Wrappers and decorators" , () => {
 				retries: 5 , delay: 10 , raiseFactor: 1.5 , timeout: 5
 			} , asyncFn ).then( () => {
 				done( new Error( 'It should throw!' ) ) ;
-			} ).catch( () => done() ) ;
+			} )
+				.catch( () => done() ) ;
 
-		} ).catch( error => done( error || new Error() ) ) ;
+		} )
+			.catch( error => done( error || new Error() ) ) ;
 	} ) ;
 
 	it( "retry with catch -- .retry()" , done => {
-
 		var count = 0 ;
 
 		const asyncFn = () => {
 			count ++ ;
 			if ( count < 4 ) { return Promise.rejectTimeout( 20 , new Error( 'error!' ) ) ; }
-			 return Promise.resolveTimeout( 20 , 'yay!' ) ;
+			return Promise.resolveTimeout( 20 , 'yay!' ) ;
 		} ;
 
 		// The first one should succeed
@@ -1651,19 +1655,21 @@ describe( "Wrappers and decorators" , () => {
 			// The second one should throw
 			Promise.retry( { retries: 5 , catch: error => { if ( error.message === 'error!' ) { throw error ; } } } , asyncFn ).then( () => {
 				done( new Error( 'It should throw!' ) ) ;
-			} ).catch( () => done() ) ;
+			} )
+				.catch( () => done() ) ;
 
-		} ).catch( error => done( error || new Error() ) ) ;
+		} )
+			.catch( error => done( error || new Error() ) ) ;
 	} ) ;
 
 	it( ".onceEvent()" , async () => {
 		var results ;
 		var bus = Object.create( require( 'events' ).prototype ) ;
-		
+
 		setTimeout( () => bus.emit( 'data' ) , 10 ) ;
 		results = await Promise.onceEvent( bus , 'data' ) ;
 		expect( results ).to.be( undefined ) ;
-		
+
 		setTimeout( () => bus.emit( 'data' , 1 , 2 , 3 ) , 10 ) ;
 		results = await Promise.onceEvent( bus , 'data' ) ;
 		expect( results ).to.be( 1 ) ;
@@ -1672,7 +1678,7 @@ describe( "Wrappers and decorators" , () => {
 	it( ".onceEventAll()" , async () => {
 		var results ;
 		var bus = Object.create( require( 'events' ).prototype ) ;
-		
+
 		setTimeout( () => bus.emit( 'data' , 1 , 2 , 3 ) , 10 ) ;
 		results = await Promise.onceEventAll( bus , 'data' ) ;
 		expect( results ).to.equal( [ 1 , 2 , 3 ] ) ;
@@ -1681,11 +1687,11 @@ describe( "Wrappers and decorators" , () => {
 	it( ".onceEventOrError()" , async () => {
 		var results ;
 		var bus = Object.create( require( 'events' ).prototype ) ;
-		
+
 		setTimeout( () => bus.emit( 'data' , 1 , 2 , 3 ) , 10 ) ;
 		results = await Promise.onceEventOrError( bus , 'data' ) ;
 		expect( results ).to.be( 1 ) ;
-		
+
 		setTimeout( () => bus.emit( 'error' , new Error( 'Doh!' ) ) , 10 ) ;
 		await expect( () => Promise.onceEventOrError( bus , 'data' ) ).to.reject.with.an( Error , { message: 'Doh!' } ) ;
 	} ) ;
@@ -1693,11 +1699,11 @@ describe( "Wrappers and decorators" , () => {
 	it( ".onceEventAllOrError()" , async () => {
 		var results ;
 		var bus = Object.create( require( 'events' ).prototype ) ;
-		
+
 		setTimeout( () => bus.emit( 'data' , 1 , 2 , 3 ) , 10 ) ;
 		results = await Promise.onceEventAllOrError( bus , 'data' ) ;
 		expect( results ).to.equal( [ 1 , 2 , 3 ] ) ;
-		
+
 		setTimeout( () => bus.emit( 'error' , new Error( 'Doh!' ) ) , 10 ) ;
 		await expect( () => Promise.onceEventAllOrError( bus , 'data' ) ).to.reject.with.an( Error , { message: 'Doh!' } ) ;
 	} ) ;
@@ -1705,27 +1711,27 @@ describe( "Wrappers and decorators" , () => {
 	it( ".onceEventOrError() with event exclusion" , async () => {
 		var results ;
 		var bus = Object.create( require( 'events' ).prototype ) ;
-		
+
 		setTimeout( () => bus.emit( 'data' , 1 , 2 , 3 ) , 10 ) ;
 		results = await Promise.onceEventOrError( bus , 'data' , 'close' ) ;
 		expect( results ).to.be( 1 ) ;
-		
+
 		setTimeout( () => bus.emit( 'error' , new Error( 'Doh!' ) ) , 10 ) ;
 		await expect( () => Promise.onceEventOrError( bus , 'data' , 'close' ) ).to.reject.with.an( Error , { message: 'Doh!' } ) ;
-		
+
 		setTimeout( () => bus.emit( 'close' , 10 ) ) ;
 		await expect( () => Promise.onceEventOrError( bus , 'data' , 'close' ) ).to.reject.with.an( Error , { message: 'Received an excluded event: close' , event: 'close' } ) ;
-		
+
 		setTimeout( () => bus.emit( 'data' , 1 , 2 , 3 ) , 10 ) ;
 		results = await Promise.onceEventOrError( bus , 'data' , [ 'close' , 'end' ] ) ;
 		expect( results ).to.be( 1 ) ;
-		
+
 		setTimeout( () => bus.emit( 'error' , new Error( 'Doh!' ) ) , 10 ) ;
 		await expect( () => Promise.onceEventOrError( bus , 'data' , [ 'close' , 'end' ] ) ).to.reject.with.an( Error , { message: 'Doh!' } ) ;
-		
+
 		setTimeout( () => bus.emit( 'close' , 10 ) ) ;
 		await expect( () => Promise.onceEventOrError( bus , 'data' , [ 'close' , 'end' ] ) ).to.reject.with.an( Error , { message: 'Received an excluded event: close' , event: 'close' } ) ;
-		
+
 		setTimeout( () => bus.emit( 'end' , 10 ) ) ;
 		await expect( () => Promise.onceEventOrError( bus , 'data' , [ 'close' , 'end' ] ) ).to.reject.with.an( Error , { message: 'Received an excluded event: end' , event: 'end' } ) ;
 	} ) ;
@@ -1733,27 +1739,27 @@ describe( "Wrappers and decorators" , () => {
 	it( ".onceEventAllOrError() with event exclusion" , async () => {
 		var results ;
 		var bus = Object.create( require( 'events' ).prototype ) ;
-		
+
 		setTimeout( () => bus.emit( 'data' , 1 , 2 , 3 ) , 10 ) ;
 		results = await Promise.onceEventAllOrError( bus , 'data' , 'close' ) ;
 		expect( results ).to.equal( [ 1 , 2 , 3 ] ) ;
-		
+
 		setTimeout( () => bus.emit( 'error' , new Error( 'Doh!' ) ) , 10 ) ;
 		await expect( () => Promise.onceEventAllOrError( bus , 'data' , 'close' ) ).to.reject.with.an( Error , { message: 'Doh!' } ) ;
-		
+
 		setTimeout( () => bus.emit( 'close' , 10 ) ) ;
 		await expect( () => Promise.onceEventAllOrError( bus , 'data' , 'close' ) ).to.reject.with.an( Error , { message: 'Received an excluded event: close' , event: 'close' } ) ;
-		
+
 		setTimeout( () => bus.emit( 'data' , 1 , 2 , 3 ) , 10 ) ;
 		results = await Promise.onceEventAllOrError( bus , 'data' , [ 'close' , 'end' ] ) ;
 		expect( results ).to.equal( [ 1 , 2 , 3 ] ) ;
-		
+
 		setTimeout( () => bus.emit( 'error' , new Error( 'Doh!' ) ) , 10 ) ;
 		await expect( () => Promise.onceEventAllOrError( bus , 'data' , [ 'close' , 'end' ] ) ).to.reject.with.an( Error , { message: 'Doh!' } ) ;
-		
+
 		setTimeout( () => bus.emit( 'close' , 10 ) ) ;
 		await expect( () => Promise.onceEventAllOrError( bus , 'data' , [ 'close' , 'end' ] ) ).to.reject.with.an( Error , { message: 'Received an excluded event: close' , event: 'close' } ) ;
-		
+
 		setTimeout( () => bus.emit( 'end' , 10 ) ) ;
 		await expect( () => Promise.onceEventAllOrError( bus , 'data' , [ 'close' , 'end' ] ) ).to.reject.with.an( Error , { message: 'Received an excluded event: end' , event: 'end' } ) ;
 	} ) ;
@@ -1764,7 +1770,6 @@ describe( "Wrappers and decorators" , () => {
 describe( "Thenable support" , () => {
 
 	it( "Promise.isThenable()" , () => {
-
 		expect( Promise.isThenable( new Promise() ) ).to.be.ok() ;
 		expect( Promise.isThenable( new Promise( resolve => resolve() ) ) ).to.be.ok() ;
 		expect( Promise.isThenable( { then: resolve => resolve() } ) ).to.be.ok() ;
@@ -1773,25 +1778,24 @@ describe( "Thenable support" , () => {
 	} ) ;
 
 	it( "Promise.fromThenable() from native promises" , done => {
-
 		expect( Promise.fromThenable( new Promise( resolve => resolve() ) ) ).to.be.a( Promise ) ;
 
 		Promise.fromThenable( new Promise( resolve => setTimeout( () => resolve( 'yay' ) , 10 ) ) )
-		.then( value => {
-			expect( value ).to.be( 'yay' ) ;
-			Promise.fromThenable(
-				new Promise( ( resolve , reject ) => setTimeout( () => reject( new Error( 'doh!' ) ) , 10 ) )
-			)
-			.then(
-				() => { throw new Error( 'Should throw!' ) ; } ,
-				error => {
-					expect( error.message ).to.be( 'doh!' ) ;
-					done() ;
-				}
-			)
+			.then( value => {
+				expect( value ).to.be( 'yay' ) ;
+				Promise.fromThenable(
+					new Promise( ( resolve , reject ) => setTimeout( () => reject( new Error( 'doh!' ) ) , 10 ) )
+				)
+					.then(
+						() => { throw new Error( 'Should throw!' ) ; } ,
+						error => {
+							expect( error.message ).to.be( 'doh!' ) ;
+							done() ;
+						}
+					)
+					.catch( error => done( error || new Error() ) ) ;
+			} )
 			.catch( error => done( error || new Error() ) ) ;
-		} )
-		.catch( error => done( error || new Error() ) ) ;
 	} ) ;
 
 
@@ -1814,35 +1818,33 @@ describe( "Thenable support" , () => {
 
 
 	it( "Promise.fromThenable() from unknown thenable object" , done => {
-
 		expect( Promise.fromThenable( new Thenable( true ) ) ).to.be.a( Promise ) ;
 
 		Promise.fromThenable( new Thenable( true , 'yay' ) )
-		.then( value => {
-			expect( value ).to.be( 'yay' ) ;
-			Promise.fromThenable( new Thenable( false , new Error( 'doh!' ) ) )
-			.then(
-				() => { throw new Error( 'Should throw!' ) ; } ,
-				error => {
-					expect( error.message ).to.be( 'doh!' ) ;
-					done() ;
-				}
-			)
+			.then( value => {
+				expect( value ).to.be( 'yay' ) ;
+				Promise.fromThenable( new Thenable( false , new Error( 'doh!' ) ) )
+					.then(
+						() => { throw new Error( 'Should throw!' ) ; } ,
+						error => {
+							expect( error.message ).to.be( 'doh!' ) ;
+							done() ;
+						}
+					)
+					.catch( error => done( error || new Error() ) ) ;
+			} )
 			.catch( error => done( error || new Error() ) ) ;
-		} )
-		.catch( error => done( error || new Error() ) ) ;
 	} ) ;
 
 	it( "Thenable support as .then() return value" , () => {
-
 		return Promise.resolveTimeout( 10 , 'one' )
-		.then( value => {
-			expect( value ).to.be( 'one' ) ;
-			return new Thenable( true , value + '-two' ) ;
-		} )
-		.then( value => {
-			expect( value ).to.be( 'one-two' ) ;
-		} ) ;
+			.then( value => {
+				expect( value ).to.be( 'one' ) ;
+				return new Thenable( true , value + '-two' ) ;
+			} )
+			.then( value => {
+				expect( value ).to.be( 'one-two' ) ;
+			} ) ;
 	} ) ;
 } ) ;
 
@@ -1852,13 +1854,13 @@ describe( "Promise.try()" , () => {
 
 	it( "Promise.try() should be a try-catched version of Promise.resolve( fn() )" , () => {
 		return Promise.try( () => { throw new Error( 'throw!' ) ; } )
-		.then(
-			() => { throw new Error( 'Should throw!' ) ; } ,
-			// Catch part:
-			error => {
-				expect( error.message ).to.be( 'throw!' ) ;
-			}
-		) ;
+			.then(
+				() => { throw new Error( 'Should throw!' ) ; } ,
+				// Catch part:
+				error => {
+					expect( error.message ).to.be( 'throw!' ) ;
+				}
+			) ;
 	} ) ;
 
 	it( "Promise.try() should resolve to a regular value" , () => {
@@ -1884,7 +1886,6 @@ describe( "Promise.try()" , () => {
 describe( "Dormant promises" , () => {
 
 	it( "Promise.dormant() should execute only once a then handler is attached" , done => {
-
 		var order = [] ;
 
 		var promise = Promise.dormant( ( resolve , reject ) => {
@@ -1895,25 +1896,24 @@ describe( "Dormant promises" , () => {
 		order.push( 'sync after 1' ) ;
 
 		Promise.resolveTimeout( 10 )
-		.then( () => {
-			expect( order ).to.equal( [ 'sync after 1' ] ) ;
+			.then( () => {
+				expect( order ).to.equal( [ 'sync after 1' ] ) ;
 
-			promise.then( result => {
-				order.push( 'then' ) ;
-				expect( result ).to.be( 'value' ) ;
-				expect( order ).to.equal( [ 'sync after 1' , 'exec' , 'sync after 2' , 'then' ] ) ;
-				done() ;
+				promise.then( result => {
+					order.push( 'then' ) ;
+					expect( result ).to.be( 'value' ) ;
+					expect( order ).to.equal( [ 'sync after 1' , 'exec' , 'sync after 2' , 'then' ] ) ;
+					done() ;
+				} )
+					.catch( error => done( error || new Error() ) ) ;
+
+				order.push( 'sync after 2' ) ;
+				expect( order ).to.equal( [ 'sync after 1' , 'exec' , 'sync after 2' ] ) ;
 			} )
 			.catch( error => done( error || new Error() ) ) ;
-
-			order.push( 'sync after 2' ) ;
-			expect( order ).to.equal( [ 'sync after 1' , 'exec' , 'sync after 2' ] ) ;
-		} )
-		.catch( error => done( error || new Error() ) ) ;
 	} ) ;
 
 	it( "even rejection handlers should wake it up" , () => {
-
 		var order = [] ;
 
 		var promise = Promise.dormant( ( resolve , reject ) => {
@@ -1924,52 +1924,51 @@ describe( "Dormant promises" , () => {
 		order.push( 'sync after 1' ) ;
 
 		return Promise.resolveTimeout( 10 )
-		.then( () => {
-			expect( order ).to.equal( [ 'sync after 1' ] ) ;
-			var p2 = promise.catch( () => null ) ;
-			order.push( 'sync after 2' ) ;
-			expect( order ).to.equal( [ 'sync after 1' , 'exec' , 'sync after 2' ] ) ;
-			p2.then( () => null ) ;
-			order.push( 'sync after 3' ) ;
-			expect( order ).to.equal( [ 'sync after 1' , 'exec' , 'sync after 2' , 'sync after 3' ] ) ;
-		} ) ;
+			.then( () => {
+				expect( order ).to.equal( [ 'sync after 1' ] ) ;
+				var p2 = promise.catch( () => null ) ;
+				order.push( 'sync after 2' ) ;
+				expect( order ).to.equal( [ 'sync after 1' , 'exec' , 'sync after 2' ] ) ;
+				p2.then( () => null ) ;
+				order.push( 'sync after 3' ) ;
+				expect( order ).to.equal( [ 'sync after 1' , 'exec' , 'sync after 2' , 'sync after 3' ] ) ;
+			} ) ;
 	} ) ;
 } ) ;
 
 
 
 describe( "Then/catch alternatives" , () => {
-	
+
 	it( ".catch() without arguments" , () => {
 		return Promise.rejectTimeout( 10 , new Error( 'Error!' ) ).catch() ;
 	} ) ;
-	
+
 	it( ".tap()" ) ;
 	it( ".tapCatch()" ) ;
 	it( ".fatal()" ) ;
 
 	it( ".done() should throw any exception" , () => {
-
 		var thenCount = 0 ;
 
 		return Promise.resolveTimeout( 10 , 'one' )
-		.then( value => {
-			expect( value ).to.be( 'one' ) ;
-			thenCount ++ ;
-			return 'two' ;
-		} )
-		.then( value => {
-			expect( value ).to.be( 'two' ) ;
-			thenCount ++ ;
-			return Promise.resolveTimeout( 10 , 'three' ) ;
-		} )
-		.then( value => {
-			expect( value ).to.be( 'three' ) ;
-			thenCount ++ ;
-		} )
-		.then( () => {
-			expect( thenCount ).to.be( 3 ) ;
-		} ) ;
+			.then( value => {
+				expect( value ).to.be( 'one' ) ;
+				thenCount ++ ;
+				return 'two' ;
+			} )
+			.then( value => {
+				expect( value ).to.be( 'two' ) ;
+				thenCount ++ ;
+				return Promise.resolveTimeout( 10 , 'three' ) ;
+			} )
+			.then( value => {
+				expect( value ).to.be( 'three' ) ;
+				thenCount ++ ;
+			} )
+			.then( () => {
+				expect( thenCount ).to.be( 3 ) ;
+			} ) ;
 	} ) ;
 } ) ;
 
@@ -1977,12 +1976,12 @@ describe( "Then/catch alternatives" , () => {
 
 describe( "Misc" , () => {
 	it( ".asyncExit() TODO" ) ;
-	
+
 	it( ".resolveSafeTimeout()" , async () => {
 		// Hard to test it correctly
 		expect( await Promise.resolveSafeTimeout( 50 , 'value' ) ).to.be( 'value' ) ;
 	} ) ;
-	
+
 	it( "Promise.dummy, Promise.resolved" , async () => {
 		expect( Promise.resolved ).to.be( Promise.dummy ) ;
 		expect( await Promise.resolved ).to.be( undefined ) ;
@@ -2003,52 +2002,52 @@ describe( "Historical bugs" , () => {
 		var thenCount = 0 ;
 
 		return Promise.resolve( 'one' )
-		.then( value => {
-			expect( value ).to.be( 'one' ) ;
-			thenCount ++ ;
-			return 'two' ;
-		} )
-		.then( value => {
-			expect( value ).to.be( 'two' ) ;
-			thenCount ++ ;
-			return 'three' ;
-		} )
-		.then( value => {
-			expect( value ).to.be( 'three' ) ;
-			thenCount ++ ;
-		} )
-		.then( () => {
-			expect( thenCount ).to.be( 3 ) ;
-		} ) ;
+			.then( value => {
+				expect( value ).to.be( 'one' ) ;
+				thenCount ++ ;
+				return 'two' ;
+			} )
+			.then( value => {
+				expect( value ).to.be( 'two' ) ;
+				thenCount ++ ;
+				return 'three' ;
+			} )
+			.then( value => {
+				expect( value ).to.be( 'three' ) ;
+				thenCount ++ ;
+			} )
+			.then( () => {
+				expect( thenCount ).to.be( 3 ) ;
+			} ) ;
 	} ) ;
 
 	it( ".then() sync chain throwing" , () => {
 		var thenCount = 0 ;
 
 		return Promise.resolve( 'one' )
-		.then( value => {
-			expect( value ).to.be( 'one' ) ;
-			thenCount ++ ;
-			return 'two' ;
-		} )
-		.then( value => {
-			expect( value ).to.be( 'two' ) ;
-			thenCount ++ ;
-			throw new Error( 'throw!' ) ;
-		} )
-		.then( value => {
-			thenCount ++ ;
-		} )
-		.then(
-			() => { throw new Error( 'Should throw!' ) ; } ,
-			error => {
-				expect( thenCount ).to.be( 2 ) ;
-				expect( error.message ).to.be( 'throw!' ) ;
-			}
-		) ;
+			.then( value => {
+				expect( value ).to.be( 'one' ) ;
+				thenCount ++ ;
+				return 'two' ;
+			} )
+			.then( value => {
+				expect( value ).to.be( 'two' ) ;
+				thenCount ++ ;
+				throw new Error( 'throw!' ) ;
+			} )
+			.then( value => {
+				thenCount ++ ;
+			} )
+			.then(
+				() => { throw new Error( 'Should throw!' ) ; } ,
+				error => {
+					expect( thenCount ).to.be( 2 ) ;
+					expect( error.message ).to.be( 'throw!' ) ;
+				}
+			) ;
 	} ) ;
 
-	it( "await and .then method mutation bug" , async() => {
+	it( "await and .then method mutation bug" , async () => {
 		var pFn = () => {
 			var lastP = Promise.resolve() ;
 			var p = new Promise() ;
@@ -2065,17 +2064,17 @@ describe( "Historical bugs" , () => {
 	it( ".concurrent() with only 1 item and concurrency set to 1" , () => {
 		var index = 0 ;
 		var promiseArray = [
-			Promise.resolveTimeout( 20 , 'one' ) ,
+			Promise.resolveTimeout( 20 , 'one' )
 		] ;
 
 		return Promise.concurrent( 1 , promiseArray , str => {
 			return Promise.resolveTimeout( 10 , str + str ) ;
 		} )
-		.then(
-			( values ) => {
-				expect( values ).to.equal( [ 'oneone' ] ) ;
-			}
-		) ;
+			.then(
+				( values ) => {
+					expect( values ).to.equal( [ 'oneone' ] ) ;
+				}
+			) ;
 	} ) ;
 } ) ;
 
@@ -2087,7 +2086,6 @@ describe( "Native promise parasiting" , () => {
 	Promise.parasite() ;
 
 	it( "Promise.parasite() should parasite global native promises, bringing them few 'seventh' features" , done => {
-
 		var promiseOk = new Promise.Native( ( resolve , reject ) => setTimeout( () => resolve( 'yay!' ) , 10 ) ) ;
 		var promiseKo = new Promise.Native( ( resolve , reject ) => setTimeout( () => reject( new Error( 'doh!' ) ) , 10 ) ) ;
 
@@ -2100,16 +2098,15 @@ describe( "Native promise parasiting" , () => {
 				expect( error.message ).to.be( 'doh!' ) ;
 				done() ;
 			} )
-			.catch( error => done( error || new Error() ) ) ;
+				.catch( error => done( error || new Error() ) ) ;
 		} )
-		.catch( error => done( error || new Error() ) ) ;
+			.catch( error => done( error || new Error() ) ) ;
 	} ) ;
 
 	it( "Async/await function should return a promise correctly parasited" , done => {
-
 		var promiseOk = new Promise.Native( ( resolve , reject ) => setTimeout( () => resolve( 'yay!' ) , 10 ) ) ;
 
-		var asyncFn = async() => {
+		var asyncFn = async () => {
 			return await promiseOk ;
 		} ;
 
@@ -2118,8 +2115,7 @@ describe( "Native promise parasiting" , () => {
 			expect( value ).to.be( 'yay!' ) ;
 			done() ;
 		} )
-		.catch( error => done( error || new Error() ) ) ;
+			.catch( error => done( error || new Error() ) ) ;
 	} ) ;
 } ) ;
-
 
