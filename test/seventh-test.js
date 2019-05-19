@@ -289,6 +289,51 @@ describe( "Promise to callback" , () => {
 
 
 
+describe( "Create a callback for promise" , () => {
+
+	it( "Promise#createCallback()" , async () => {
+		var promise ;
+		
+		var fn = ( error , result , callback ) => {
+			setTimeout( () => callback( error , result ) , 10 ) ;
+		}
+		
+		promise = new Promise() ;
+		fn( null , 'value' , promise.createCallback() ) ;
+		await expect( promise ).to.eventually.be( 'value' ) ;
+
+		promise = new Promise() ;
+		fn( new Error( 'Error!' ) , null , promise.createCallback() ) ;
+		await expect( () => promise ).to.reject.with.an( Error , { message: 'Error!' } ) ;
+	} ) ;
+
+	it( "Promise#createCallbackAll()" , async () => {
+		var promise ;
+		
+		var fn = ( error , results , callback ) => {
+			setTimeout( () => callback( error , ... results ) , 10 ) ;
+		}
+		
+		promise = new Promise() ;
+		fn( null , [] , promise.createCallbackAll() ) ;
+		await expect( promise ).to.eventually.equal( [] ) ;
+
+		promise = new Promise() ;
+		fn( null , [ 'value' ] , promise.createCallbackAll() ) ;
+		await expect( promise ).to.eventually.equal( [ 'value' ] ) ;
+
+		promise = new Promise() ;
+		fn( null , [ 'value' , 'value2' , 'value3' ] , promise.createCallbackAll() ) ;
+		await expect( promise ).to.eventually.equal( [ 'value' , 'value2' , 'value3' ] ) ;
+
+		promise = new Promise() ;
+		fn( new Error( 'Error!' ) , [] , promise.createCallbackAll() ) ;
+		await expect( () => promise ).to.reject.with.an( Error , { message: 'Error!' } ) ;
+	} ) ;
+} ) ;
+
+
+
 describe( "Promise batch operations" , () => {
 
 	describe( "Promise.all()" , () => {
