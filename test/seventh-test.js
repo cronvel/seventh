@@ -291,44 +291,24 @@ describe( "Promise to callback" , () => {
 
 describe( "Create a callback for promise" , () => {
 
-	it( "Promise#createCallback()" , async () => {
-		var promise ;
-		
+	it( "Promise.callback()" , async () => {
 		var fn = ( error , result , callback ) => {
 			setTimeout( () => callback( error , result ) , 10 ) ;
-		}
-		
-		promise = new Promise() ;
-		fn( null , 'value' , promise.createCallback() ) ;
-		await expect( promise ).to.eventually.be( 'value' ) ;
+		} ;
 
-		promise = new Promise() ;
-		fn( new Error( 'Error!' ) , null , promise.createCallback() ) ;
-		await expect( () => promise ).to.reject.with.an( Error , { message: 'Error!' } ) ;
+		await expect( Promise.callback( callback => fn( null , 'value' , callback ) ) ).to.eventually.be( 'value' ) ;
+		await expect( () => Promise.callback( callback => fn( new Error( 'Some error' ) , null , callback ) ) ).to.reject.with.an( Error , { message: 'Some error' } ) ;
 	} ) ;
 
-	it( "Promise#createCallbackAll()" , async () => {
-		var promise ;
-		
+	it( "Promise.callbackAll()" , async () => {
 		var fn = ( error , results , callback ) => {
 			setTimeout( () => callback( error , ... results ) , 10 ) ;
-		}
-		
-		promise = new Promise() ;
-		fn( null , [] , promise.createCallbackAll() ) ;
-		await expect( promise ).to.eventually.equal( [] ) ;
+		} ;
 
-		promise = new Promise() ;
-		fn( null , [ 'value' ] , promise.createCallbackAll() ) ;
-		await expect( promise ).to.eventually.equal( [ 'value' ] ) ;
-
-		promise = new Promise() ;
-		fn( null , [ 'value' , 'value2' , 'value3' ] , promise.createCallbackAll() ) ;
-		await expect( promise ).to.eventually.equal( [ 'value' , 'value2' , 'value3' ] ) ;
-
-		promise = new Promise() ;
-		fn( new Error( 'Error!' ) , [] , promise.createCallbackAll() ) ;
-		await expect( () => promise ).to.reject.with.an( Error , { message: 'Error!' } ) ;
+		await expect( Promise.callbackAll( callback => fn( null , [] , callback ) ) ).to.eventually.equal( [] ) ;
+		await expect( Promise.callbackAll( callback => fn( null , [ 'value' ] , callback ) ) ).to.eventually.equal( [ 'value' ] ) ;
+		await expect( Promise.callbackAll( callback => fn( null , [ 'value' , 'value2' , 'value3' ] , callback ) ) ).to.eventually.equal( [ 'value' , 'value2' , 'value3' ] ) ;
+		await expect( () => Promise.callbackAll( callback => fn( new Error( 'Some error' ) , [] , callback ) ) ).to.reject.with.an( Error , { message: 'Some error' } ) ;
 	} ) ;
 } ) ;
 
