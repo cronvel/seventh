@@ -1345,6 +1345,8 @@ describe( "Wrappers and decorators" , () => {
 				() => { throw new Error( 'Should throw!' ) ; } ,
 				error => {
 					expect( error.message ).to.be( 'failed!' ) ;
+					expect( error ).not.to.have.property( 'arg' ) ;
+					expect( error ).not.to.have.property( 'args' ) ;
 					done() ;
 				}
 			)
@@ -1372,6 +1374,66 @@ describe( "Wrappers and decorators" , () => {
 				() => { throw new Error( 'Should throw!' ) ; } ,
 				error => {
 					expect( error.message ).to.be( 'failed!' ) ;
+					expect( error ).not.to.have.property( 'arg' ) ;
+					expect( error ).not.to.have.property( 'args' ) ;
+					done() ;
+				}
+			)
+				.catch( error => done( error || new Error() ) ) ;
+		} )
+			.catch( error => done( error || new Error() ) ) ;
+	} ) ;
+
+	it( "promisify node style callback function and error extra argument -- .promisify()" , done => {
+		const okFn = ( callback ) => {
+			setTimeout( () => callback( undefined , 'arg' , 'trash' ) , 10 ) ;
+		} ;
+
+		const koFn = ( callback ) => {
+			setTimeout( () => callback( new Error( 'failed!' ) , 'arg1' , 'arg2' ) , 10 ) ;
+		} ;
+
+		const promisifiedOkFn = Promise.promisify( okFn ) ;
+		const promisifiedKoFn = Promise.promisify( koFn ) ;
+
+		promisifiedOkFn().then( value => {
+			expect( value ).to.be( 'arg' ) ;
+
+			promisifiedKoFn().then(
+				() => { throw new Error( 'Should throw!' ) ; } ,
+				error => {
+					expect( error.message ).to.be( 'failed!' ) ;
+					expect( error.arg ).to.be( 'arg1' ) ;
+					expect( error ).not.to.have.property( 'args' ) ;
+					done() ;
+				}
+			)
+				.catch( error => done( error || new Error() ) ) ;
+		} )
+			.catch( error => done( error || new Error() ) ) ;
+	} ) ;
+
+	it( "promisify node style callback function and error extra arguments -- .promisifyAll()" , done => {
+		const okFn = ( callback ) => {
+			setTimeout( () => callback( undefined , 'arg1' , 'arg2' , 'arg3' ) , 10 ) ;
+		} ;
+
+		const koFn = ( callback ) => {
+			setTimeout( () => callback( new Error( 'failed!' ) , 'arg1' , 'arg2' ) , 10 ) ;
+		} ;
+
+		const promisifiedOkFn = Promise.promisifyAll( okFn ) ;
+		const promisifiedKoFn = Promise.promisifyAll( koFn ) ;
+
+		promisifiedOkFn().then( value => {
+			expect( value ).to.equal( [ 'arg1' , 'arg2' , 'arg3' ] ) ;
+
+			promisifiedKoFn().then(
+				() => { throw new Error( 'Should throw!' ) ; } ,
+				error => {
+					expect( error.message ).to.be( 'failed!' ) ;
+					expect( error ).not.to.have.property( 'arg' ) ;
+					expect( error.args ).to.equal( [ 'arg1' , 'arg2' ] ) ;
 					done() ;
 				}
 			)

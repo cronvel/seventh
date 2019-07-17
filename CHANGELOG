@@ -1,0 +1,7 @@
+
+v0.7.24
+-------
+
+New: .promisify()/.promisifyAll() now add extra property 'arg'/'args' to Error instances on rejection
+
+
