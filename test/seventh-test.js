@@ -1588,7 +1588,6 @@ describe( "Decorators" , () => {
 		} , 40 ) ;
 	} ) ;
 
-	it( "debounce sync -- .debounceSync()" ) ;
 
 	// decorator variant
 	it( "timeout -- .timeout()" , () => {
@@ -1636,6 +1635,170 @@ describe( "Decorators" , () => {
 	} ) ;
 
 	it( "Test decorators thisBinding behavior" ) ;
+
+	describe( "Debounce sync test suite -- .debounceSync()" , () => {
+		var results , debouncedGetFn , debouncedFullSyncFn ;
+
+		const getFn = ( resource , value ) => {
+			value = 'get:' + value ;
+			results.push( value ) ;
+			var p = Promise.resolveTimeout( 20 , value ) ;
+			p.then( () => results.push( 'end:' + value ) ) ;
+			return p ;
+		} ;
+
+		const fullSyncFn = ( resource , value ) => {
+			value = 'fullSync:' + value ;
+			results.push( value ) ;
+			//console.log( value ) ;
+			var p = Promise.resolveTimeout( 20 , value ) ;
+			p.then( () => {
+				//console.log( 'end:' + value ) ;
+				results.push( 'end:' + value )
+			} ) ;
+			return p ;
+		} ;
+
+		it( "get only" , async () => {
+			[ debouncedGetFn , debouncedFullSyncFn ] = Promise.debounceSync( { fn: getFn } , { fn: fullSyncFn } ) ;
+			results = [] ;
+			debouncedGetFn( 'resource#1' , 'one' ) ;
+			debouncedGetFn( 'resource#1' , 'two' ) ;
+			debouncedGetFn( 'resource#1' , 'three' ) ;
+			await debouncedGetFn( 'resource#1' , 'four' ) ;
+			await debouncedGetFn( 'resource#1' , 'five' ) ;
+			expect( results ).to.equal( [ 'get:one' , 'end:get:one' , 'get:five' , 'end:get:five' ] ) ;
+		} ) ;
+
+		it( "fullSync only" , async () => {
+			[ debouncedGetFn , debouncedFullSyncFn ] = Promise.debounceSync( { fn: getFn } , { fn: fullSyncFn } ) ;
+			results = [] ;
+			debouncedFullSyncFn( 'resource#1' , 'one' ) ;
+			debouncedFullSyncFn( 'resource#1' , 'two' ) ;
+			debouncedFullSyncFn( 'resource#1' , 'three' ) ;
+			await debouncedFullSyncFn( 'resource#1' , 'four' ) ;
+			await debouncedFullSyncFn( 'resource#1' , 'five' ) ;
+			expect( results ).to.equal( [ 'fullSync:one' , 'end:fullSync:one' , 'fullSync:four' , 'end:fullSync:four' , 'fullSync:five' , 'end:fullSync:five' ] ) ;
+		} ) ;
+
+		it( "get before fullSync" , async () => {
+			[ debouncedGetFn , debouncedFullSyncFn ] = Promise.debounceSync( { fn: getFn } , { fn: fullSyncFn } ) ;
+			results = [] ;
+			debouncedGetFn( 'resource#1' , 'one' ) ;
+			await debouncedFullSyncFn( 'resource#1' , 'two' ) ;
+			expect( results ).to.equal( [ 'get:one' , 'end:get:one' , 'fullSync:two' , 'end:fullSync:two' ] ) ;
+		} ) ;
+
+		it( "get before 2 fullSync" , async () => {
+			[ debouncedGetFn , debouncedFullSyncFn ] = Promise.debounceSync( { fn: getFn } , { fn: fullSyncFn } ) ;
+			results = [] ;
+			debouncedGetFn( 'resource#1' , 'one' ) ;
+			debouncedFullSyncFn( 'resource#1' , 'two' ) ;
+			await debouncedFullSyncFn( 'resource#1' , 'three' ) ;
+			expect( results ).to.equal( [ 'get:one' , 'end:get:one' , 'fullSync:three' , 'end:fullSync:three' ] ) ;
+		} ) ;
+
+		it( "get after fullSync" , async () => {
+			[ debouncedGetFn , debouncedFullSyncFn ] = Promise.debounceSync( { fn: getFn } , { fn: fullSyncFn } ) ;
+			results = [] ;
+			debouncedFullSyncFn( 'resource#1' , 'one' ) ;
+			await debouncedGetFn( 'resource#1' , 'two' ) ;
+			expect( results ).to.equal( [ 'fullSync:one' , 'end:fullSync:one' ] ) ;
+		} ) ;
+
+		it( "2 get after fullSync" , async () => {
+			[ debouncedGetFn , debouncedFullSyncFn ] = Promise.debounceSync( { fn: getFn } , { fn: fullSyncFn } ) ;
+			results = [] ;
+			debouncedFullSyncFn( 'resource#1' , 'one' ) ;
+			debouncedGetFn( 'resource#1' , 'two' ) ;
+			await debouncedGetFn( 'resource#1' , 'three' ) ;
+			expect( results ).to.equal( [ 'fullSync:one' , 'end:fullSync:one' ] ) ;
+		} ) ;
+
+		it( "2 get after fullSync, then 1 get" , async () => {
+			[ debouncedGetFn , debouncedFullSyncFn ] = Promise.debounceSync( { fn: getFn } , { fn: fullSyncFn } ) ;
+			results = [] ;
+			debouncedFullSyncFn( 'resource#1' , 'one' ) ;
+			debouncedGetFn( 'resource#1' , 'two' ) ;
+			await debouncedGetFn( 'resource#1' , 'three' ) ;
+			await debouncedGetFn( 'resource#1' , 'four' ) ;
+			expect( results ).to.equal( [ 'fullSync:one' , 'end:fullSync:one' , 'get:four' , 'end:get:four' ] ) ;
+		} ) ;
+
+		it( "test delays for get" , async () => {
+			[ debouncedGetFn , debouncedFullSyncFn ] = Promise.debounceSync( { fn: getFn , delay: 50 } , { fn: fullSyncFn } ) ;
+			results = [] ;
+			await debouncedGetFn( 'resource#1' , 'one' ) ;
+			// Cause it return immediately for the next 3
+			await debouncedGetFn( 'resource#1' , 'two' ) ;
+			await debouncedGetFn( 'resource#1' , 'three' ) ;
+			await debouncedGetFn( 'resource#1' , 'four' ) ;
+			expect( results ).to.equal( [ 'get:one' , 'end:get:one' ] ) ;
+
+			[ debouncedGetFn , debouncedFullSyncFn ] = Promise.debounceSync( { fn: getFn , delay: 50 } , { fn: fullSyncFn } ) ;
+			results = [] ;
+			await debouncedGetFn( 'resource#1' , 'one' ) ;
+			await Promise.resolveTimeout( 30 ) ;
+			await debouncedGetFn( 'resource#1' , 'two' ) ;
+			await Promise.resolveTimeout( 30 ) ;
+			await debouncedGetFn( 'resource#1' , 'three' ) ;
+			await Promise.resolveTimeout( 30 ) ;
+			await debouncedGetFn( 'resource#1' , 'four' ) ;
+			await Promise.resolveTimeout( 30 ) ;
+			await debouncedGetFn( 'resource#1' , 'five' ) ;
+			expect( results ).to.equal( [ 'get:one' , 'end:get:one' , 'get:three' , 'end:get:three' , 'get:five' , 'end:get:five' ] ) ;
+		} ) ;
+
+		it( "test delays for fullSync" , async () => {
+			[ debouncedGetFn , debouncedFullSyncFn ] = Promise.debounceSync( { fn: getFn } , { fn: fullSyncFn , delay: 50 } ) ;
+			results = [] ;
+			await debouncedFullSyncFn( 'resource#1' , 'one' ) ;
+			debouncedFullSyncFn( 'resource#1' , 'two' ) ;
+			debouncedFullSyncFn( 'resource#1' , 'three' ) ;
+			await debouncedFullSyncFn( 'resource#1' , 'four' ) ;
+			expect( results ).to.equal( [ 'fullSync:one' , 'end:fullSync:one' , 'fullSync:four' , 'end:fullSync:four' ] ) ;
+
+			[ debouncedGetFn , debouncedFullSyncFn ] = Promise.debounceSync( { fn: getFn } , { fn: fullSyncFn , delay: 50 } ) ;
+			results = [] ;
+			await debouncedFullSyncFn( 'resource#1' , 'one' ) ;
+			await Promise.resolveTimeout( 60 ) ;
+			debouncedFullSyncFn( 'resource#1' , 'two' ) ;
+			debouncedFullSyncFn( 'resource#1' , 'three' ) ;
+			await debouncedFullSyncFn( 'resource#1' , 'four' ) ;
+			expect( results ).to.equal( [ 'fullSync:one' , 'end:fullSync:one' , 'fullSync:two' , 'end:fullSync:two' , 'fullSync:four' , 'end:fullSync:four' ] ) ;
+
+			[ debouncedGetFn , debouncedFullSyncFn ] = Promise.debounceSync( { fn: getFn } , { fn: fullSyncFn , delay: 50 } ) ;
+			results = [] ;
+			debouncedFullSyncFn( 'resource#1' , 'one' ) ;
+			debouncedFullSyncFn( 'resource#1' , 'two' ) ;
+			// 60 < 20 + 50
+			await Promise.resolveTimeout( 60 ) ;
+			await debouncedFullSyncFn( 'resource#1' , 'three' ) ;
+			//await debouncedFullSyncFn( 'resource#1' , 'four' ) ;
+			expect( results ).to.equal( [ 'fullSync:one' , 'end:fullSync:one' , 'fullSync:three' , 'end:fullSync:three' ] ) ;
+
+			[ debouncedGetFn , debouncedFullSyncFn ] = Promise.debounceSync( { fn: getFn } , { fn: fullSyncFn , delay: 50 } ) ;
+			results = [] ;
+			debouncedFullSyncFn( 'resource#1' , 'one' ) ;
+			debouncedFullSyncFn( 'resource#1' , 'two' ) ;
+			// 80 > 20 + 50
+			await Promise.resolveTimeout( 80 ) ;
+			await debouncedFullSyncFn( 'resource#1' , 'three' ) ;
+			//await debouncedFullSyncFn( 'resource#1' , 'four' ) ;
+			expect( results ).to.equal( [ 'fullSync:one' , 'end:fullSync:one' , 'fullSync:two' , 'end:fullSync:two' , 'fullSync:three' , 'end:fullSync:three' ] ) ;
+		} ) ;
+
+		it( "different resources should not be debounced" , async () => {
+			[ debouncedGetFn , debouncedFullSyncFn ] = Promise.debounceSync( { fn: getFn } , { fn: fullSyncFn } ) ;
+			results = [] ;
+			debouncedGetFn( 'resource#1' , 'one' ) ;
+			debouncedGetFn( 'resource#2' , 'two' ) ;
+			debouncedGetFn( 'resource#3' , 'three' ) ;
+			await debouncedGetFn( 'resource#1' , 'four' ) ;
+			await debouncedGetFn( 'resource#1' , 'five' ) ;
+			expect( results ).to.equal( [ 'get:one' , 'get:two' , 'get:three' , 'end:get:one' , 'end:get:two' , 'end:get:three' , 'get:five' , 'end:get:five' ] ) ;
+		} ) ;
+	} ) ;
 } ) ;
 
 
