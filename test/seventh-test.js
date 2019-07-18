@@ -1326,7 +1326,7 @@ describe( "Promise batch operations" , () => {
 
 
 
-describe( "Wrappers and decorators" , () => {
+describe( "Decorators" , () => {
 
 	it( "promisify node style callback function, limit to one argument after the error argument -- .promisify()" , done => {
 		const okFn = ( callback ) => {
@@ -1492,6 +1492,50 @@ describe( "Wrappers and decorators" , () => {
 		} , 40 ) ;
 	} ) ;
 
+	it( "serialize, successive executions never overlap -- .serialize()" , done => {
+		var results = [] ;
+
+		const asyncFn = ( value ) => {
+			results.push( 'before: ' + value ) ;
+
+			var p = new Promise( resolve => {
+				setTimeout( () => {
+					results.push( 'after: ' + value ) ;
+					resolve() ;
+				} , 20 ) ;
+			} ) ;
+
+			return p ;
+		} ;
+
+		const serializedFn = Promise.serialize( asyncFn ) ;
+
+		serializedFn( 'one' ) ;
+		serializedFn( 'two' ) ;
+		serializedFn( 'three' ) ;
+		serializedFn( 'four' ) ;
+
+		setTimeout( () => {
+			serializedFn( 'five' ).then( () => {
+				//console.log( results ) ;
+				expect( results ).to.equal( [
+					"before: one" ,
+					"after: one" ,
+					"before: two" ,
+					"after: two" ,
+					"before: three" ,
+					"after: three" ,
+					"before: four" ,
+					"after: four" ,
+					"before: five" ,
+					"after: five"
+				] ) ;
+				done() ;
+			} )
+				.catch( error => done( error ) ) ;
+		} , 40 ) ;
+	} ) ;
+
 	it( "debounce -- .debounce()" , done => {
 		var results = [] ;
 
@@ -1544,49 +1588,7 @@ describe( "Wrappers and decorators" , () => {
 		} , 40 ) ;
 	} ) ;
 
-	it( "serialize, successive executions never overlap -- .serialize()" , done => {
-		var results = [] ;
-
-		const asyncFn = ( value ) => {
-			results.push( 'before: ' + value ) ;
-
-			var p = new Promise( resolve => {
-				setTimeout( () => {
-					results.push( 'after: ' + value ) ;
-					resolve() ;
-				} , 20 ) ;
-			} ) ;
-
-			return p ;
-		} ;
-
-		const serializedFn = Promise.serialize( asyncFn ) ;
-
-		serializedFn( 'one' ) ;
-		serializedFn( 'two' ) ;
-		serializedFn( 'three' ) ;
-		serializedFn( 'four' ) ;
-
-		setTimeout( () => {
-			serializedFn( 'five' ).then( () => {
-				//console.log( results ) ;
-				expect( results ).to.equal( [
-					"before: one" ,
-					"after: one" ,
-					"before: two" ,
-					"after: two" ,
-					"before: three" ,
-					"after: three" ,
-					"before: four" ,
-					"after: four" ,
-					"before: five" ,
-					"after: five"
-				] ) ;
-				done() ;
-			} )
-				.catch( error => done( error ) ) ;
-		} , 40 ) ;
-	} ) ;
+	it( "debounce sync -- .debounceSync()" ) ;
 
 	// decorator variant
 	it( "timeout -- .timeout()" , () => {
@@ -1632,6 +1634,13 @@ describe( "Wrappers and decorators" , () => {
 			expect( results ).to.equal( [ true , false , false , true ] ) ;
 		} ) ;
 	} ) ;
+
+	it( "Test decorators thisBinding behavior" ) ;
+} ) ;
+
+
+
+describe( "Wrappers" , () => {
 
 	// wrapper variant
 	it( "timeout -- .timeLimit()" , () => {
