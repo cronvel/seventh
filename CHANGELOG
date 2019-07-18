@@ -1,4 +1,10 @@
 
+v0.7.25
+-------
+
+Fix bugged .finally() behavior, splitting into .finally() and .tapFinally()
+
+
 v0.7.24
 -------
 

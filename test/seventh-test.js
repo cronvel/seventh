@@ -192,12 +192,14 @@ describe( "Basic standard-compliant Promise" , () => {
 			) ;
 		} ) ;
 	} ) ;
+	
+	it( ".finally() and .tapFinally()" ) ;
 } ) ;
 
 
 
 describe( "Promise to/from another promise" , () => {
-	it( "Promise#toPromise()" ) ;
+	it( "Promise#propagate()" ) ;
 } ) ;
 
 
