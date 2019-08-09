@@ -1,4 +1,10 @@
 
+v0.7.28
+-------
+
+New: Promise.resolveNextTick(), Promise.rejectNextTick()
+
+
 v0.7.27
 -------
 
