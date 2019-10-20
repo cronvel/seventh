@@ -34,14 +34,20 @@ publish: check-if-commited browser README.md build-commit log/npm-publish.log lo
 # Clean temporary things, or things that can be automatically regenerated
 clean: clean-all
 
+# browserify
+browser: browser/seventh.js browser/seventh.min.js
+
+# Build
+build: browser
+
 
 
 # Variables
 
 MOCHA=./node_modules/.bin/mocha -c
 JSHINT=./node_modules/.bin/jshint --verbose
-BROWSERIFY=./node_modules/.bin/browserify
-UGLIFY=./node_modules/.bin/uglifyjs
+BROWSERIFY=browserify
+UGLIFY=uglifyjs
 
 
 
@@ -49,7 +55,7 @@ UGLIFY=./node_modules/.bin/uglifyjs
 
 # Build the browser lib
 browser/seventh.js: lib/*.js
-	${BROWSERIFY} lib/browser.js -s seventh -o browser/seventh.js
+	${BROWSERIFY} lib/seventh.js -s Promise7th -o browser/seventh.js
 
 # Build the browser minified lib
 browser/seventh.min.js: browser/seventh.js
