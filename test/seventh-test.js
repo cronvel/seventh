@@ -1562,6 +1562,35 @@ describe( "Decorators" , () => {
 		} , 40 ) ;
 	} ) ;
 
+	it( "debounce with an extra cooldown delay -- .debounceDelay()" , done => {
+		var results = [] ;
+
+		const asyncFn = ( value ) => {
+			results.push( value ) ;
+			var p = Promise.resolveTimeout( 20 , value ) ;
+			return p ;
+		} ;
+
+		const debouncedFn = Promise.debounceDelay( 60 , asyncFn ) ;
+
+		debouncedFn( 'one' ) ;
+		debouncedFn( 'two' ) ;
+		debouncedFn( 'three' ) ;
+		debouncedFn( 'four' ) ;
+		
+		// Not enough! there is an extra delay! 60 + 20 = 80ms
+		setTimeout( () => debouncedFn( 'five' ) , 40 ) ;
+
+		setTimeout( () => {
+			debouncedFn( 'six' ).then( () => {
+				//console.log( results ) ;
+				expect( results ).to.equal( [ 'one' , 'six' ] ) ;
+				done() ;
+			} )
+				.catch( error => done( error ) ) ;
+		} , 100 ) ;
+	} ) ;
+
 	it( "debounce update -- .debounceUpdate()" , done => {
 		var results = [] ;
 
@@ -1796,7 +1825,9 @@ describe( "Decorators" , () => {
 			debouncedGetFn( 'resource#3' , 'three' ) ;
 			await debouncedGetFn( 'resource#1' , 'four' ) ;
 			await debouncedGetFn( 'resource#1' , 'five' ) ;
-			expect( results ).to.equal( [ 'get:one' , 'get:two' , 'get:three' , 'end:get:one' , 'end:get:two' , 'end:get:three' , 'get:five' , 'end:get:five' ] ) ;
+			
+			//expect( results ).to.equal( [ 'get:one' , 'get:two' , 'get:three' , 'end:get:one' , 'end:get:two' , 'end:get:three' , 'get:five' , 'end:get:five' ] ) ;
+			expect( results ).to.equal( [ 'get:one' , 'get:two' , 'get:three' , 'end:get:one' , 'get:five' , 'end:get:two' , 'end:get:three' , 'end:get:five' ] ) ;
 		} ) ;
 	} ) ;
 } ) ;

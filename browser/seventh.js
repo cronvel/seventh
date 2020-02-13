@@ -1628,6 +1628,27 @@ Promise.debounce = ( asyncFn , thisBinding ) => {
 
 
 /*
+	Like .debouce(), but the last promise is returned for some extra time after it resolved
+*/
+Promise.debounceDelay = ( delay , asyncFn , thisBinding ) => {
+	var inProgress = null ;
+
+	const outWrapper = () => {
+		setTimeout( () => inProgress = null , delay ) ;
+	} ;
+
+	return function( ... args ) {
+		if ( inProgress ) { return inProgress ; }
+
+		inProgress = asyncFn.call( thisBinding || this , ... args ) ;
+		Promise.finally( inProgress , outWrapper ) ;
+		return inProgress ;
+	} ;
+} ;
+
+
+
+/*
 	It does nothing if the decoratee is still in progress.
 	Instead, the decoratee is called when finished once and only once, if it was tried one or more time during its progress.
 	In case of multiple calls, the arguments of the last call will be used.
