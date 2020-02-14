@@ -1,4 +1,10 @@
 
+v0.7.33
+-------
+
+.debounceSync has a .onDebounce property for syncGet params
+
+
 v0.7.32
 -------
 

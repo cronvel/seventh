@@ -2,7 +2,7 @@
 /*
 	Seventh
 
-	Copyright (c) 2017 - 2019 Cédric Ronvel
+	Copyright (c) 2017 - 2020 Cédric Ronvel
 
 	The MIT License (MIT)
 
@@ -86,7 +86,7 @@ Promise.promisifyAnyNodeApi = ( api , suffix , multiSuffix , filter ) => {
 /*
 	Seventh
 
-	Copyright (c) 2017 - 2019 Cédric Ronvel
+	Copyright (c) 2017 - 2020 Cédric Ronvel
 
 	The MIT License (MIT)
 
@@ -696,7 +696,7 @@ Promise.race = ( iterable ) => {
 /*
 	Seventh
 
-	Copyright (c) 2017 - 2019 Cédric Ronvel
+	Copyright (c) 2017 - 2020 Cédric Ronvel
 
 	The MIT License (MIT)
 
@@ -1450,7 +1450,7 @@ if ( process.browser ) {
 /*
 	Seventh
 
-	Copyright (c) 2017 - 2019 Cédric Ronvel
+	Copyright (c) 2017 - 2020 Cédric Ronvel
 
 	The MIT License (MIT)
 
@@ -1715,6 +1715,7 @@ Promise.NO_DELAY = {} ;
 		delay: the minimum delay between to call
 			for get: nothing is done is the delay is not met, simply return the last promise
 			for update/fullSync, it waits for that delay before synchronizing again
+		onDebounce: *ONLY* for GET ATM, a callback called when debounced
 */
 Promise.debounceSync = ( getParams , fullSyncParams ) => {
 	var perResourceData = new Map() ;
@@ -1789,6 +1790,7 @@ Promise.debounceSync = ( getParams , fullSyncParams ) => {
 		if ( resourceData.inProgress ) { return resourceData.inProgress ; }
 
 		if ( ! noDelay && getParams.delay && resourceData.lastTime && new Date() - resourceData.lastTime < getParams.delay ) {
+			if ( typeof getParams.onDebounce === 'function' ) { getParams.onDebounce( resourceId , ... args ) ; }
 			return resourceData.last ;
 		}
 
@@ -1935,7 +1937,7 @@ Promise.variableRetry = ( asyncFn , thisBinding ) => {
 /*
 	Seventh
 
-	Copyright (c) 2017 - 2019 Cédric Ronvel
+	Copyright (c) 2017 - 2020 Cédric Ronvel
 
 	The MIT License (MIT)
 
@@ -2034,7 +2036,7 @@ Promise.resolveSafeTimeout = function( timeout , value ) {
 /*
 	Seventh
 
-	Copyright (c) 2017 - 2019 Cédric Ronvel
+	Copyright (c) 2017 - 2020 Cédric Ronvel
 
 	The MIT License (MIT)
 
@@ -2086,7 +2088,7 @@ Promise.parasite = () => {
 /*
 	Seventh
 
-	Copyright (c) 2017 - 2019 Cédric Ronvel
+	Copyright (c) 2017 - 2020 Cédric Ronvel
 
 	The MIT License (MIT)
 
@@ -2129,7 +2131,7 @@ require( './misc.js' ) ;
 /*
 	Seventh
 
-	Copyright (c) 2017 - 2019 Cédric Ronvel
+	Copyright (c) 2017 - 2020 Cédric Ronvel
 
 	The MIT License (MIT)
 
