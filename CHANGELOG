@@ -1,4 +1,10 @@
 
+v0.7.32
+-------
+
+.debounceSync() decoratee now accepts a final Promise.NO_DELAY option to force syncing without delay when not busy
+
+
 v0.7.31
 -------
 

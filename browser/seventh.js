@@ -1700,6 +1700,9 @@ Promise.debounceUpdate = ( asyncFn , thisBinding ) => {
 
 
 
+// Used to ensure that the sync is done immediately if not busy
+Promise.NO_DELAY = {} ;
+
 /*
 	Debounce for synchronization algorithm.
 	Get two functions, one for getting from upstream, one for a full sync with upstream (getting AND updating).
@@ -1774,11 +1777,20 @@ Promise.debounceSync = ( getParams , fullSyncParams ) => {
 	} ;
 
 	const getInWrapper = function( resourceId , ... args ) {
-		var localThis = getParams.thisBinding || this ,
+		var noDelay = false ,
+			localThis = getParams.thisBinding || this ,
 			resourceData = getResourceData( resourceId ) ;
 
+		if ( args[ args.length - 1 ] === Promise.NO_DELAY ) {
+			noDelay = true ;
+			args.length -- ;
+		}
+
 		if ( resourceData.inProgress ) { return resourceData.inProgress ; }
-		if ( getParams.delay && resourceData.lastTime && new Date() - resourceData.lastTime < getParams.delay ) { return resourceData.last ; }
+
+		if ( ! noDelay && getParams.delay && resourceData.lastTime && new Date() - resourceData.lastTime < getParams.delay ) {
+			return resourceData.last ;
+		}
 
 		resourceData.last = resourceData.inProgress = getParams.fn.call( localThis , resourceId , ... args ) ;
 		resourceData.inProgressIsFull = false ;
@@ -1788,10 +1800,16 @@ Promise.debounceSync = ( getParams , fullSyncParams ) => {
 
 	const fullSyncInWrapper = function( resourceId , ... args ) {
 		var delta ,
+			noDelay = false ,
 			localThis = fullSyncParams.thisBinding || this ,
 			resourceData = getResourceData( resourceId ) ;
 
-		if ( ! resourceData.inProgress && fullSyncParams.delay && resourceData.lastFullSyncTime && ( delta = new Date() - resourceData.lastFullSyncTime - fullSyncParams.delay ) < 0 ) {
+		if ( args[ args.length - 1 ] === Promise.NO_DELAY ) {
+			noDelay = true ;
+			args.length -- ;
+		}
+
+		if ( ! resourceData.inProgress && ! noDelay && fullSyncParams.delay && resourceData.lastFullSyncTime && ( delta = new Date() - resourceData.lastFullSyncTime - fullSyncParams.delay ) < 0 ) {
 			resourceData.inProgress = Promise.resolveTimeout( -delta + 1 ) ;	// Strangely, sometime it is trigerred 1ms too soon
 			Promise.finally( resourceData.inProgress , () => outWrapper( resourceData , 0 ) ) ;
 		}

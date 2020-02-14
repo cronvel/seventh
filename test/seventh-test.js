@@ -1778,6 +1778,21 @@ describe( "Decorators" , () => {
 			expect( results ).to.equal( [ 'get:one' , 'end:get:one' , 'get:three' , 'end:get:three' , 'get:five' , 'end:get:five' ] ) ;
 		} ) ;
 
+		it( "test delays for get when Promise.NO_DELAY is appended to the function args" , async () => {
+			[ debouncedGetFn , debouncedFullSyncFn ] = Promise.debounceSync( { fn: getFn , delay: 50 } , { fn: fullSyncFn } ) ;
+			results = [] ;
+			await debouncedGetFn( 'resource#1' , 'one' ) ;
+			await Promise.resolveTimeout( 30 ) ;
+			await debouncedGetFn( 'resource#1' , 'two' , Promise.NO_DELAY ) ;
+			await Promise.resolveTimeout( 30 ) ;
+			await debouncedGetFn( 'resource#1' , 'three' , Promise.NO_DELAY ) ;
+			await Promise.resolveTimeout( 30 ) ;
+			await debouncedGetFn( 'resource#1' , 'four' ) ;
+			await Promise.resolveTimeout( 30 ) ;
+			await debouncedGetFn( 'resource#1' , 'five' ) ;
+			expect( results ).to.equal( [ 'get:one' , 'end:get:one' , 'get:two' , 'end:get:two' , 'get:three' , 'end:get:three' , 'get:five' , 'end:get:five' ] ) ;
+		} ) ;
+
 		it( "test delays for fullSync" , async () => {
 			[ debouncedGetFn , debouncedFullSyncFn ] = Promise.debounceSync( { fn: getFn } , { fn: fullSyncFn , delay: 50 } ) ;
 			results = [] ;
@@ -1815,6 +1830,16 @@ describe( "Decorators" , () => {
 			await debouncedFullSyncFn( 'resource#1' , 'three' ) ;
 			//await debouncedFullSyncFn( 'resource#1' , 'four' ) ;
 			expect( results ).to.equal( [ 'fullSync:one' , 'end:fullSync:one' , 'fullSync:two' , 'end:fullSync:two' , 'fullSync:three' , 'end:fullSync:three' ] ) ;
+		} ) ;
+
+		it( "test delays for fullSync when Promise.NO_DELAY is appended to the function args" , async () => {
+			[ debouncedGetFn , debouncedFullSyncFn ] = Promise.debounceSync( { fn: getFn } , { fn: fullSyncFn , delay: 50 } ) ;
+			results = [] ;
+			await debouncedFullSyncFn( 'resource#1' , 'one' ) ;
+			debouncedFullSyncFn( 'resource#1' , 'two' , Promise.NO_DELAY ) ;
+			debouncedFullSyncFn( 'resource#1' , 'three' , Promise.NO_DELAY ) ;
+			await debouncedFullSyncFn( 'resource#1' , 'four' ) ;
+			expect( results ).to.equal( [ 'fullSync:one' , 'end:fullSync:one' , 'fullSync:two' , 'end:fullSync:two' , 'fullSync:four' , 'end:fullSync:four' ] ) ;
 		} ) ;
 
 		it( "different resources should not be debounced" , async () => {
