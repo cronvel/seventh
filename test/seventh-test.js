@@ -1778,19 +1778,34 @@ describe( "Decorators" , () => {
 			expect( results ).to.equal( [ 'get:one' , 'end:get:one' , 'get:three' , 'end:get:three' , 'get:five' , 'end:get:five' ] ) ;
 		} ) ;
 
-		it( "test delays for get when Promise.NO_DELAY is appended to the function args" , async () => {
+		it( "test delays for get when Promise.NO_DELAY is used before the function args" , async () => {
 			[ debouncedGetFn , debouncedFullSyncFn ] = Promise.debounceSync( { fn: getFn , delay: 50 } , { fn: fullSyncFn } ) ;
 			results = [] ;
 			await debouncedGetFn( 'resource#1' , 'one' ) ;
 			await Promise.resolveTimeout( 30 ) ;
-			await debouncedGetFn( 'resource#1' , 'two' , Promise.NO_DELAY ) ;
+			await debouncedGetFn( 'resource#1' , Promise.NO_DELAY , 'two' ) ;
 			await Promise.resolveTimeout( 30 ) ;
-			await debouncedGetFn( 'resource#1' , 'three' , Promise.NO_DELAY ) ;
+			await debouncedGetFn( 'resource#1' , Promise.NO_DELAY , 'three' ) ;
 			await Promise.resolveTimeout( 30 ) ;
 			await debouncedGetFn( 'resource#1' , 'four' ) ;
 			await Promise.resolveTimeout( 30 ) ;
 			await debouncedGetFn( 'resource#1' , 'five' ) ;
 			expect( results ).to.equal( [ 'get:one' , 'end:get:one' , 'get:two' , 'end:get:two' , 'get:three' , 'end:get:three' , 'get:five' , 'end:get:five' ] ) ;
+		} ) ;
+
+		it( "test delays for get when Promise.BATCH_NO_DELAY is used before the function args" , async () => {
+			[ debouncedGetFn , debouncedFullSyncFn ] = Promise.debounceSync( { fn: getFn , delay: 50 } , { fn: fullSyncFn } ) ;
+			results = [] ;
+			await debouncedGetFn( 'resource#1' , 'one' ) ;
+			await Promise.resolveTimeout( 30 ) ;
+			await debouncedGetFn( 'resource#1' , Promise.BATCH_NO_DELAY , 'batch' , 'two' ) ;
+			await Promise.resolveTimeout( 30 ) ;
+			await debouncedGetFn( 'resource#1' , Promise.BATCH_NO_DELAY , 'batch' , 'three' ) ;
+			await Promise.resolveTimeout( 30 ) ;
+			await debouncedGetFn( 'resource#1' , Promise.BATCH_NO_DELAY , 'batch' , 'four' ) ;
+			await Promise.resolveTimeout( 30 ) ;
+			await debouncedGetFn( 'resource#1' , Promise.BATCH_NO_DELAY , 'batch2' ,'five' ) ;
+			expect( results ).to.equal( [ 'get:one' , 'end:get:one' , 'get:two' , 'end:get:two' , 'get:four' , 'end:get:four' , 'get:five' , 'end:get:five' ] ) ;
 		} ) ;
 
 		it( "test delays for fullSync" , async () => {
@@ -1832,12 +1847,22 @@ describe( "Decorators" , () => {
 			expect( results ).to.equal( [ 'fullSync:one' , 'end:fullSync:one' , 'fullSync:two' , 'end:fullSync:two' , 'fullSync:three' , 'end:fullSync:three' ] ) ;
 		} ) ;
 
-		it( "test delays for fullSync when Promise.NO_DELAY is appended to the function args" , async () => {
+		it( "test delays for fullSync when Promise.NO_DELAY is used before to the function args" , async () => {
 			[ debouncedGetFn , debouncedFullSyncFn ] = Promise.debounceSync( { fn: getFn } , { fn: fullSyncFn , delay: 50 } ) ;
 			results = [] ;
 			await debouncedFullSyncFn( 'resource#1' , 'one' ) ;
-			debouncedFullSyncFn( 'resource#1' , 'two' , Promise.NO_DELAY ) ;
-			debouncedFullSyncFn( 'resource#1' , 'three' , Promise.NO_DELAY ) ;
+			await debouncedFullSyncFn( 'resource#1' , Promise.NO_DELAY , 'two' ) ;
+			debouncedFullSyncFn( 'resource#1' , Promise.NO_DELAY , 'three' ) ;
+			await debouncedFullSyncFn( 'resource#1' , 'four' ) ;
+			expect( results ).to.equal( [ 'fullSync:one' , 'end:fullSync:one' , 'fullSync:two' , 'end:fullSync:two' , 'fullSync:three' , 'end:fullSync:three' , 'fullSync:four' , 'end:fullSync:four' ] ) ;
+		} ) ;
+
+		it( "test delays for fullSync when Promise.BATCH_NO_DELAY is used before to the function args" , async () => {
+			[ debouncedGetFn , debouncedFullSyncFn ] = Promise.debounceSync( { fn: getFn } , { fn: fullSyncFn , delay: 50 } ) ;
+			results = [] ;
+			await debouncedFullSyncFn( 'resource#1' , 'one' ) ;
+			await debouncedFullSyncFn( 'resource#1' , Promise.BATCH_NO_DELAY , 'batch' , 'two' ) ;
+			debouncedFullSyncFn( 'resource#1' , Promise.BATCH_NO_DELAY , 'batch' , 'three' ) ;
 			await debouncedFullSyncFn( 'resource#1' , 'four' ) ;
 			expect( results ).to.equal( [ 'fullSync:one' , 'end:fullSync:one' , 'fullSync:two' , 'end:fullSync:two' , 'fullSync:four' , 'end:fullSync:four' ] ) ;
 		} ) ;
