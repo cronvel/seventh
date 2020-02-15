@@ -1703,6 +1703,9 @@ Promise.debounceUpdate = ( asyncFn , thisBinding ) => {
 // Used to ensure that the sync is done immediately if not busy
 Promise.NO_DELAY = {} ;
 
+// Used to ensure that the sync is done immediately if not busy, but for the first of a batch
+Promise.BATCH_NO_DELAY = {} ;
+
 /*
 	Debounce for synchronization algorithm.
 	Get two functions, one for getting from upstream, one for a full sync with upstream (getting AND updating).
@@ -1732,7 +1735,8 @@ Promise.debounceSync = ( getParams , fullSyncParams ) => {
 				lastFullSync: null ,		// last full sync promise
 				lastFullSyncTime: null ,	// last full sync time
 				nextFullSyncPromise: null ,	// the promise for the next fullSync iteration
-				nextFullSyncWith: null 	// the 'this' and arguments for the next fullSync iteration
+				nextFullSyncWith: null , 	// the 'this' and arguments for the next fullSync iteration
+				noDelayBatches: new Set()		// only the first of the batch has no delay
 			} ;
 
 			perResourceData.set( resourceId , resourceData ) ;
@@ -1782,9 +1786,17 @@ Promise.debounceSync = ( getParams , fullSyncParams ) => {
 			localThis = getParams.thisBinding || this ,
 			resourceData = getResourceData( resourceId ) ;
 
-		if ( args[ args.length - 1 ] === Promise.NO_DELAY ) {
+		if ( args[ 0 ] === Promise.NO_DELAY ) {
 			noDelay = true ;
-			args.length -- ;
+			args.shift() ;
+		}
+		else if ( args[ 0 ] === Promise.BATCH_NO_DELAY ) {
+			args.shift() ;
+			let batchId = args.shift() ;
+			if ( ! resourceData.noDelayBatches.has( batchId ) ) {
+				resourceData.noDelayBatches.add( batchId ) ;
+				noDelay = true ;
+			}
 		}
 
 		if ( resourceData.inProgress ) { return resourceData.inProgress ; }
@@ -1806,9 +1818,17 @@ Promise.debounceSync = ( getParams , fullSyncParams ) => {
 			localThis = fullSyncParams.thisBinding || this ,
 			resourceData = getResourceData( resourceId ) ;
 
-		if ( args[ args.length - 1 ] === Promise.NO_DELAY ) {
+		if ( args[ 0 ] === Promise.NO_DELAY ) {
 			noDelay = true ;
-			args.length -- ;
+			args.shift() ;
+		}
+		else if ( args[ 0 ] === Promise.BATCH_NO_DELAY ) {
+			args.shift() ;
+			let batchId = args.shift() ;
+			if ( ! resourceData.noDelayBatches.has( batchId ) ) {
+				resourceData.noDelayBatches.add( batchId ) ;
+				noDelay = true ;
+			}
 		}
 
 		if ( ! resourceData.inProgress && ! noDelay && fullSyncParams.delay && resourceData.lastFullSyncTime && ( delta = new Date() - resourceData.lastFullSyncTime - fullSyncParams.delay ) < 0 ) {

@@ -1,4 +1,10 @@
 
+v0.7.34
+-------
+
+.debounceSync() support a batch no delay mode
+
+
 v0.7.33
 -------
 
