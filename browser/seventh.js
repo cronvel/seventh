@@ -2248,12 +2248,12 @@ Promise.onceEventAll = ( emitter , eventName ) => {
 
 
 // Resolve once an event is fired, or reject on error
-Promise.onceEventOrError = ( emitter , eventName , excludeEvents ) => {
+Promise.onceEventOrError = ( emitter , eventName , excludeEvents , _internalAllArgs = false ) => {
 	return new Promise( ( resolve , reject ) => {
 		var altRejects ;
 
 		// We care about removing listener, especially 'error', because if an error kick in after, it should throw because there is no listener
-		var resolve_ = arg => {
+		var resolve_ = ( ... args ) => {
 			emitter.removeListener( 'error' , reject_ ) ;
 
 			if ( altRejects ) {
@@ -2262,7 +2262,7 @@ Promise.onceEventOrError = ( emitter , eventName , excludeEvents ) => {
 				}
 			}
 
-			resolve( arg ) ;
+			resolve( _internalAllArgs ? args : args[ 0 ] ) ;
 		} ;
 
 		var reject_ = arg => {
@@ -2308,59 +2308,7 @@ Promise.onceEventOrError = ( emitter , eventName , excludeEvents ) => {
 
 // Resolve once an event is fired, or reject on error, resolve with an array of arguments, reject with the first argument
 Promise.onceEventAllOrError = ( emitter , eventName , excludeEvents ) => {
-	return new Promise( ( resolve , reject ) => {
-		var altRejects ;
-
-		// We care about removing listener, especially 'error', because if an error kick in after, it should throw because there is no listener
-		var resolve_ = ( ... args ) => {
-			emitter.removeListener( 'error' , reject_ ) ;
-
-			if ( altRejects ) {
-				for ( let event in altRejects ) {
-					emitter.removeListener( event , altRejects[ event ] ) ;
-				}
-			}
-
-			resolve( args ) ;
-		} ;
-
-		var reject_ = arg => {
-			emitter.removeListener( eventName , resolve_ ) ;
-
-			if ( altRejects ) {
-				for ( let event in altRejects ) {
-					emitter.removeListener( event , altRejects[ event ] ) ;
-				}
-			}
-
-			reject( arg ) ;
-		} ;
-
-		emitter.once( eventName , resolve_ ) ;
-		emitter.once( 'error' , reject_ ) ;
-
-		if ( excludeEvents ) {
-			if ( ! Array.isArray( excludeEvents ) ) { excludeEvents = [ excludeEvents ] ; }
-
-			altRejects = {} ;
-
-			excludeEvents.forEach( event => {
-				var altReject = ( ... args ) => {
-					emitter.removeListener( 'error' , reject_ ) ;
-					emitter.removeListener( eventName , resolve_ ) ;
-
-					var error = new Error( "Received an excluded event: " + event ) ;
-					error.event = event ;
-					error.eventArgs = args ;
-					reject( error ) ;
-				} ;
-
-				emitter.once( event , altReject ) ;
-
-				altRejects[ event ] = altReject ;
-			} ) ;
-		}
-	} ) ;
+	return Promise.onceEventOrError( emitter , eventName , excludeEvents , true ) ;
 } ;
 
 
