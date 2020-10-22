@@ -1383,6 +1383,10 @@ Promise.prototype._unhandledRejection = function() {
 
 
 
+Promise.prototype.isSettled = function() { return this._then.settled ; } ;
+
+
+
 Promise.prototype.getStatus = function() {
 	switch ( this._then ) {
 		case Promise._dormantThen :
