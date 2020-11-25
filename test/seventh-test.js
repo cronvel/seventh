@@ -2318,7 +2318,7 @@ describe( "Then/catch alternatives" , () => {
 
 describe( "Queue" , () => {
 
-	it( "..." , async () => {
+	it( "Without dependencies" , async () => {
 		var fn = async ( data ) => {
 			console.log( ">>> before" , data.id ) ;
 			await Promise.resolveTimeout( 200 ) ;
@@ -2331,7 +2331,26 @@ describe( "Queue" , () => {
 		queue.add( "bill" , { id: "bill", k: 2 } ) ;
 		queue.add( "joe" , { id: "joe", k: 2 } ) ;
 		queue.add( "jack" , { id: "jack", k: 2 } ) ;
-		await queue.drained ;
+		await queue.idle ;
+		console.log( "Idle!" ) ;
+	} ) ;
+
+	it( "zzz With dependencies" , async () => {
+		var fn = async ( data ) => {
+			console.log( ">>> before" , data.id ) ;
+			await Promise.resolveTimeout( 200 ) ;
+			console.log( "<<< after" , data.id ) ;
+		} ;
+
+		var queue = new Promise.Queue( fn , 2 ) ;
+		queue.run() ;
+		queue.add( "bob" , { id: "bob", k: 2 } , [ "joe" ] ) ;
+		queue.add( "bill" , { id: "bill", k: 2 } , [ "jack" ] ) ;
+		queue.add( "joe" , { id: "joe", k: 2 } , [ "bill" ] ) ;
+		//queue.add( "jack" , { id: "jack", k: 2 } ) ;
+		queue.add( "jack" , { id: "jack", k: 2 } , [ "bill" ] ) ;
+		await queue.idle ;
+		console.log( "Idle!" ) ;
 	} ) ;
 } ) ;
 
