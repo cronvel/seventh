@@ -29,7 +29,167 @@
 
 
 
-var Promise = require( './seventh.js' ) ;
+const Promise = require( './seventh.js' ) ;
+
+
+
+function Queue( jobRunner , concurrency = 4 ) {
+	this.jobRunner = jobRunner ;
+	this.pendingJobs = new Map() ;
+	this.runningJobs = new Map() ;
+	this.errorJobs = new Map() ;
+	this.jobsDone = new Map() ;
+	this.concurrency = + concurrency || 1 ;
+
+	// Internal
+	this.isLoopRunning = false ;
+	this.isQueueRunning = true ;
+	this.canLoopAgain = false ;
+	this.ready = Promise.resolved ;
+
+	// External API, resolved when there is no jobs anymore in the queue, a new Promise is created when new element are injected
+	this.drained = Promise.resolved ;
+
+	// External API, resolved when the Queue has nothing to do: either it's drained or the remaining jobs have dependencies that cannot be solved
+	this.idle = Promise.resolved ;
+}
+
+Promise.Queue = Queue ;
+
+
+
+function Job( id , dependencies , data ) {
+	this.id = id ;
+	this.dependencies = dependencies === null ? null : [ ... dependencies ] ;
+	this.data = data ;
+	this.error = null ;
+}
+
+Queue.Job = Job ;
+
+
+
+Queue.prototype.setConcurrency = function( concurrency ) { this.concurrency = + concurrency || 1 ; } ;
+Queue.prototype.stop = function() { this.isQueueRunning = false ; } ;
+
+
+
+Queue.prototype.add = Queue.prototype.addJob = function( id , data , dependencies = null ) {
+	// Don't add it twice!
+	if ( this.pendingJobs.has( id ) || this.runningJobs.has( id ) || this.jobsDone.has( id ) || this.errorJobs.has( id ) ) { return ; }
+	this.pendingJobs.set( id , new Job( id , dependencies , data ) ) ;
+	this.canLoopAgain = true ;
+	if ( this.isQueueRunning && ! this.isLoopRunning ) { this.run() ; }
+	if ( this.drained.isSettled() ) { this.drained = new Promise() ; }
+} ;
+
+
+
+Queue.prototype.run = Queue.prototype.resume = async function() {
+	var job ;
+
+	this.isQueueRunning = true ;
+
+	if ( this.isLoopRunning ) { return ; }
+	this.isLoopRunning = true ;
+
+	do {
+		this.canLoopAgain = false ;
+
+		for ( job of this.pendingJobs.values() ) {
+			if ( job.dependencies && job.dependencies.some( dependencyId => ! this.jobsDone.has( dependencyId ) ) ) { continue ; }
+			// This should be done synchronously:
+			if ( this.idle.isSettled() ) { this.idle = new Promise() ; }
+			this.canLoopAgain = true ;
+
+			await this.ready ;
+
+			// Something has stopped the queue while we were awaiting.
+			// This check MUST be done only after "await", before is potentially synchronous, and things only change concurrently during an "await"
+			if ( ! this.isQueueRunning ) { this.finishRun() ; return ; }
+
+			this.runJob( job ) ;
+		}
+	} while ( this.canLoopAgain ) ;
+
+	this.finishRun() ;
+} ;
+
+
+
+// Finish current run
+Queue.prototype.finishRun = function() {
+	this.isLoopRunning = false ;
+	if ( ! this.runningJobs.size ) { this.idle.resolve() ; }
+	if ( ! this.pendingJobs.size ) { this.drained.resolve() ; }
+} ;
+
+
+
+Queue.prototype.runJob = async function( job ) {
+	var ok = false ;
+
+	// Immediately remove it synchronously from the pending queue and add it to the running one
+	this.pendingJobs.delete( job.id ) ;
+	this.runningJobs.set( job.id , job ) ;
+
+	if ( this.runningJobs.size >= this.concurrency ) { this.ready = new Promise() ; }
+
+	// Async part
+	try {
+		await this.jobRunner( job.data ) ;
+		this.jobsDone.set( job.id , job ) ;
+		this.canLoopAgain = true ;
+		ok = true ;
+	}
+	catch ( error ) {
+		job.error = error ;
+		this.errorJobs.set( job.id , job ) ;
+	}
+
+	this.runningJobs.delete( job.id ) ;
+	if ( this.runningJobs.size < this.concurrency ) { this.ready.resolve() ; }
+
+	// This MUST come last, because it retry the loop: dependencies may have been unlocked!
+	if ( ! this.isLoopRunning ) {
+		if ( this.isQueueRunning && this.pendingJobs.size ) { this.run() ; }
+		else { this.finishRun() ; }
+	}
+} ;
+
+
+},{"./seventh.js":8}],2:[function(require,module,exports){
+/*
+	Seventh
+
+	Copyright (c) 2017 - 2020 Cédric Ronvel
+
+	The MIT License (MIT)
+
+	Permission is hereby granted, free of charge, to any person obtaining a copy
+	of this software and associated documentation files (the "Software"), to deal
+	in the Software without restriction, including without limitation the rights
+	to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+	copies of the Software, and to permit persons to whom the Software is
+	furnished to do so, subject to the following conditions:
+
+	The above copyright notice and this permission notice shall be included in all
+	copies or substantial portions of the Software.
+
+	THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+	IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+	FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+	AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+	LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+	OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+	SOFTWARE.
+*/
+
+"use strict" ;
+
+
+
+const Promise = require( './seventh.js' ) ;
 
 
 
@@ -82,7 +242,7 @@ Promise.promisifyAnyNodeApi = ( api , suffix , multiSuffix , filter ) => {
 
 
 
-},{"./seventh.js":7}],2:[function(require,module,exports){
+},{"./seventh.js":8}],3:[function(require,module,exports){
 /*
 	Seventh
 
@@ -113,7 +273,7 @@ Promise.promisifyAnyNodeApi = ( api , suffix , multiSuffix , filter ) => {
 
 
 
-var Promise = require( './seventh.js' ) ;
+const Promise = require( './seventh.js' ) ;
 
 
 
@@ -581,7 +741,7 @@ Promise.concurrent = ( limit , iterable , iterator ) => {
 	// The array-like may contains promises that could be rejected before being handled
 	if ( Promise.warnUnhandledRejection ) { Promise._handleAll( iterable ) ; }
 
-	limit = limit || 1 ;
+	limit = + limit || 1 ;
 
 	const runBatch = () => {
 		while ( ! done && running < limit ) {
@@ -691,7 +851,7 @@ Promise.race = ( iterable ) => {
 } ;
 
 
-},{"./seventh.js":7}],3:[function(require,module,exports){
+},{"./seventh.js":8}],4:[function(require,module,exports){
 (function (process,global,setImmediate){
 /*
 	Seventh
@@ -1450,7 +1610,7 @@ if ( process.browser ) {
 
 
 }).call(this,require('_process'),typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {},require("timers").setImmediate)
-},{"_process":10,"setimmediate":9,"timers":11}],4:[function(require,module,exports){
+},{"_process":11,"setimmediate":10,"timers":12}],5:[function(require,module,exports){
 /*
 	Seventh
 
@@ -1481,7 +1641,7 @@ if ( process.browser ) {
 
 
 
-var Promise = require( './seventh.js' ) ;
+const Promise = require( './seventh.js' ) ;
 
 
 
@@ -1956,7 +2116,7 @@ Promise.variableRetry = ( asyncFn , thisBinding ) => {
 */
 
 
-},{"./seventh.js":7}],5:[function(require,module,exports){
+},{"./seventh.js":8}],6:[function(require,module,exports){
 (function (process){
 /*
 	Seventh
@@ -1988,7 +2148,7 @@ Promise.variableRetry = ( asyncFn , thisBinding ) => {
 
 
 
-var Promise = require( './seventh.js' ) ;
+const Promise = require( './seventh.js' ) ;
 
 
 
@@ -2056,7 +2216,7 @@ Promise.resolveSafeTimeout = function( timeout , value ) {
 
 
 }).call(this,require('_process'))
-},{"./seventh.js":7,"_process":10}],6:[function(require,module,exports){
+},{"./seventh.js":8,"_process":11}],7:[function(require,module,exports){
 /*
 	Seventh
 
@@ -2087,7 +2247,7 @@ Promise.resolveSafeTimeout = function( timeout , value ) {
 
 
 
-var Promise = require( './seventh.js' ) ;
+const Promise = require( './seventh.js' ) ;
 
 
 
@@ -2108,7 +2268,7 @@ Promise.parasite = () => {
 } ;
 
 
-},{"./seventh.js":7}],7:[function(require,module,exports){
+},{"./seventh.js":8}],8:[function(require,module,exports){
 /*
 	Seventh
 
@@ -2146,12 +2306,13 @@ module.exports = seventh ;
 require( './batch.js' ) ;
 require( './wrapper.js' ) ;
 require( './decorators.js' ) ;
+require( './Queue.js' ) ;
 require( './api.js' ) ;
 require( './parasite.js' ) ;
 require( './misc.js' ) ;
 
 
-},{"./api.js":1,"./batch.js":2,"./core.js":3,"./decorators.js":4,"./misc.js":5,"./parasite.js":6,"./wrapper.js":8}],8:[function(require,module,exports){
+},{"./Queue.js":1,"./api.js":2,"./batch.js":3,"./core.js":4,"./decorators.js":5,"./misc.js":6,"./parasite.js":7,"./wrapper.js":9}],9:[function(require,module,exports){
 /*
 	Seventh
 
@@ -2182,7 +2343,7 @@ require( './misc.js' ) ;
 
 
 
-var Promise = require( './seventh.js' ) ;
+const Promise = require( './seventh.js' ) ;
 
 
 
@@ -2316,7 +2477,7 @@ Promise.onceEventAllOrError = ( emitter , eventName , excludeEvents ) => {
 } ;
 
 
-},{"./seventh.js":7}],9:[function(require,module,exports){
+},{"./seventh.js":8}],10:[function(require,module,exports){
 (function (process,global){
 (function (global, undefined) {
     "use strict";
@@ -2506,7 +2667,7 @@ Promise.onceEventAllOrError = ( emitter , eventName , excludeEvents ) => {
 }(typeof self === "undefined" ? typeof global === "undefined" ? this : global : self));
 
 }).call(this,require('_process'),typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"_process":10}],10:[function(require,module,exports){
+},{"_process":11}],11:[function(require,module,exports){
 // shim for using process in browser
 var process = module.exports = {};
 
@@ -2692,7 +2853,7 @@ process.chdir = function (dir) {
 };
 process.umask = function() { return 0; };
 
-},{}],11:[function(require,module,exports){
+},{}],12:[function(require,module,exports){
 (function (setImmediate,clearImmediate){
 var nextTick = require('process/browser.js').nextTick;
 var apply = Function.prototype.apply;
@@ -2771,5 +2932,5 @@ exports.clearImmediate = typeof clearImmediate === "function" ? clearImmediate :
   delete immediateIds[id];
 };
 }).call(this,require("timers").setImmediate,require("timers").clearImmediate)
-},{"process/browser.js":10,"timers":11}]},{},[7])(7)
+},{"process/browser.js":11,"timers":12}]},{},[8])(8)
 });

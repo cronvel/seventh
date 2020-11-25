@@ -2319,38 +2319,71 @@ describe( "Then/catch alternatives" , () => {
 describe( "Queue" , () => {
 
 	it( "Without dependencies" , async () => {
+		var queue , log = [] ;
 		var fn = async ( data ) => {
-			console.log( ">>> before" , data.id ) ;
-			await Promise.resolveTimeout( 200 ) ;
-			console.log( "<<< after" , data.id ) ;
+			log.push( "before " + data.id ) ;
+			await Promise.resolveTimeout( 50 ) ;
+			log.push( "after " + data.id ) ;
 		} ;
 
-		var queue = new Promise.Queue( fn , 2 ) ;
+		queue = new Promise.Queue( fn , 2 ) ;
 		queue.run() ;
+
 		queue.add( "bob" , { id: "bob", k: 2 } ) ;
 		queue.add( "bill" , { id: "bill", k: 2 } ) ;
 		queue.add( "joe" , { id: "joe", k: 2 } ) ;
 		queue.add( "jack" , { id: "jack", k: 2 } ) ;
+
 		await queue.idle ;
-		console.log( "Idle!" ) ;
+
+		expect( log ).to.equal( [ "before bob" , "before bill" , "after bob" , "before joe" , "after bill" , "before jack" , "after joe" , "after jack" ] ) ;
+
+		log = [] ;
+		queue = new Promise.Queue( fn , 1 ) ;
+		queue.run() ;
+
+		queue.add( "bob" , { id: "bob", k: 2 } ) ;
+		queue.add( "bill" , { id: "bill", k: 2 } ) ;
+		queue.add( "joe" , { id: "joe", k: 2 } ) ;
+		queue.add( "jack" , { id: "jack", k: 2 } ) ;
+
+		await queue.idle ;
+
+		expect( log ).to.equal( [ "before bob" , "after bob" , "before bill" , "after bill" , "before joe" , "after joe" , "before jack" , "after jack" ] ) ;
 	} ) ;
 
-	it( "zzz With dependencies" , async () => {
+	it( "With dependencies" , async () => {
+		var queue , log = [] ;
 		var fn = async ( data ) => {
-			console.log( ">>> before" , data.id ) ;
-			await Promise.resolveTimeout( 200 ) ;
-			console.log( "<<< after" , data.id ) ;
+			log.push( "before " + data.id ) ;
+			await Promise.resolveTimeout( 50 ) ;
+			log.push( "after " + data.id ) ;
 		} ;
 
-		var queue = new Promise.Queue( fn , 2 ) ;
+		queue = new Promise.Queue( fn , 2 ) ;
 		queue.run() ;
+
 		queue.add( "bob" , { id: "bob", k: 2 } , [ "joe" ] ) ;
 		queue.add( "bill" , { id: "bill", k: 2 } , [ "jack" ] ) ;
 		queue.add( "joe" , { id: "joe", k: 2 } , [ "bill" ] ) ;
-		//queue.add( "jack" , { id: "jack", k: 2 } ) ;
-		queue.add( "jack" , { id: "jack", k: 2 } , [ "bill" ] ) ;
+		queue.add( "jack" , { id: "jack", k: 2 } ) ;
+
 		await queue.idle ;
-		console.log( "Idle!" ) ;
+
+		expect( log ).to.equal( [ "before jack" , "after jack" , "before bill" , "after bill" , "before joe" , "after joe" , "before bob" , "after bob" ] ) ;
+
+		log = [] ;
+		queue = new Promise.Queue( fn , 2 ) ;
+		queue.run() ;
+
+		queue.add( "bob" , { id: "bob", k: 2 } , [ "joe" , "jack" ] ) ;
+		queue.add( "bill" , { id: "bill", k: 2 } ) ;
+		queue.add( "joe" , { id: "joe", k: 2 } ) ;
+		queue.add( "jack" , { id: "jack", k: 2 } ) ;
+
+		await queue.idle ;
+
+		expect( log ).to.equal( [ "before bill" , "before joe" , "after bill" , "before jack" , "after joe" , "after jack" , "before bob" , "after bob" ] ) ;
 	} ) ;
 } ) ;
 
