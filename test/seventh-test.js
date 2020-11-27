@@ -2369,6 +2369,7 @@ describe( "Queue" , () => {
 		queue.add( "jack" , { id: "jack", k: 2 } ) ;
 
 		await queue.idle ;
+		//console.log( queue.getJobTimes() ) ; console.log( queue.getStats() ) ;
 
 		expect( log ).to.equal( [ "before jack" , "after jack" , "before bill" , "after bill" , "before joe" , "after joe" , "before bob" , "after bob" ] ) ;
 
@@ -2382,6 +2383,7 @@ describe( "Queue" , () => {
 		queue.add( "jack" , { id: "jack", k: 2 } ) ;
 
 		await queue.idle ;
+		//console.log( queue.getJobTimes() ) ; console.log( queue.getStats() ) ;
 
 		expect( log ).to.equal( [ "before bill" , "before joe" , "after bill" , "before jack" , "after joe" , "after jack" , "before bob" , "after bob" ] ) ;
 	} ) ;
