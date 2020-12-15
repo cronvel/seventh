@@ -63,7 +63,7 @@ Promise.Queue = Queue ;
 
 
 
-function Job( id , dependencies , data ) {
+function Job( id , dependencies = null , data = undefined ) {
 	this.id = id ;
 	this.dependencies = dependencies === null ? null : [ ... dependencies ] ;
 	this.data = data === undefined ? id : data ;
@@ -93,6 +93,25 @@ Queue.prototype.add = Queue.prototype.addJob = function( id , data , dependencie
 	if ( this.isQueueRunning && ! this.isLoopRunning ) { this.run() ; }
 	if ( this.drained.isSettled() ) { this.drained = new Promise() ; }
 	return job ;
+} ;
+
+
+
+// Add a batch of jobs, with only id (data=id) and no dependencies
+Queue.prototype.addBatch = Queue.prototype.addJobBatch = function( ids ) {
+	var id , job ;
+
+	for ( id of ids ) {
+		// Don't add it twice!
+		if ( this.jobs.has( id ) ) { return false ; }
+		job = new Job( id ) ;
+		this.jobs.set( id , job ) ;
+		this.pendingJobs.set( id , job ) ;
+	}
+
+	this.canLoopAgain = true ;
+	if ( this.isQueueRunning && ! this.isLoopRunning ) { this.run() ; }
+	if ( this.drained.isSettled() ) { this.drained = new Promise() ; }
 } ;
 
 

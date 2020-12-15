@@ -2361,6 +2361,24 @@ describe( "Queue" , () => {
 		expect( log ).to.equal( [ "before bob" , "after bob" , "before jack" , "after jack" , "before null" , "after null" , "before false" , "after false" ] ) ;
 	} ) ;
 
+	it( "Add a batch of jobs" , async () => {
+		var fn , queue , log = [] ;
+		
+		fn = async ( data ) => {
+			log.push( "before " + data ) ;
+			await Promise.resolveTimeout( 10 ) ;
+			log.push( "after " + data ) ;
+		} ;
+
+		queue = new Promise.Queue( fn , 1 ) ;
+		queue.run() ;
+
+		queue.addBatch( [ "bob" , "jack" , "joe" , "jim" ] ) ;
+		await queue.idle ;
+
+		expect( log ).to.equal( [ "before bob" , "after bob" , "before jack" , "after jack" , "before joe" , "after joe" , "before jim" , "after jim" ] ) ;
+	} ) ;
+
 	it( "Without dependencies" , async () => {
 		var queue , log = [] ;
 		var fn = async ( data ) => {
