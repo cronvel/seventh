@@ -2318,6 +2318,49 @@ describe( "Then/catch alternatives" , () => {
 
 describe( "Queue" , () => {
 
+	it( "Job's data" , async () => {
+		var fn , queue , log = [] ;
+		
+		fn = async ( data ) => {
+			log.push( "before " + data.id + ' : ' + data.k ) ;
+			await Promise.resolveTimeout( 10 ) ;
+			log.push( "after " + data.id + ' : ' + data.k ) ;
+		} ;
+
+		queue = new Promise.Queue( fn , 1 ) ;
+		queue.run() ;
+
+		queue.add( "bob" , { id: "bob", k: 7 } ) ;
+		queue.add( "bill" , { id: "bill", k: 4 } ) ;
+		queue.add( "joe" , { id: "joe", k: 1 } ) ;
+
+		await queue.idle ;
+
+		expect( log ).to.equal( [ "before bob : 7" , "after bob : 7" , "before bill : 4" , "after bill : 4" , "before joe : 1" , "after joe : 1" ] ) ;
+	} ) ;
+
+	it( "When data is provided for a job, its id is used as its data" , async () => {
+		var fn , queue , log = [] ;
+		
+		fn = async ( data ) => {
+			log.push( "before " + data ) ;
+			await Promise.resolveTimeout( 10 ) ;
+			log.push( "after " + data ) ;
+		} ;
+
+		queue = new Promise.Queue( fn , 1 ) ;
+		queue.run() ;
+
+		queue.add( "bob" ) ;
+		queue.add( "bill" , "jack" ) ;
+		queue.add( "joe" , null ) ;
+		queue.add( "jim" , false ) ;
+
+		await queue.idle ;
+
+		expect( log ).to.equal( [ "before bob" , "after bob" , "before jack" , "after jack" , "before null" , "after null" , "before false" , "after false" ] ) ;
+	} ) ;
+
 	it( "Without dependencies" , async () => {
 		var queue , log = [] ;
 		var fn = async ( data ) => {

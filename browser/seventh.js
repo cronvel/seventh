@@ -66,7 +66,7 @@ Promise.Queue = Queue ;
 function Job( id , dependencies , data ) {
 	this.id = id ;
 	this.dependencies = dependencies === null ? null : [ ... dependencies ] ;
-	this.data = data ;
+	this.data = data === undefined ? id : data ;
 	this.error = null ;
 	this.startTime = null ;
 	this.endTime = null ;
