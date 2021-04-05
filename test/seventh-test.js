@@ -2455,6 +2455,16 @@ describe( "Queue" , () => {
 describe( "Misc" , () => {
 	it( ".asyncExit() TODO" ) ;
 
+	it( ".resolveTimeout()" , async () => {
+		await expect( Promise.resolveTimeout( 10 , 'value' ) ).to.eventually.be( 'value' ) ;
+		await expect( Promise.resolveTimeout( 10 , Promise.resolveTimeout( 10 , 'value2' ) ) ).to.eventually.be( 'value2' ) ;
+	} ) ;
+
+	it( ".rejectTimeout()" , async () => {
+		await expect( Promise.rejectTimeout( 10 , new Error( 'dang!' ) ) ).to.reject() ;
+		await expect( Promise.rejectTimeout( 10 , Promise.resolveTimeout( 10 , new Error( 'dang!' ) ) ) ).to.reject() ;
+	} ) ;
+
 	it( ".resolveSafeTimeout()" , async () => {
 		// Hard to test it correctly
 		expect( await Promise.resolveSafeTimeout( 50 , 'value' ) ).to.be( 'value' ) ;
