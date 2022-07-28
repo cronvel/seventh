@@ -1,4 +1,12 @@
 
+v0.8.0
+------
+
+BREAKING CHANGES, conformance to new ECMAScript Promise.any(): Promise.any() and Promise.some() now rejects with AggregateError
+Adding Promise.allSettled()
+Require Node engine >= 16.13.0 (require AggregateError)
+
+
 v0.7.40
 -------
 

@@ -1,10 +1,10 @@
 {
   "name": "seventh",
-  "version": "0.7.40",
+  "version": "0.8.0",
   "description": "A lean Promises and Async lib for ES6/ES7",
   "main": "lib/seventh.js",
   "engines": {
-    "node": ">=7.6.0"
+    "node": ">=16.13.0"
   },
   "directories": {
     "test": "test"

@@ -340,6 +340,8 @@ Promise.promisifyAnyNodeApi = ( api , suffix , multiSuffix , filter ) => {
 
 "use strict" ;
 
+/* global AggregateError */
+
 
 
 const Promise = require( './seventh.js' ) ;
@@ -362,32 +364,27 @@ Promise.all = ( iterable ) => {
 	for ( value of iterable ) {
 		if ( settled ) { break ; }
 
-		index ++ ;
+		const promiseIndex = ++ index ;
 
-		// Create a scope to keep track of the promise's own index
-		( () => {
-			const promiseIndex = index ;
+		Promise.resolve( value )
+			.then(
+				value_ => {
+					if ( settled ) { return ; }
 
-			Promise.resolve( value )
-				.then(
-					value_ => {
-						if ( settled ) { return ; }
+					values[ promiseIndex ] = value_ ;
+					count ++ ;
 
-						values[ promiseIndex ] = value_ ;
-						count ++ ;
-
-						if ( count >= length ) {
-							settled = true ;
-							allPromise._resolveValue( values ) ;
-						}
-					} ,
-					error => {
-						if ( settled ) { return ; }
+					if ( count >= length ) {
 						settled = true ;
-						allPromise.reject( error ) ;
+						allPromise._resolveValue( values ) ;
 					}
-				) ;
-		} )() ;
+				} ,
+				error => {
+					if ( settled ) { return ; }
+					settled = true ;
+					allPromise.reject( error ) ;
+				}
+			) ;
 	}
 
 	length = index + 1 ;
@@ -449,6 +446,56 @@ Promise._allArrayOne = ( value , index , runtime ) => {
 } ;
 
 
+
+Promise.allSettled = ( iterable ) => {
+	var index = -1 , settled = false ,
+		count = 0 , length = Infinity ,
+		value , values = [] ,
+		allPromise = new Promise() ;
+
+	for ( value of iterable ) {
+		if ( settled ) { break ; }
+
+		const promiseIndex = ++ index ;
+
+		Promise.resolve( value )
+			.then(
+				value_ => {
+					if ( settled ) { return ; }
+
+					values[ promiseIndex ] = { status: 'fulfilled' , value: value_ } ;
+					count ++ ;
+
+					if ( count >= length ) {
+						settled = true ;
+						allPromise._resolveValue( values ) ;
+					}
+				} ,
+				error => {
+					if ( settled ) { return ; }
+
+					values[ promiseIndex ] = { status: 'rejected' ,  reason: error } ;
+					count ++ ;
+
+					if ( count >= length ) {
+						settled = true ;
+						allPromise._resolveValue( values ) ;
+					}
+				}
+			) ;
+	}
+
+	length = index + 1 ;
+
+	if ( ! length ) {
+		allPromise._resolveValue( values ) ;
+	}
+
+	return allPromise ;
+} ;
+
+
+
 // Promise.all() with an iterator
 Promise.every =
 Promise.map = ( iterable , iterator ) => {
@@ -460,36 +507,31 @@ Promise.map = ( iterable , iterator ) => {
 	for ( value of iterable ) {
 		if ( settled ) { break ; }
 
-		index ++ ;
+		const promiseIndex = ++ index ;
 
-		// Create a scope to keep track of the promise's own index
-		( () => {
-			const promiseIndex = index ;
-
-			Promise.resolve( value )
-				.then( value_ => {
+		Promise.resolve( value )
+			.then( value_ => {
+				if ( settled ) { return ; }
+				return iterator( value_ , promiseIndex ) ;
+			} )
+			.then(
+				value_ => {
 					if ( settled ) { return ; }
-					return iterator( value_ , promiseIndex ) ;
-				} )
-				.then(
-					value_ => {
-						if ( settled ) { return ; }
 
-						values[ promiseIndex ] = value_ ;
-						count ++ ;
+					values[ promiseIndex ] = value_ ;
+					count ++ ;
 
-						if ( count >= length ) {
-							settled = true ;
-							allPromise._resolveValue( values ) ;
-						}
-					} ,
-					error => {
-						if ( settled ) { return ; }
+					if ( count >= length ) {
 						settled = true ;
-						allPromise.reject( error ) ;
+						allPromise._resolveValue( values ) ;
 					}
-				) ;
-		} )() ;
+				} ,
+				error => {
+					if ( settled ) { return ; }
+					settled = true ;
+					allPromise.reject( error ) ;
+				}
+			) ;
 	}
 
 	length = index + 1 ;
@@ -506,7 +548,7 @@ Promise.map = ( iterable , iterator ) => {
 /*
 	It works symmetrically with Promise.all(), the resolve and reject logic are switched.
 	Therefore, it resolves to the first resolving promise OR reject if all promises are rejected
-	with, as a reason, the array of all promise rejection reasons.
+	with, as a reason an AggregateError of all promise rejection reasons.
 */
 Promise.any = ( iterable ) => {
 	var index = -1 , settled = false ,
@@ -518,33 +560,28 @@ Promise.any = ( iterable ) => {
 	for ( value of iterable ) {
 		if ( settled ) { break ; }
 
-		index ++ ;
+		const promiseIndex = ++ index ;
 
-		// Create a scope to keep track of the promise's own index
-		( () => {
-			const promiseIndex = index ;
+		Promise.resolve( value )
+			.then(
+				value_ => {
+					if ( settled ) { return ; }
 
-			Promise.resolve( value )
-				.then(
-					value_ => {
-						if ( settled ) { return ; }
+					settled = true ;
+					anyPromise._resolveValue( value_ ) ;
+				} ,
+				error => {
+					if ( settled ) { return ; }
 
+					errors[ promiseIndex ] = error ;
+					count ++ ;
+
+					if ( count >= length ) {
 						settled = true ;
-						anyPromise._resolveValue( value_ ) ;
-					} ,
-					error => {
-						if ( settled ) { return ; }
-
-						errors[ promiseIndex ] = error ;
-						count ++ ;
-
-						if ( count >= length ) {
-							settled = true ;
-							anyPromise.reject( errors ) ;
-						}
+						anyPromise.reject( new AggregateError( errors ) , 'Promise.any(): All promises have rejected' ) ;
 					}
-				) ;
-		} )() ;
+				}
+			) ;
 	}
 
 	length = index + 1 ;
@@ -569,43 +606,38 @@ Promise.some = ( iterable , iterator ) => {
 	for ( value of iterable ) {
 		if ( settled ) { break ; }
 
-		index ++ ;
+		const promiseIndex = ++ index ;
 
-		// Create a scope to keep track of the promise's own index
-		( () => {
-			const promiseIndex = index ;
-
-			Promise.resolve( value )
-				.then( value_ => {
+		Promise.resolve( value )
+			.then( value_ => {
+				if ( settled ) { return ; }
+				return iterator( value_ , promiseIndex ) ;
+			} )
+			.then(
+				value_ => {
 					if ( settled ) { return ; }
-					return iterator( value_ , promiseIndex ) ;
-				} )
-				.then(
-					value_ => {
-						if ( settled ) { return ; }
 
+					settled = true ;
+					anyPromise._resolveValue( value_ ) ;
+				} ,
+				error => {
+					if ( settled ) { return ; }
+
+					errors[ promiseIndex ] = error ;
+					count ++ ;
+
+					if ( count >= length ) {
 						settled = true ;
-						anyPromise._resolveValue( value_ ) ;
-					} ,
-					error => {
-						if ( settled ) { return ; }
-
-						errors[ promiseIndex ] = error ;
-						count ++ ;
-
-						if ( count >= length ) {
-							settled = true ;
-							anyPromise.reject( errors ) ;
-						}
+						anyPromise.reject( new AggregateError( errors , 'Promise.some(): All promises have rejected' ) ) ;
 					}
-				) ;
-		} )() ;
+				}
+			) ;
 	}
 
 	length = index + 1 ;
 
 	if ( ! length ) {
-		anyPromise.reject( new RangeError( 'Promise.any(): empty array' ) ) ;
+		anyPromise.reject( new RangeError( 'Promise.some(): empty array' ) ) ;
 	}
 
 	return anyPromise ;
@@ -628,39 +660,34 @@ Promise.filter = ( iterable , iterator ) => {
 	for ( value of iterable ) {
 		if ( settled ) { break ; }
 
-		index ++ ;
+		const promiseIndex = ++ index ;
 
-		// Create a scope to keep track of the promise's own index
-		( () => {
-			const promiseIndex = index ;
-
-			Promise.resolve( value )
-				.then( value_ => {
+		Promise.resolve( value )
+			.then( value_ => {
+				if ( settled ) { return ; }
+				values[ promiseIndex ] = value_ ;
+				return iterator( value_ , promiseIndex ) ;
+			} )
+			.then(
+				iteratorValue => {
 					if ( settled ) { return ; }
-					values[ promiseIndex ] = value_ ;
-					return iterator( value_ , promiseIndex ) ;
-				} )
-				.then(
-					iteratorValue => {
-						if ( settled ) { return ; }
 
-						count ++ ;
+					count ++ ;
 
-						if ( ! iteratorValue ) { values[ promiseIndex ] = HOLE ; }
+					if ( ! iteratorValue ) { values[ promiseIndex ] = HOLE ; }
 
-						if ( count >= length ) {
-							settled = true ;
-							values = values.filter( e => e !== HOLE ) ;
-							filterPromise._resolveValue( values ) ;
-						}
-					} ,
-					error => {
-						if ( settled ) { return ; }
+					if ( count >= length ) {
 						settled = true ;
-						filterPromise.reject( error ) ;
+						values = values.filter( e => e !== HOLE ) ;
+						filterPromise._resolveValue( values ) ;
 					}
-				) ;
-		} )() ;
+				} ,
+				error => {
+					if ( settled ) { return ; }
+					settled = true ;
+					filterPromise.reject( error ) ;
+				}
+			) ;
 	}
 
 	length = index + 1 ;
@@ -749,43 +776,38 @@ Promise.reduce = ( iterable , iterator , accumulator ) => {
 Promise.mapObject = ( inputObject , iterator ) => {
 	var settled = false ,
 		count = 0 ,
-		i , key , keys = Object.keys( inputObject ) ,
+		keys = Object.keys( inputObject ) ,
 		length = keys.length ,
-		value , outputObject = {} ,
+		outputObject = {} ,
 		mapPromise = new Promise() ;
 
-	for ( i = 0 ; ! settled && i < length ; i ++ ) {
-		key = keys[ i ] ;
-		value = inputObject[ key ] ;
+	for ( let i = 0 ; ! settled && i < length ; i ++ ) {
+		const key = keys[ i ] ;
+		const value = inputObject[ key ] ;
 
-		// Create a scope to keep track of the promise's own key
-		( () => {
-			const promiseKey = key ;
-
-			Promise.resolve( value )
-				.then( value_ => {
+		Promise.resolve( value )
+			.then( value_ => {
+				if ( settled ) { return ; }
+				return iterator( value_ , key ) ;
+			} )
+			.then(
+				value_ => {
 					if ( settled ) { return ; }
-					return iterator( value_ , promiseKey ) ;
-				} )
-				.then(
-					value_ => {
-						if ( settled ) { return ; }
 
-						outputObject[ promiseKey ] = value_ ;
-						count ++ ;
+					outputObject[ key ] = value_ ;
+					count ++ ;
 
-						if ( count >= length ) {
-							settled = true ;
-							mapPromise._resolveValue( outputObject ) ;
-						}
-					} ,
-					error => {
-						if ( settled ) { return ; }
+					if ( count >= length ) {
 						settled = true ;
-						mapPromise.reject( error ) ;
+						mapPromise._resolveValue( outputObject ) ;
 					}
-				) ;
-		} )() ;
+				} ,
+				error => {
+					if ( settled ) { return ; }
+					settled = true ;
+					mapPromise.reject( error ) ;
+				}
+			) ;
 	}
 
 	if ( ! length ) {
@@ -831,48 +853,42 @@ Promise.concurrent = ( limit , iterable , iterator ) => {
 
 			if ( settled ) { break ; }
 
-			index ++ ;
+			const promiseIndex = ++ index ;
+			running ++ ;
+			//console.log( "Launch" , promiseIndex ) ;
 
-			// Create a scope to keep track of the promise's own index
-			( () => {
-				const promiseIndex = index ;
-
-				running ++ ;
-				//console.log( "Launch" , promiseIndex ) ;
-
-				Promise.resolve( value )
-					.then( value_ => {
+			Promise.resolve( value )
+				.then( value_ => {
+					if ( settled ) { return ; }
+					return iterator( value_ , promiseIndex ) ;
+				} )
+				.then(
+					value_ => {
+					//console.log( "Done" , promiseIndex , value_ ) ;
 						if ( settled ) { return ; }
-						return iterator( value_ , promiseIndex ) ;
-					} )
-					.then(
-						value_ => {
-						//console.log( "Done" , promiseIndex , value_ ) ;
-							if ( settled ) { return ; }
 
-							values[ promiseIndex ] = value_ ;
-							count ++ ;
-							running -- ;
+						values[ promiseIndex ] = value_ ;
+						count ++ ;
+						running -- ;
 
-							//console.log( "count/length" , count , length ) ;
-							if ( count >= length ) {
-								settled = true ;
-								concurrentPromise._resolveValue( values ) ;
-								return ;
-							}
-
-							if ( running < limit ) {
-								runBatch() ;
-								return ;
-							}
-						} ,
-						error => {
-							if ( settled ) { return ; }
+						//console.log( "count/length" , count , length ) ;
+						if ( count >= length ) {
 							settled = true ;
-							concurrentPromise.reject( error ) ;
+							concurrentPromise._resolveValue( values ) ;
+							return ;
 						}
-					) ;
-			} )() ;
+
+						if ( running < limit ) {
+							runBatch() ;
+							return ;
+						}
+					} ,
+					error => {
+						if ( settled ) { return ; }
+						settled = true ;
+						concurrentPromise.reject( error ) ;
+					}
+				) ;
 		}
 	} ;
 
@@ -921,7 +937,7 @@ Promise.race = ( iterable ) => {
 
 
 },{"./seventh.js":8}],4:[function(require,module,exports){
-(function (process,global,setImmediate){
+(function (process,global,setImmediate){(function (){
 /*
 	Seventh
 
@@ -1678,7 +1694,7 @@ if ( process.browser ) {
 }
 
 
-}).call(this,require('_process'),typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {},require("timers").setImmediate)
+}).call(this)}).call(this,require('_process'),typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {},require("timers").setImmediate)
 },{"_process":11,"setimmediate":10,"timers":12}],5:[function(require,module,exports){
 /*
 	Seventh
@@ -2186,7 +2202,7 @@ Promise.variableRetry = ( asyncFn , thisBinding ) => {
 
 
 },{"./seventh.js":8}],6:[function(require,module,exports){
-(function (process){
+(function (process){(function (){
 /*
 	Seventh
 
@@ -2284,7 +2300,7 @@ Promise.resolveSafeTimeout = function( timeout , value ) {
 } ;
 
 
-}).call(this,require('_process'))
+}).call(this)}).call(this,require('_process'))
 },{"./seventh.js":8,"_process":11}],7:[function(require,module,exports){
 /*
 	Seventh
@@ -2547,7 +2563,7 @@ Promise.onceEventAllOrError = ( emitter , eventName , excludeEvents ) => {
 
 
 },{"./seventh.js":8}],10:[function(require,module,exports){
-(function (process,global){
+(function (process,global){(function (){
 (function (global, undefined) {
     "use strict";
 
@@ -2735,7 +2751,7 @@ Promise.onceEventAllOrError = ( emitter , eventName , excludeEvents ) => {
     attachTo.clearImmediate = clearImmediate;
 }(typeof self === "undefined" ? typeof global === "undefined" ? this : global : self));
 
-}).call(this,require('_process'),typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
+}).call(this)}).call(this,require('_process'),typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
 },{"_process":11}],11:[function(require,module,exports){
 // shim for using process in browser
 var process = module.exports = {};
@@ -2923,7 +2939,7 @@ process.chdir = function (dir) {
 process.umask = function() { return 0; };
 
 },{}],12:[function(require,module,exports){
-(function (setImmediate,clearImmediate){
+(function (setImmediate,clearImmediate){(function (){
 var nextTick = require('process/browser.js').nextTick;
 var apply = Function.prototype.apply;
 var slice = Array.prototype.slice;
@@ -3000,6 +3016,6 @@ exports.setImmediate = typeof setImmediate === "function" ? setImmediate : funct
 exports.clearImmediate = typeof clearImmediate === "function" ? clearImmediate : function(id) {
   delete immediateIds[id];
 };
-}).call(this,require("timers").setImmediate,require("timers").clearImmediate)
+}).call(this)}).call(this,require("timers").setImmediate,require("timers").clearImmediate)
 },{"process/browser.js":11,"timers":12}]},{},[8])(8)
 });
