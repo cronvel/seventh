@@ -374,6 +374,84 @@ describe( "Promise batch operations" , () => {
 		} ) ;
 	} ) ;
 
+	describe( "Promise.allSettled()" , () => {
+
+		it( "with resolvable-promises only, it should resolve with an array of {status,value}" , () => {
+			return Promise.allSettled( [
+				Promise.resolveTimeout( 20 , 'one' ) ,
+				Promise.resolveTimeout( 0 , 'two' ) ,
+				Promise.resolveTimeout( 10 , 'three' )
+			] )
+				.then( result => {
+					expect( result ).to.equal( [
+						{ status: 'fulfilled' , value: 'one' } ,
+						{ status: 'fulfilled' , value: 'two' } ,
+						{ status: 'fulfilled' , value: 'three' }
+					] ) ;
+				} ) ;
+		} ) ;
+
+		it( "starting with a rejected promise, it should resolve with an array of {status,value} or {status,reason}" , () => {
+			return Promise.allSettled( [
+				Promise.resolveTimeout( 20 , 'one' ) ,
+				Promise.rejectTimeout( 0 , new Error( 'rejected!' ) ) ,
+				Promise.resolveTimeout( 10 , 'three' )
+			] )
+				.then( result => {
+					expect( result ).to.be.partially.like( [
+						{ status: 'fulfilled' , value: 'one' } ,
+						{ status: 'rejected' , reason: { message: 'rejected!' } } ,
+						{ status: 'fulfilled' , value: 'three' }
+					] ) ;
+				} ) ;
+		} ) ;
+
+		it( "ending with a rejected promise, it should resolve with an array of {status,value} or {status,reason}" , () => {
+			return Promise.allSettled( [
+				Promise.rejectTimeout( 20 , new Error( 'rejected!' ) ) ,
+				Promise.resolveTimeout( 0 , 'two' ) ,
+				Promise.resolveTimeout( 10 , 'three' )
+			] )
+				.then( result => {
+					expect( result ).to.be.partially.like( [
+						{ status: 'rejected' , reason: { message: 'rejected!' } } ,
+						{ status: 'fulfilled' , value: 'two' } ,
+						{ status: 'fulfilled' , value: 'three' }
+					] ) ;
+				} ) ;
+		} ) ;
+
+		it( "with a rejected promise in the middle, it should resolve with an array of {status,value} or {status,reason}" , () => {
+			return Promise.allSettled( [
+				Promise.resolveTimeout( 20 , 'one' ) ,
+				Promise.resolveTimeout( 0 , 'two' ) ,
+				Promise.rejectTimeout( 10 , new Error( 'rejected!' ) )
+			] )
+				.then( result => {
+					expect( result ).to.be.partially.like( [
+						{ status: 'fulfilled' , value: 'one' } ,
+						{ status: 'fulfilled' , value: 'two' } ,
+						{ status: 'rejected' , reason: { message: 'rejected!' } }
+					] ) ;
+				} ) ;
+		} ) ;
+
+		it( "with a only rejected promise, it should RESOLVE ANYWAY with an array of {status,reason}" , () => {
+			return Promise.allSettled( [
+				Promise.rejectTimeout( 20 , new Error( 'rejected one!' ) ) ,
+				Promise.rejectTimeout( 0 , new Error( 'rejected two!' ) ) ,
+				Promise.rejectTimeout( 10 , new Error( 'rejected three!' ) )
+			] )
+				.then( result => {
+					expect( result ).to.be.partially.like( [
+						{ status: 'rejected' , reason: { message: 'rejected one!' } } ,
+						{ status: 'rejected' , reason: { message: 'rejected two!' } } ,
+						{ status: 'rejected' , reason: { message: 'rejected three!' } }
+					] ) ;
+				} ) ;
+		} ) ;
+	} ) ;
+
 	describe( "Promise.map() / Promise.every()" , () => {
 
 		it( "using a synchronous iterator with resolvable-promises only, it should resolve to an array of values" , () => {
@@ -521,8 +599,8 @@ describe( "Promise batch operations" , () => {
 			] )
 				.then(
 					() => { throw new Error( 'Should throw!' ) ; } ,
-					errors => {
-						expect( errors.map( e => e.message ) ).to.equal( [ 'rejection1' , 'rejection2' , 'rejection3' ] ) ;
+					error => {
+						expect( error.errors.map( e => e.message ) ).to.equal( [ 'rejection1' , 'rejection2' , 'rejection3' ] ) ;
 					}
 				) ;
 		} ) ;
@@ -568,8 +646,8 @@ describe( "Promise batch operations" , () => {
 			return Promise.some( promiseArray , str => { throw new Error( 'failed!' + ( ++ index ) ) ; } )
 				.then(
 					() => { throw new Error( 'Should throw!' ) ; } ,
-					errors => {
-						expect( errors.map( e => e.message ) ).to.equal( [ 'failed!3' , 'failed!1' , 'failed!2' ] ) ;
+					error => {
+						expect( error.errors.map( e => e.message ) ).to.equal( [ 'failed!3' , 'failed!1' , 'failed!2' ] ) ;
 					}
 				) ;
 		} ) ;
@@ -586,8 +664,8 @@ describe( "Promise batch operations" , () => {
 			return Promise.some( promiseArray , str => Promise.rejectTimeout( 10 ,  new Error( 'failed!' + ( ++ index ) ) ) )
 				.then(
 					() => { throw new Error( 'Should throw!' ) ; } ,
-					errors => {
-						expect( errors.map( e => e.message ) ).to.equal( [ 'failed!3' , 'failed!1' , 'failed!2' ] ) ;
+					error => {
+						expect( error.errors.map( e => e.message ) ).to.equal( [ 'failed!3' , 'failed!1' , 'failed!2' ] ) ;
 					}
 				) ;
 		} ) ;
