@@ -1,4 +1,10 @@
 
+v0.8.1
+------
+
+.debounceUpdate() improved: we can now pass options to add delay/delayFn/waitFn
+
+
 v0.8.0
 ------
 

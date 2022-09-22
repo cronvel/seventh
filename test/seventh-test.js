@@ -1685,16 +1685,104 @@ describe( "Decorators" , () => {
 		debouncedFn( 'three' ) ;
 		debouncedFn( 'four' ) ;
 
+		setTimeout( () => debouncedFn( 'five' ) , 40 ) ;
+
 		setTimeout( () => {
-			debouncedFn( 'five' ).then( () => {
+			debouncedFn( 'six' ).then( () => {
 				//console.log( results ) ;
-				expect( results ).to.equal( [ 'one' , 'four' , 'five' ] ) ;
+				expect( results ).to.equal( [ 'one' , 'four' , 'six' ] ) ;
 				done() ;
 			} )
 				.catch( error => done( error ) ) ;
 		} , 40 ) ;
 	} ) ;
 
+	it( "debounce update with a delay -- .debounceUpdate()" , done => {
+		var results = [] ;
+
+		const asyncFn = ( value ) => {
+			results.push( value ) ;
+			var p = Promise.resolveTimeout( 20 , value ) ;
+			return p ;
+		} ;
+
+		const debouncedFn = Promise.debounceUpdate( { delay: 100 } , asyncFn ) ;
+
+		debouncedFn( 'one' ) ;
+		debouncedFn( 'two' ) ;
+		debouncedFn( 'three' ) ;
+		debouncedFn( 'four' ) ;
+
+		setTimeout( () => debouncedFn( 'five' ) , 40 ) ;
+		setTimeout( () => debouncedFn( 'six' ) , 140 ) ;
+
+		setTimeout( () => {
+			debouncedFn( 'seven' ).then( () => {
+				//console.log( results ) ;
+				expect( results ).to.equal( [ 'one' , 'five' , 'seven' ] ) ;
+				done() ;
+			} )
+				.catch( error => done( error ) ) ;
+		} , 140 ) ;
+	} ) ;
+
+	it( "debounce update with a delay function -- .debounceUpdate()" , done => {
+		var results = [] ;
+
+		const asyncFn = ( value ) => {
+			results.push( value ) ;
+			var p = Promise.resolveTimeout( 20 , value ) ;
+			return p ;
+		} ;
+
+		const debouncedFn = Promise.debounceUpdate( { delayFn: () => Promise.resolveTimeout( 100 ) } , asyncFn ) ;
+
+		debouncedFn( 'one' ) ;
+		debouncedFn( 'two' ) ;
+		debouncedFn( 'three' ) ;
+		debouncedFn( 'four' ) ;
+
+		setTimeout( () => debouncedFn( 'five' ) , 40 ) ;
+		setTimeout( () => debouncedFn( 'six' ) , 140 ) ;
+
+		setTimeout( () => {
+			debouncedFn( 'seven' ).then( () => {
+				//console.log( results ) ;
+				expect( results ).to.equal( [ 'one' , 'five' , 'seven' ] ) ;
+				done() ;
+			} )
+				.catch( error => done( error ) ) ;
+		} , 140 ) ;
+	} ) ;
+
+	it( "debounce update with a wait function -- .debounceUpdate()" , done => {
+		var results = [] ;
+
+		const asyncFn = ( value ) => {
+			results.push( value ) ;
+			var p = Promise.resolveTimeout( 20 , value ) ;
+			return p ;
+		} ;
+
+		const debouncedFn = Promise.debounceUpdate( { waitFn: () => Promise.resolveTimeout( 100 ) } , asyncFn ) ;
+
+		debouncedFn( 'one' ) ;
+		debouncedFn( 'two' ) ;
+		debouncedFn( 'three' ) ;
+		debouncedFn( 'four' ) ;
+
+		setTimeout( () => debouncedFn( 'five' ) , 40 ) ;
+		setTimeout( () => debouncedFn( 'six' ) , 140 ) ;
+
+		setTimeout( () => {
+			debouncedFn( 'seven' ).then( () => {
+				//console.log( results ) ;
+				expect( results ).to.equal( [ 'five' , 'seven' ] ) ;
+				done() ;
+			} )
+				.catch( error => done( error ) ) ;
+		} , 140 ) ;
+	} ) ;
 
 	// decorator variant
 	it( "timeout -- .timeout()" , () => {
