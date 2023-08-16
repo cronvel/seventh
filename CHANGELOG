@@ -1,4 +1,12 @@
 
+v0.9.0
+------
+
+MAYBE BREAKING: decorators Promise.once(), Promise.serialize(), Promise.debounce(), Promise.debounceDelay() and Promise.debounceUpdate()
+now have automatic supports for 'this', allowing easier management of object's method, instead of creating it inside the constructor,
+it's now possible to create it on the prototype, because each 'this' object has its own meta-data through a WeakMap.
+
+
 v0.8.3
 ------
 
