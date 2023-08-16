@@ -340,8 +340,6 @@ Promise.promisifyAnyNodeApi = ( api , suffix , multiSuffix , filter ) => {
 
 "use strict" ;
 
-/* global AggregateError */
-
 
 
 const Promise = require( './seventh.js' ) ;
@@ -356,7 +354,7 @@ function noop() {}
 
 
 Promise.all = ( iterable ) => {
-	var index = -1 , settled = false ,
+	var index = - 1 , settled = false ,
 		count = 0 , length = Infinity ,
 		value , values = [] ,
 		allPromise = new Promise() ;
@@ -448,7 +446,7 @@ Promise._allArrayOne = ( value , index , runtime ) => {
 
 
 Promise.allSettled = ( iterable ) => {
-	var index = -1 , settled = false ,
+	var index = - 1 , settled = false ,
 		count = 0 , length = Infinity ,
 		value , values = [] ,
 		allPromise = new Promise() ;
@@ -499,7 +497,7 @@ Promise.allSettled = ( iterable ) => {
 // Promise.all() with an iterator
 Promise.every =
 Promise.map = ( iterable , iterator ) => {
-	var index = -1 , settled = false ,
+	var index = - 1 , settled = false ,
 		count = 0 , length = Infinity ,
 		value , values = [] ,
 		allPromise = new Promise() ;
@@ -551,7 +549,7 @@ Promise.map = ( iterable , iterator ) => {
 	with, as a reason an AggregateError of all promise rejection reasons.
 */
 Promise.any = ( iterable ) => {
-	var index = -1 , settled = false ,
+	var index = - 1 , settled = false ,
 		count = 0 , length = Infinity ,
 		value ,
 		errors = [] ,
@@ -597,7 +595,7 @@ Promise.any = ( iterable ) => {
 
 // Like Promise.any() but with an iterator
 Promise.some = ( iterable , iterator ) => {
-	var index = -1 , settled = false ,
+	var index = - 1 , settled = false ,
 		count = 0 , length = Infinity ,
 		value ,
 		errors = [] ,
@@ -652,7 +650,7 @@ Promise.some = ( iterable , iterator ) => {
 	Any rejection reject the whole promise.
 */
 Promise.filter = ( iterable , iterator ) => {
-	var index = -1 , settled = false ,
+	var index = - 1 , settled = false ,
 		count = 0 , length = Infinity ,
 		value , values = [] ,
 		filterPromise = new Promise() ;
@@ -710,7 +708,7 @@ Promise.filter = ( iterable , iterator ) => {
 // Force a function statement because we are using arguments.length, so we can support accumulator equals to undefined
 Promise.foreach =
 Promise.forEach = function( iterable , iterator , accumulator ) {
-	var index = -1 ,
+	var index = - 1 ,
 		isReduce = arguments.length >= 3 ,
 		it = iterable[Symbol.iterator]() ,
 		forEachPromise = new Promise() ,
@@ -821,7 +819,7 @@ Promise.mapObject = ( inputObject , iterator ) => {
 
 // Like map, but with a concurrency limit
 Promise.concurrent = ( limit , iterable , iterator ) => {
-	var index = -1 , settled = false ,
+	var index = - 1 , settled = false ,
 		running = 0 ,
 		count = 0 , length = Infinity ,
 		value , done = false ,
@@ -1015,6 +1013,7 @@ module.exports = Promise ;
 
 Promise.Native = NativePromise ;
 Promise.warnUnhandledRejection = true ;
+Promise.nextTick = nextTick ;
 
 
 
@@ -1171,6 +1170,18 @@ Promise.prototype.resolveTimeout = Promise.prototype.fulfillTimeout = function( 
 
 Promise.prototype.rejectTimeout = function( time , error ) {
 	setTimeout( () => this.reject( error ) , time ) ;
+} ;
+
+
+
+Promise.prototype.resolveNextTick = Promise.prototype.fulfillNextTick = function( result ) {
+	nextTick( () => this.resolve( result ) ) ;
+} ;
+
+
+
+Promise.prototype.rejectNextTick = function( error ) {
+	nextTick( () => this.reject( error ) ) ;
 } ;
 
 
@@ -1933,7 +1944,9 @@ Promise.debounceUpdate = ( options , asyncFn , thisBinding ) => {
 	else {
 		if ( typeof options.delay === 'number' ) { delay = options.delay ; }
 		if ( typeof options.delayFn === 'function' ) { delayFn = options.delayFn ; }
-		if ( typeof options.waitFn === 'function' ) { waitFn = options.waitFn ; }
+
+		if ( options.waitNextTick ) { waitFn = Promise.resolveNextTick ; }
+		else if ( typeof options.waitFn === 'function' ) { waitFn = options.waitFn ; }
 	}
 
 
@@ -1999,6 +2012,9 @@ Promise.debounceUpdate = ( options , asyncFn , thisBinding ) => {
 		} ;
 	}
 
+
+	// Variant without a waitFn
+
 	inWrapper = ( callArgs ) => {
 		inProgress = asyncFn.call( ... callArgs ) ;
 		Promise.finally( inProgress , outWrapper ) ;
@@ -2016,7 +2032,6 @@ Promise.debounceUpdate = ( options , asyncFn , thisBinding ) => {
 
 		return inWrapper( [ localThis , ... args ] ) ;
 	} ;
-
 } ;
 
 
@@ -2079,7 +2094,7 @@ Promise.debounceSync = ( getParams , fullSyncParams ) => {
 
 		if ( resourceData.nextFullSyncWith ) {
 			if ( fullSyncParams.delay && resourceData.lastFullSyncTime && ( delta = now - resourceData.lastFullSyncTime - fullSyncParams.delay ) < 0 ) {
-				resourceData.inProgress = Promise.resolveTimeout( -delta + 1 ) ;	// Strangely, sometime it is trigerred 1ms too soon
+				resourceData.inProgress = Promise.resolveTimeout( - delta + 1 ) ;	// Strangely, sometime it is trigerred 1ms too soon
 				resourceData.inProgress.finally( () => outWrapper( resourceData , 0 ) ) ;
 				return resourceData.nextFullSyncPromise ;
 			}
@@ -2153,7 +2168,7 @@ Promise.debounceSync = ( getParams , fullSyncParams ) => {
 		}
 
 		if ( ! resourceData.inProgress && ! noDelay && fullSyncParams.delay && resourceData.lastFullSyncTime && ( delta = new Date() - resourceData.lastFullSyncTime - fullSyncParams.delay ) < 0 ) {
-			resourceData.inProgress = Promise.resolveTimeout( -delta + 1 ) ;	// Strangely, sometime it is trigerred 1ms too soon
+			resourceData.inProgress = Promise.resolveTimeout( - delta + 1 ) ;	// Strangely, sometime it is trigerred 1ms too soon
 			Promise.finally( resourceData.inProgress , () => outWrapper( resourceData , 0 ) ) ;
 		}
 

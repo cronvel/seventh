@@ -1,4 +1,11 @@
 
+v0.8.3
+------
+
+New: Promise.nextTick() (exposing internal nextTick() function), Promise.resolveNextTick(), Promise.rejectNextTick()
+Promise.debounceUpdate() now supports option 'waitNextTick' (it's like setting option 'waitFn' to Promise.resolveNextTick)
+
+
 v0.8.2
 ------
 

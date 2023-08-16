@@ -1669,119 +1669,153 @@ describe( "Decorators" , () => {
 		} , 100 ) ;
 	} ) ;
 
-	it( "debounce update -- .debounceUpdate()" , done => {
-		var results = [] ;
+	describe( "Debounce update test suite -- .debounceUpdate()" , () => {
 
-		const asyncFn = ( value ) => {
-			results.push( value ) ;
-			var p = Promise.resolveTimeout( 20 , value ) ;
-			return p ;
-		} ;
+		it( "basic debounce update" , done => {
+			var results = [] ;
 
-		const debouncedFn = Promise.debounceUpdate( asyncFn ) ;
+			const asyncFn = ( value ) => {
+				results.push( value ) ;
+				var p = Promise.resolveTimeout( 20 , value ) ;
+				return p ;
+			} ;
 
-		debouncedFn( 'one' ) ;
-		debouncedFn( 'two' ) ;
-		debouncedFn( 'three' ) ;
-		debouncedFn( 'four' ) ;
+			const debouncedFn = Promise.debounceUpdate( asyncFn ) ;
 
-		setTimeout( () => debouncedFn( 'five' ) , 40 ) ;
+			debouncedFn( 'one' ) ;
+			debouncedFn( 'two' ) ;
+			debouncedFn( 'three' ) ;
+			debouncedFn( 'four' ) ;
 
-		setTimeout( () => {
-			debouncedFn( 'six' ).then( () => {
-				//console.log( results ) ;
-				expect( results ).to.equal( [ 'one' , 'four' , 'six' ] ) ;
-				done() ;
-			} )
-				.catch( error => done( error ) ) ;
-		} , 40 ) ;
-	} ) ;
+			setTimeout( () => {
+				debouncedFn( 'five' ) ;
+				debouncedFn( 'six' ).then( () => {
+					//console.log( results ) ;
+					expect( results ).to.equal( [ 'one' , 'four' , 'six' ] ) ;
+					done() ;
+				} )
+					.catch( error => done( error ) ) ;
+			} , 40 ) ;
+		} ) ;
 
-	it( "debounce update with a delay -- .debounceUpdate()" , done => {
-		var results = [] ;
+		it( "debounce update with a delay (delay option)" , done => {
+			var results = [] ;
 
-		const asyncFn = ( value ) => {
-			results.push( value ) ;
-			var p = Promise.resolveTimeout( 20 , value ) ;
-			return p ;
-		} ;
+			const asyncFn = ( value ) => {
+				results.push( value ) ;
+				var p = Promise.resolveTimeout( 20 , value ) ;
+				return p ;
+			} ;
 
-		const debouncedFn = Promise.debounceUpdate( { delay: 100 } , asyncFn ) ;
+			const debouncedFn = Promise.debounceUpdate( { delay: 100 } , asyncFn ) ;
 
-		debouncedFn( 'one' ) ;
-		debouncedFn( 'two' ) ;
-		debouncedFn( 'three' ) ;
-		debouncedFn( 'four' ) ;
+			debouncedFn( 'one' ) ;
+			debouncedFn( 'two' ) ;
+			debouncedFn( 'three' ) ;
+			debouncedFn( 'four' ) ;
 
-		setTimeout( () => debouncedFn( 'five' ) , 40 ) ;
-		setTimeout( () => debouncedFn( 'six' ) , 140 ) ;
+			setTimeout( () => debouncedFn( 'five' ) , 40 ) ;
+			setTimeout( () => debouncedFn( 'six' ) , 140 ) ;
 
-		setTimeout( () => {
-			debouncedFn( 'seven' ).then( () => {
-				//console.log( results ) ;
-				expect( results ).to.equal( [ 'one' , 'five' , 'seven' ] ) ;
-				done() ;
-			} )
-				.catch( error => done( error ) ) ;
-		} , 140 ) ;
-	} ) ;
+			setTimeout( () => {
+				debouncedFn( 'seven' ).then( () => {
+					//console.log( results ) ;
+					expect( results ).to.equal( [ 'one' , 'five' , 'seven' ] ) ;
+					done() ;
+				} )
+					.catch( error => done( error ) ) ;
+			} , 140 ) ;
+		} ) ;
 
-	it( "debounce update with a delay function -- .debounceUpdate()" , done => {
-		var results = [] ;
+		it( "debounce update with a delay function (delayFn option)" , done => {
+			var results = [] ;
 
-		const asyncFn = ( value ) => {
-			results.push( value ) ;
-			var p = Promise.resolveTimeout( 20 , value ) ;
-			return p ;
-		} ;
+			const asyncFn = ( value ) => {
+				results.push( value ) ;
+				var p = Promise.resolveTimeout( 20 , value ) ;
+				return p ;
+			} ;
 
-		const debouncedFn = Promise.debounceUpdate( { delayFn: () => Promise.resolveTimeout( 100 ) } , asyncFn ) ;
+			const debouncedFn = Promise.debounceUpdate( { delayFn: () => Promise.resolveTimeout( 100 ) } , asyncFn ) ;
 
-		debouncedFn( 'one' ) ;
-		debouncedFn( 'two' ) ;
-		debouncedFn( 'three' ) ;
-		debouncedFn( 'four' ) ;
+			debouncedFn( 'one' ) ;
+			debouncedFn( 'two' ) ;
+			debouncedFn( 'three' ) ;
+			debouncedFn( 'four' ) ;
 
-		setTimeout( () => debouncedFn( 'five' ) , 40 ) ;
-		setTimeout( () => debouncedFn( 'six' ) , 140 ) ;
+			setTimeout( () => debouncedFn( 'five' ) , 40 ) ;
+			setTimeout( () => debouncedFn( 'six' ) , 140 ) ;
 
-		setTimeout( () => {
-			debouncedFn( 'seven' ).then( () => {
-				//console.log( results ) ;
-				expect( results ).to.equal( [ 'one' , 'five' , 'seven' ] ) ;
-				done() ;
-			} )
-				.catch( error => done( error ) ) ;
-		} , 140 ) ;
-	} ) ;
+			setTimeout( () => {
+				debouncedFn( 'seven' ).then( () => {
+					//console.log( results ) ;
+					expect( results ).to.equal( [ 'one' , 'five' , 'seven' ] ) ;
+					done() ;
+				} )
+					.catch( error => done( error ) ) ;
+			} , 140 ) ;
+		} ) ;
 
-	it( "debounce update with a wait function -- .debounceUpdate()" , done => {
-		var results = [] ;
+		it( "debounce update with a wait function (waitFn option)" , done => {
+			var results = [] ;
 
-		const asyncFn = ( value ) => {
-			results.push( value ) ;
-			var p = Promise.resolveTimeout( 20 , value ) ;
-			return p ;
-		} ;
+			const asyncFn = ( value ) => {
+				results.push( value ) ;
+				var p = Promise.resolveTimeout( 20 , value ) ;
+				return p ;
+			} ;
 
-		const debouncedFn = Promise.debounceUpdate( { waitFn: () => Promise.resolveTimeout( 100 ) } , asyncFn ) ;
+			const debouncedFn = Promise.debounceUpdate( { waitFn: () => Promise.resolveTimeout( 100 ) } , asyncFn ) ;
 
-		debouncedFn( 'one' ) ;
-		debouncedFn( 'two' ) ;
-		debouncedFn( 'three' ) ;
-		debouncedFn( 'four' ) ;
+			debouncedFn( 'one' ) ;
+			debouncedFn( 'two' ) ;
+			debouncedFn( 'three' ) ;
+			debouncedFn( 'four' ) ;
 
-		setTimeout( () => debouncedFn( 'five' ) , 40 ) ;
-		setTimeout( () => debouncedFn( 'six' ) , 140 ) ;
+			setTimeout( () => debouncedFn( 'five' ) , 40 ) ;
 
-		setTimeout( () => {
-			debouncedFn( 'seven' ).then( () => {
-				//console.log( results ) ;
-				expect( results ).to.equal( [ 'five' , 'seven' ] ) ;
-				done() ;
-			} )
-				.catch( error => done( error ) ) ;
-		} , 140 ) ;
+			setTimeout( () => {
+				debouncedFn( 'six' ) ;
+				debouncedFn( 'seven' ).then( () => {
+					//console.log( results ) ;
+					expect( results ).to.equal( [ 'five' , 'seven' ] ) ;
+					done() ;
+				} )
+					.catch( error => done( error ) ) ;
+			} , 140 ) ;
+		} ) ;
+
+		it( "debounce update waiting for the next tick (waitNextTick option)" , done => {
+			var results = [] ;
+
+			const asyncFn = ( value ) => {
+				results.push( value ) ;
+				var p = Promise.resolveTimeout( 20 , value ) ;
+				return p ;
+			} ;
+
+			const debouncedFn = Promise.debounceUpdate( { waitNextTick: true } , asyncFn ) ;
+
+			debouncedFn( 'one' ) ;
+			debouncedFn( 'two' ) ;
+			debouncedFn( 'three' ) ;
+			debouncedFn( 'four' ) ;
+
+			setTimeout( () => {
+				debouncedFn( 'five' ) ;
+				debouncedFn( 'six' ) ;
+			} , 40 ) ;
+
+			setTimeout( () => {
+				debouncedFn( 'seven' ) ;
+				debouncedFn( 'eight' ).then( () => {
+					//console.log( results ) ;
+					expect( results ).to.equal( [ 'four' , 'six' , 'eight' ] ) ;
+					done() ;
+				} )
+					.catch( error => done( error ) ) ;
+			} , 140 ) ;
+		} ) ;
 	} ) ;
 
 	// decorator variant
@@ -2629,6 +2663,16 @@ describe( "Misc" , () => {
 	it( ".rejectTimeout()" , async () => {
 		await expect( Promise.rejectTimeout( 10 , new Error( 'dang!' ) ) ).to.reject() ;
 		await expect( Promise.rejectTimeout( 10 , Promise.resolveTimeout( 10 , new Error( 'dang!' ) ) ) ).to.reject() ;
+	} ) ;
+
+	it( ".resolveNextTick()" , async () => {
+		await expect( Promise.resolveNextTick( 'value' ) ).to.eventually.be( 'value' ) ;
+		await expect( Promise.resolveNextTick( Promise.resolveNextTick( 'value2' ) ) ).to.eventually.be( 'value2' ) ;
+	} ) ;
+
+	it( ".rejectNextTick()" , async () => {
+		await expect( Promise.rejectNextTick( new Error( 'dang!' ) ) ).to.reject() ;
+		await expect( Promise.rejectNextTick( Promise.resolveNextTick( new Error( 'dang!' ) ) ) ).to.reject() ;
 	} ) ;
 
 	it( ".resolveSafeTimeout()" , async () => {
