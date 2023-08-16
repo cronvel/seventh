@@ -1816,6 +1816,39 @@ describe( "Decorators" , () => {
 					.catch( error => done( error ) ) ;
 			} , 140 ) ;
 		} ) ;
+
+		it( "zzz object method support" , done => {
+			var results = [] ;
+
+			const asyncFn = function( value ) {
+				results.push( this.name + ':' + value ) ;
+				var p = Promise.resolveTimeout( 20 , this.name + ':' + value ) ;
+				return p ;
+			} ;
+
+			const debouncedFn = Promise.debounceUpdate( asyncFn ) ;
+
+			function Class( name ) { this.name = name ; }
+			Class.prototype.method = debouncedFn ;
+			
+			var object1 = new Class( 'object1' ) ,
+				object2 = new Class( 'object1' ) ;
+
+			object1.method( 'one' ) ;
+			object1.method( 'two' ) ;
+			object1.method( 'three' ) ;
+			object1.method( 'four' ) ;
+
+			setTimeout( () => {
+				object1.method( 'five' ) ;
+				object1.method( 'six' ).then( () => {
+					//console.log( results ) ;
+					expect( results ).to.equal( [ 'object1:one' , 'object1:four' , 'object1:six' ] ) ;
+					done() ;
+				} )
+					.catch( error => done( error ) ) ;
+			} , 40 ) ;
+		} ) ;
 	} ) ;
 
 	// decorator variant
