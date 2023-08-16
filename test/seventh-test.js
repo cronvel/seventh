@@ -1406,123 +1406,126 @@ describe( "Promise batch operations" , () => {
 
 describe( "Decorators" , () => {
 
-	it( "promisify node style callback function, limit to one argument after the error argument -- .promisify()" , done => {
-		const okFn = ( callback ) => {
-			setTimeout( () => callback( undefined , 'arg' , 'trash' ) , 10 ) ;
-		} ;
+	describe( "Promisify" , () => {
+		it( "promisify node style callback function, limit to one argument after the error argument -- .promisify()" , done => {
+			const okFn = ( callback ) => {
+				setTimeout( () => callback( undefined , 'arg' , 'trash' ) , 10 ) ;
+			} ;
 
-		const koFn = ( callback ) => {
-			setTimeout( () => callback( new Error( 'failed!' ) ) , 10 ) ;
-		} ;
+			const koFn = ( callback ) => {
+				setTimeout( () => callback( new Error( 'failed!' ) ) , 10 ) ;
+			} ;
 
-		const promisifiedOkFn = Promise.promisify( okFn ) ;
-		const promisifiedKoFn = Promise.promisify( koFn ) ;
+			const promisifiedOkFn = Promise.promisify( okFn ) ;
+			const promisifiedKoFn = Promise.promisify( koFn ) ;
 
-		promisifiedOkFn().then( value => {
-			expect( value ).to.be( 'arg' ) ;
+			promisifiedOkFn().then( value => {
+				expect( value ).to.be( 'arg' ) ;
 
-			promisifiedKoFn().then(
-				() => { throw new Error( 'Should throw!' ) ; } ,
-				error => {
-					expect( error.message ).to.be( 'failed!' ) ;
-					expect( error ).not.to.have.property( 'arg' ) ;
-					expect( error ).not.to.have.property( 'args' ) ;
-					done() ;
-				}
-			)
+				promisifiedKoFn().then(
+					() => { throw new Error( 'Should throw!' ) ; } ,
+					error => {
+						expect( error.message ).to.be( 'failed!' ) ;
+						expect( error ).not.to.have.property( 'arg' ) ;
+						expect( error ).not.to.have.property( 'args' ) ;
+						done() ;
+					}
+				)
+					.catch( error => done( error || new Error() ) ) ;
+			} )
 				.catch( error => done( error || new Error() ) ) ;
-		} )
-			.catch( error => done( error || new Error() ) ) ;
+		} ) ;
+
+		it( "promisify node style callback function -- .promisifyAll()" , done => {
+			const okFn = ( callback ) => {
+				setTimeout( () => callback( undefined , 'arg1' , 'arg2' , 'arg3' ) , 10 ) ;
+			} ;
+
+			const koFn = ( callback ) => {
+				setTimeout( () => callback( new Error( 'failed!' ) ) , 10 ) ;
+			} ;
+
+			const promisifiedOkFn = Promise.promisifyAll( okFn ) ;
+			const promisifiedKoFn = Promise.promisifyAll( koFn ) ;
+
+			promisifiedOkFn().then( value => {
+				expect( value ).to.equal( [ 'arg1' , 'arg2' , 'arg3' ] ) ;
+
+				promisifiedKoFn().then(
+					() => { throw new Error( 'Should throw!' ) ; } ,
+					error => {
+						expect( error.message ).to.be( 'failed!' ) ;
+						expect( error ).not.to.have.property( 'arg' ) ;
+						expect( error ).not.to.have.property( 'args' ) ;
+						done() ;
+					}
+				)
+					.catch( error => done( error || new Error() ) ) ;
+			} )
+				.catch( error => done( error || new Error() ) ) ;
+		} ) ;
+
+		it( "promisify node style callback function and error extra argument -- .promisify()" , done => {
+			const okFn = ( callback ) => {
+				setTimeout( () => callback( undefined , 'arg' , 'trash' ) , 10 ) ;
+			} ;
+
+			const koFn = ( callback ) => {
+				setTimeout( () => callback( new Error( 'failed!' ) , 'arg1' , 'arg2' ) , 10 ) ;
+			} ;
+
+			const promisifiedOkFn = Promise.promisify( okFn ) ;
+			const promisifiedKoFn = Promise.promisify( koFn ) ;
+
+			promisifiedOkFn().then( value => {
+				expect( value ).to.be( 'arg' ) ;
+
+				promisifiedKoFn().then(
+					() => { throw new Error( 'Should throw!' ) ; } ,
+					error => {
+						expect( error.message ).to.be( 'failed!' ) ;
+						expect( error.arg ).to.be( 'arg1' ) ;
+						expect( error ).not.to.have.property( 'args' ) ;
+						done() ;
+					}
+				)
+					.catch( error => done( error || new Error() ) ) ;
+			} )
+				.catch( error => done( error || new Error() ) ) ;
+		} ) ;
+
+		it( "promisify node style callback function and error extra arguments -- .promisifyAll()" , done => {
+			const okFn = ( callback ) => {
+				setTimeout( () => callback( undefined , 'arg1' , 'arg2' , 'arg3' ) , 10 ) ;
+			} ;
+
+			const koFn = ( callback ) => {
+				setTimeout( () => callback( new Error( 'failed!' ) , 'arg1' , 'arg2' ) , 10 ) ;
+			} ;
+
+			const promisifiedOkFn = Promise.promisifyAll( okFn ) ;
+			const promisifiedKoFn = Promise.promisifyAll( koFn ) ;
+
+			promisifiedOkFn().then( value => {
+				expect( value ).to.equal( [ 'arg1' , 'arg2' , 'arg3' ] ) ;
+
+				promisifiedKoFn().then(
+					() => { throw new Error( 'Should throw!' ) ; } ,
+					error => {
+						expect( error.message ).to.be( 'failed!' ) ;
+						expect( error ).not.to.have.property( 'arg' ) ;
+						expect( error.args ).to.equal( [ 'arg1' , 'arg2' ] ) ;
+						done() ;
+					}
+				)
+					.catch( error => done( error || new Error() ) ) ;
+			} )
+				.catch( error => done( error || new Error() ) ) ;
+		} ) ;
 	} ) ;
 
-	it( "promisify node style callback function -- .promisifyAll()" , done => {
-		const okFn = ( callback ) => {
-			setTimeout( () => callback( undefined , 'arg1' , 'arg2' , 'arg3' ) , 10 ) ;
-		} ;
 
-		const koFn = ( callback ) => {
-			setTimeout( () => callback( new Error( 'failed!' ) ) , 10 ) ;
-		} ;
-
-		const promisifiedOkFn = Promise.promisifyAll( okFn ) ;
-		const promisifiedKoFn = Promise.promisifyAll( koFn ) ;
-
-		promisifiedOkFn().then( value => {
-			expect( value ).to.equal( [ 'arg1' , 'arg2' , 'arg3' ] ) ;
-
-			promisifiedKoFn().then(
-				() => { throw new Error( 'Should throw!' ) ; } ,
-				error => {
-					expect( error.message ).to.be( 'failed!' ) ;
-					expect( error ).not.to.have.property( 'arg' ) ;
-					expect( error ).not.to.have.property( 'args' ) ;
-					done() ;
-				}
-			)
-				.catch( error => done( error || new Error() ) ) ;
-		} )
-			.catch( error => done( error || new Error() ) ) ;
-	} ) ;
-
-	it( "promisify node style callback function and error extra argument -- .promisify()" , done => {
-		const okFn = ( callback ) => {
-			setTimeout( () => callback( undefined , 'arg' , 'trash' ) , 10 ) ;
-		} ;
-
-		const koFn = ( callback ) => {
-			setTimeout( () => callback( new Error( 'failed!' ) , 'arg1' , 'arg2' ) , 10 ) ;
-		} ;
-
-		const promisifiedOkFn = Promise.promisify( okFn ) ;
-		const promisifiedKoFn = Promise.promisify( koFn ) ;
-
-		promisifiedOkFn().then( value => {
-			expect( value ).to.be( 'arg' ) ;
-
-			promisifiedKoFn().then(
-				() => { throw new Error( 'Should throw!' ) ; } ,
-				error => {
-					expect( error.message ).to.be( 'failed!' ) ;
-					expect( error.arg ).to.be( 'arg1' ) ;
-					expect( error ).not.to.have.property( 'args' ) ;
-					done() ;
-				}
-			)
-				.catch( error => done( error || new Error() ) ) ;
-		} )
-			.catch( error => done( error || new Error() ) ) ;
-	} ) ;
-
-	it( "promisify node style callback function and error extra arguments -- .promisifyAll()" , done => {
-		const okFn = ( callback ) => {
-			setTimeout( () => callback( undefined , 'arg1' , 'arg2' , 'arg3' ) , 10 ) ;
-		} ;
-
-		const koFn = ( callback ) => {
-			setTimeout( () => callback( new Error( 'failed!' ) , 'arg1' , 'arg2' ) , 10 ) ;
-		} ;
-
-		const promisifiedOkFn = Promise.promisifyAll( okFn ) ;
-		const promisifiedKoFn = Promise.promisifyAll( koFn ) ;
-
-		promisifiedOkFn().then( value => {
-			expect( value ).to.equal( [ 'arg1' , 'arg2' , 'arg3' ] ) ;
-
-			promisifiedKoFn().then(
-				() => { throw new Error( 'Should throw!' ) ; } ,
-				error => {
-					expect( error.message ).to.be( 'failed!' ) ;
-					expect( error ).not.to.have.property( 'arg' ) ;
-					expect( error.args ).to.equal( [ 'arg1' , 'arg2' ] ) ;
-					done() ;
-				}
-			)
-				.catch( error => done( error || new Error() ) ) ;
-		} )
-			.catch( error => done( error || new Error() ) ) ;
-	} ) ;
-
-	it( "return value interceptor -- .returnValueInterceptor()" , () => {
+	it( "Promise.returnValueInterceptor() should intercept values" , () => {
 		var index = 0 ;
 		var returnArray = [ 'one' , 'two' , 'three' ] ;
 		var results = [] ;
@@ -1544,132 +1547,314 @@ describe( "Decorators" , () => {
 		expect( results ).to.equal( returnArray ) ;
 	} ) ;
 
-	it( "run once -- .once()" , done => {
-		var results = [] ;
 
-		const asyncFn = ( value ) => {
-			results.push( value ) ;
-			var p = Promise.resolveTimeout( 20 , value ) ;
-			return p ;
-		} ;
+	describe( "Promise.once()" , () => {
 
-		const onceFn = Promise.once( asyncFn ) ;
+		it( ".once() should run only once and return the same promise for subsequent calls" , done => {
+			var results = [] ;
 
-		onceFn( 'one' ) ;
-		onceFn( 'two' ) ;
-		onceFn( 'three' ) ;
-		onceFn( 'four' ) ;
+			const asyncFn = ( value ) => {
+				results.push( value ) ;
+				var p = Promise.resolveTimeout( 20 , value ) ;
+				return p ;
+			} ;
 
-		setTimeout( () => {
-			onceFn( 'five' ).then( () => {
-				//console.log( results ) ;
-				expect( results ).to.equal( [ 'one' ] ) ;
-				done() ;
-			} )
-				.catch( error => done( error ) ) ;
-		} , 40 ) ;
+			const onceFn = Promise.once( asyncFn ) ;
+
+			onceFn( 'one' ) ;
+			onceFn( 'two' ) ;
+			onceFn( 'three' ) ;
+			onceFn( 'four' ) ;
+
+			setTimeout( () => {
+				onceFn( 'five' ).then( () => {
+					//console.log( results ) ;
+					expect( results ).to.equal( [ 'one' ] ) ;
+					done() ;
+				} )
+					.catch( error => done( error ) ) ;
+			} , 40 ) ;
+		} ) ;
+
+		it( "object method support" , done => {
+			var results = [] ;
+
+			const asyncFn = function( value ) {
+				results.push( this.name + ':' + value ) ;
+				var p = Promise.resolveTimeout( 20 , this.name + ':' + value ) ;
+				return p ;
+			} ;
+
+			function Class( name ) { this.name = name ; }
+			Class.prototype.method = Promise.once( asyncFn ) ;
+			
+			var object1 = new Class( 'object1' ) ,
+				object2 = new Class( 'object2' ) ;
+
+			object1.method( 'one' ) ;
+			object1.method( 'two' ) ;
+			object1.method( 'three' ) ;
+			object2.method( 'one' ) ;
+			object2.method( 'two' ) ;
+			object1.method( 'four' ) ;
+
+			setTimeout( () => {
+				Promise.all( [
+					object1.method( 'five' ) ,
+					object2.method( 'three' )
+				] ).then( () => {
+					//console.log( results ) ;
+					expect( results ).to.equal( [ 'object1:one' , 'object2:one' ] ) ;
+					done() ;
+				} )
+					.catch( error => done( error ) ) ;
+			} , 40 ) ;
+		} ) ;
 	} ) ;
 
-	it( "serialize, successive executions never overlap -- .serialize()" , done => {
-		var results = [] ;
 
-		const asyncFn = ( value ) => {
-			results.push( 'before: ' + value ) ;
+	describe( "Promise.serialize()" , () => {
 
-			var p = new Promise( resolve => {
-				setTimeout( () => {
-					results.push( 'after: ' + value ) ;
-					resolve() ;
-				} , 20 ) ;
-			} ) ;
+		it( ".serialize(): successive executions never overlap" , done => {
+			var results = [] ;
 
-			return p ;
-		} ;
+			const asyncFn = ( value ) => {
+				results.push( 'before: ' + value ) ;
 
-		const serializedFn = Promise.serialize( asyncFn ) ;
+				var p = new Promise( resolve => {
+					setTimeout( () => {
+						results.push( 'after: ' + value ) ;
+						resolve() ;
+					} , 20 ) ;
+				} ) ;
 
-		serializedFn( 'one' ) ;
-		serializedFn( 'two' ) ;
-		serializedFn( 'three' ) ;
-		serializedFn( 'four' ) ;
+				return p ;
+			} ;
 
-		setTimeout( () => {
-			serializedFn( 'five' ).then( () => {
-				//console.log( results ) ;
-				expect( results ).to.equal( [
-					"before: one" ,
-					"after: one" ,
-					"before: two" ,
-					"after: two" ,
-					"before: three" ,
-					"after: three" ,
-					"before: four" ,
-					"after: four" ,
-					"before: five" ,
-					"after: five"
-				] ) ;
-				done() ;
-			} )
-				.catch( error => done( error ) ) ;
-		} , 40 ) ;
+			const serializedFn = Promise.serialize( asyncFn ) ;
+
+			serializedFn( 'one' ) ;
+			serializedFn( 'two' ) ;
+			serializedFn( 'three' ) ;
+			serializedFn( 'four' ) ;
+
+			setTimeout( () => {
+				serializedFn( 'five' ).then( () => {
+					//console.log( results ) ;
+					expect( results ).to.equal( [
+						"before: one" ,
+						"after: one" ,
+						"before: two" ,
+						"after: two" ,
+						"before: three" ,
+						"after: three" ,
+						"before: four" ,
+						"after: four" ,
+						"before: five" ,
+						"after: five"
+					] ) ;
+					done() ;
+				} )
+					.catch( error => done( error ) ) ;
+			} , 40 ) ;
+		} ) ;
+
+		it( "object method support" , done => {
+			var results = [] ;
+
+			const asyncFn = function( value ) {
+				results.push( 'before: ' + this.name + ':' + value ) ;
+
+				var p = new Promise( resolve => {
+					setTimeout( () => {
+						results.push( 'after: ' + this.name + ':' + value ) ;
+						resolve() ;
+					} , 20 ) ;
+				} ) ;
+
+				return p ;
+			} ;
+
+			function Class( name ) { this.name = name ; }
+			Class.prototype.method = Promise.serialize( asyncFn ) ;
+			
+			var object1 = new Class( 'object1' ) ,
+				object2 = new Class( 'object2' ) ;
+
+			object1.method( 'one' ) ;
+			object1.method( 'two' ) ;
+			object1.method( 'three' ) ;
+			object2.method( 'one' ) ;
+			object2.method( 'two' ) ;
+			object1.method( 'four' ) ;
+
+			setTimeout( () => {
+				object1.method( 'five' ).then( () => {
+					//console.log( results ) ;
+					expect( results ).to.equal( [
+						"before: object1:one" ,
+						"before: object2:one" ,
+						"after: object1:one" ,
+						"before: object1:two" ,
+						"after: object2:one" ,
+						"before: object2:two" ,
+						"after: object1:two" ,
+						"before: object1:three" ,
+						"after: object2:two" ,
+						"after: object1:three" ,
+						"before: object1:four" ,
+						"after: object1:four" ,
+						"before: object1:five" ,
+						"after: object1:five"
+					] ) ;
+					done() ;
+				} )
+					.catch( error => done( error ) ) ;
+			} , 40 ) ;
+		} ) ;
 	} ) ;
 
-	it( "debounce -- .debounce()" , done => {
-		var results = [] ;
 
-		const asyncFn = ( value ) => {
-			results.push( value ) ;
-			var p = Promise.resolveTimeout( 20 , value ) ;
-			return p ;
-		} ;
+	describe( "Promise.debounce()" , () => {
 
-		const debouncedFn = Promise.debounce( asyncFn ) ;
+		it( ".debounce() should do nothing if the decoratee is still in progress, should return the promise of the action in progress" , done => {
+			var results = [] ;
 
-		debouncedFn( 'one' ) ;
-		debouncedFn( 'two' ) ;
-		debouncedFn( 'three' ) ;
-		debouncedFn( 'four' ) ;
+			const asyncFn = ( value ) => {
+				results.push( value ) ;
+				var p = Promise.resolveTimeout( 20 , value ) ;
+				return p ;
+			} ;
 
-		setTimeout( () => {
-			debouncedFn( 'five' ).then( () => {
-				//console.log( results ) ;
-				expect( results ).to.equal( [ 'one' , 'five' ] ) ;
-				done() ;
-			} )
-				.catch( error => done( error ) ) ;
-		} , 40 ) ;
+			const debouncedFn = Promise.debounce( asyncFn ) ;
+
+			debouncedFn( 'one' ) ;
+			debouncedFn( 'two' ) ;
+			debouncedFn( 'three' ) ;
+			debouncedFn( 'four' ) ;
+
+			setTimeout( () => {
+				debouncedFn( 'five' ).then( () => {
+					//console.log( results ) ;
+					expect( results ).to.equal( [ 'one' , 'five' ] ) ;
+					done() ;
+				} )
+					.catch( error => done( error ) ) ;
+			} , 35 ) ;
+		} ) ;
+
+		it( "object method support" , done => {
+			var results = [] ;
+
+			const asyncFn = function( value ) {
+				results.push( this.name + ':' + value ) ;
+				var p = Promise.resolveTimeout( 20 , this.name + ':' + value ) ;
+				return p ;
+			} ;
+
+			function Class( name ) { this.name = name ; }
+			Class.prototype.method = Promise.debounce( asyncFn ) ;
+			
+			var object1 = new Class( 'object1' ) ,
+				object2 = new Class( 'object2' ) ;
+
+			object1.method( 'one' ) ;
+			object1.method( 'two' ) ;
+			object1.method( 'three' ) ;
+			object2.method( 'one' ) ;
+			object2.method( 'two' ) ;
+			object1.method( 'four' ) ;
+
+			setTimeout( () => {
+				Promise.all( [
+					object1.method( 'five' ) ,
+					object2.method( 'three' )
+				] ).then( () => {
+					//console.log( results ) ;
+					expect( results ).to.equal( [ 'object1:one' , 'object2:one' , 'object1:five' , 'object2:three' ] ) ;
+					done() ;
+				} )
+					.catch( error => done( error ) ) ;
+			} , 40 ) ;
+		} ) ;
 	} ) ;
 
-	it( "debounce with an extra cooldown delay -- .debounceDelay()" , done => {
-		var results = [] ;
 
-		const asyncFn = ( value ) => {
-			results.push( value ) ;
-			var p = Promise.resolveTimeout( 20 , value ) ;
-			return p ;
-		} ;
+	describe( "Promise.debounceDelay()" , () => {
 
-		const debouncedFn = Promise.debounceDelay( 60 , asyncFn ) ;
+		it( ".debounceDelay() should debounce with an extra cooldown delay" , done => {
+			var results = [] ;
 
-		debouncedFn( 'one' ) ;
-		debouncedFn( 'two' ) ;
-		debouncedFn( 'three' ) ;
-		debouncedFn( 'four' ) ;
-		
-		// Not enough! there is an extra delay! 60 + 20 = 80ms
-		setTimeout( () => debouncedFn( 'five' ) , 40 ) ;
+			const asyncFn = ( value ) => {
+				results.push( value ) ;
+				var p = Promise.resolveTimeout( 20 , value ) ;
+				return p ;
+			} ;
 
-		setTimeout( () => {
-			debouncedFn( 'six' ).then( () => {
-				//console.log( results ) ;
-				expect( results ).to.equal( [ 'one' , 'six' ] ) ;
-				done() ;
-			} )
-				.catch( error => done( error ) ) ;
-		} , 100 ) ;
+			const debouncedFn = Promise.debounceDelay( 60 , asyncFn ) ;
+
+			debouncedFn( 'one' ) ;
+			debouncedFn( 'two' ) ;
+			debouncedFn( 'three' ) ;
+			debouncedFn( 'four' ) ;
+			
+			// Not enough! there is an extra delay! 60 + 20 = 80ms
+			setTimeout( () => debouncedFn( 'five' ) , 40 ) ;
+
+			setTimeout( () => {
+				debouncedFn( 'six' ).then( () => {
+					//console.log( results ) ;
+					expect( results ).to.equal( [ 'one' , 'six' ] ) ;
+					done() ;
+				} )
+					.catch( error => done( error ) ) ;
+			} , 100 ) ;
+		} ) ;
+
+		it( "object method support" , done => {
+			var results = [] ;
+
+			const asyncFn = function( value ) {
+				results.push( this.name + ':' + value ) ;
+				var p = Promise.resolveTimeout( 20 , this.name + ':' + value ) ;
+				return p ;
+			} ;
+
+			function Class( name ) { this.name = name ; }
+			Class.prototype.method = Promise.debounceDelay( 60 , asyncFn ) ;
+			
+			var object1 = new Class( 'object1' ) ,
+				object2 = new Class( 'object2' ) ;
+
+			object1.method( 'one' ) ;
+			object1.method( 'two' ) ;
+			object1.method( 'three' ) ;
+			object2.method( 'one' ) ;
+			object2.method( 'two' ) ;
+			object1.method( 'four' ) ;
+
+			// Not enough! there is an extra delay! 60 + 20 = 80ms
+			setTimeout( () => {
+				object1.method( 'five' ) ;
+				object2.method( 'three' ) ;
+			} , 40 ) ;
+
+			setTimeout( () => {
+				Promise.all( [
+					object1.method( 'six' ) ,
+					object2.method( 'four' )
+				] ).then( () => {
+					//console.log( results ) ;
+					expect( results ).to.equal( [ 'object1:one' , 'object2:one' , 'object1:six' , 'object2:four' ] ) ;
+					done() ;
+				} )
+					.catch( error => done( error ) ) ;
+			} , 100 ) ;
+		} ) ;
 	} ) ;
+	
 
-	describe( "Debounce update test suite -- .debounceUpdate()" , () => {
+	describe( "Promise.debounceUpdate()" , () => {
 
 		it( "basic debounce update" , done => {
 			var results = [] ;
@@ -1817,7 +2002,7 @@ describe( "Decorators" , () => {
 			} , 140 ) ;
 		} ) ;
 
-		it( "zzz object method support" , done => {
+		it( "object method support" , done => {
 			var results = [] ;
 
 			const asyncFn = function( value ) {
@@ -1826,33 +2011,37 @@ describe( "Decorators" , () => {
 				return p ;
 			} ;
 
-			const debouncedFn = Promise.debounceUpdate( asyncFn ) ;
-
 			function Class( name ) { this.name = name ; }
-			Class.prototype.method = debouncedFn ;
+			Class.prototype.method = Promise.debounceUpdate( asyncFn ) ;
 			
 			var object1 = new Class( 'object1' ) ,
-				object2 = new Class( 'object1' ) ;
+				object2 = new Class( 'object2' ) ;
 
 			object1.method( 'one' ) ;
+			object2.method( 'one' ) ;
 			object1.method( 'two' ) ;
 			object1.method( 'three' ) ;
+			object2.method( 'two' ) ;
+			object2.method( 'three' ) ;
 			object1.method( 'four' ) ;
 
 			setTimeout( () => {
-				object1.method( 'five' ) ;
-				object1.method( 'six' ).then( () => {
+				Promise.all( [
+					object1.method( 'five' ) ,
+					object2.method( 'four' ) ,
+					object1.method( 'six' )
+				] ).then( () => {
 					//console.log( results ) ;
-					expect( results ).to.equal( [ 'object1:one' , 'object1:four' , 'object1:six' ] ) ;
+					expect( results ).to.equal( [ 'object1:one' , 'object2:one' , 'object1:four' , 'object2:three' , 'object1:six' , 'object2:four' ] ) ;
 					done() ;
 				} )
 					.catch( error => done( error ) ) ;
-			} , 40 ) ;
+			} , 35 ) ;
 		} ) ;
 	} ) ;
 
-	// decorator variant
-	it( "timeout -- .timeout()" , () => {
+
+	it( "Promise.timeout()" , () => {
 		var index = 0 ;
 		var times = [ 0 , 10 , 40 , 10 ] ;
 		var results = [] ;
@@ -1874,7 +2063,7 @@ describe( "Decorators" , () => {
 		} ) ;
 	} ) ;
 
-	it( "variable (per call) timeout -- .variableTimeout()" , () => {
+	it( "Promise.variableTimeout(): variable (per call) timeout" , () => {
 		var index = 0 ;
 		var times = [ 0 , 10 , 40 , 20 ] ;
 		var results = [] ;
@@ -1898,7 +2087,8 @@ describe( "Decorators" , () => {
 
 	it( "Test decorators thisBinding behavior" ) ;
 
-	describe( "Debounce sync test suite -- .debounceSync()" , () => {
+
+	describe( "Promise.debounceSync()" , () => {
 		var results , debouncedGetFn , debouncedFullSyncFn ;
 
 		const getFn = ( resource , value ) => {
