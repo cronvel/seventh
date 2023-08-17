@@ -1,6 +1,17 @@
 
+v0.9.1
+------
+
+Promise.interceptor() improved
+Promise.timeout() and Promise.variableTimeout() bug fixed (now support any thenable, not only Seventh's one)
+
+
 v0.9.0
 ------
+
+BREAKING: Promise.returnValueInterceptor() removed, replaced by Promise.interceptor(), instead of triggering the interceptorFn
+with the function return value, it is triggered when that return value is resolved (if it needs to).
+It also accept an errorInterceptorFn.
 
 MAYBE BREAKING: decorators Promise.once(), Promise.serialize(), Promise.debounce(), Promise.debounceDelay() and Promise.debounceUpdate()
 now have automatic supports for 'this', allowing easier management of object's method, instead of creating it inside the constructor,

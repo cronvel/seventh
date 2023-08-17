@@ -1738,6 +1738,7 @@ if ( process.browser ) {
 
 
 const Promise = require( './seventh.js' ) ;
+const noop = () => undefined ;
 
 
 
@@ -1814,13 +1815,24 @@ Promise.promisify = ( nodeAsyncFn , thisBinding ) => {
 
 
 /*
-	Pass a function that will be called every time the decoratee return something.
+	Intercept each decoratee resolve/reject.
 */
-Promise.returnValueInterceptor = ( interceptor , asyncFn , thisBinding ) => {
+Promise.interceptor = ( asyncFn , interceptor , errorInterceptor , thisBinding ) => {
+	if ( typeof errorInterceptor !== 'function' ) {
+		thisBinding = errorInterceptor ;
+		errorInterceptor = noop ;
+	}
+
 	return function( ... args ) {
-		var returnVal = asyncFn.call( thisBinding || this , ... args ) ;
-		interceptor( returnVal ) ;
-		return returnVal ;
+		var localThis = thisBinding || this ,
+			maybePromise = asyncFn.call( localThis , ... args ) ;
+
+		Promise.resolve( maybePromise ).then(
+			value => interceptor.call( localThis , value ) ,
+			error => errorInterceptor.call( localThis , error )
+		) ;
+
+		return maybePromise ;
 	} ;
 } ;
 

@@ -1584,8 +1584,7 @@ describe( "Decorators" , () => {
 		catch ( error ) {}
 		await interceptableFn() ;
 		await Promise.resolveNextTick() ;
-		expect( results ).to.equal( [ 'one' , 'two' , new Error( 'Interceptor Error: Forced error' ) , 'three' ] ) ;
-		expect( results ).to.equal( [ 'one' , 'two' , new Error() , 'three' ] ) ;
+		expect( results ).to.be.like( [ 'one' , 'two' , { message: 'Interceptor Error: Error: Forced error' } , 'three' ] ) ;
 	} ) ;
 
 
