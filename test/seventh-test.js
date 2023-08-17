@@ -1525,10 +1525,10 @@ describe( "Decorators" , () => {
 	} ) ;
 
 
-	it( "Promise.returnValueInterceptor() should intercept values" , () => {
-		var index = 0 ;
-		var returnArray = [ 'one' , 'two' , 'three' ] ;
-		var results = [] ;
+	it( "Promise.interceptor() should intercept values" , async () => {
+		var returnArray = [ 'one' , 'two' , 'three' ] ,
+			index = 0 ,
+			results = [] ;
 
 		const fn = () => {
 			return returnArray[ index ++ ] ;
@@ -1538,13 +1538,54 @@ describe( "Decorators" , () => {
 			results.push( value ) ;
 		} ;
 
-		const interceptableFn = Promise.returnValueInterceptor( interceptorFn , fn ) ;
+		var interceptableFn = Promise.interceptor( fn , interceptorFn ) ;
 
 		interceptableFn() ;
 		interceptableFn() ;
 		interceptableFn() ;
-
+		await Promise.resolveNextTick() ;
 		expect( results ).to.equal( returnArray ) ;
+
+
+		// Test with async
+		index = 0 ; results = [] ;
+
+		const asyncFn = ( forceError ) => {
+			if ( forceError ) {
+				return Promise.rejectTimeout( 20 , new Error( 'Forced error' ) ) ;
+			}
+
+			return Promise.resolveTimeout( 20 , returnArray[ index ++ ] ) ;
+		} ;
+
+		interceptableFn = Promise.interceptor( asyncFn , interceptorFn ) ;
+
+		await interceptableFn() ;
+		await interceptableFn() ;
+		await interceptableFn() ;
+		await Promise.resolveNextTick() ;
+		expect( results ).to.equal( returnArray ) ;
+
+
+		// Test with error
+		index = 0 ; results = [] ;
+
+		const errorInterceptorFn = error => {
+			results.push( new Error( 'Interceptor Error: ' + error ) ) ;
+		} ;
+
+		interceptableFn = Promise.interceptor( asyncFn , interceptorFn , errorInterceptorFn ) ;
+
+		await interceptableFn() ;
+		await interceptableFn() ;
+		try {
+			await interceptableFn( true ) ;
+		}
+		catch ( error ) {}
+		await interceptableFn() ;
+		await Promise.resolveNextTick() ;
+		expect( results ).to.equal( [ 'one' , 'two' , new Error( 'Interceptor Error: Forced error' ) , 'three' ] ) ;
+		expect( results ).to.equal( [ 'one' , 'two' , new Error() , 'three' ] ) ;
 	} ) ;
 
 
@@ -2047,8 +2088,7 @@ describe( "Decorators" , () => {
 		var results = [] ;
 
 		const asyncFn = ( value ) => {
-			var p = Promise.resolveTimeout( times[ index ++ ] , value ) ;
-			return p ;
+			return Promise.resolveTimeout( times[ index ++ ] , value ) ;
 		} ;
 
 		const timedOutFn = Promise.timeout( 20 , asyncFn ) ;
@@ -2996,6 +3036,27 @@ describe( "Historical bugs" , () => {
 					expect( values ).to.equal( [ 'oneone' ] ) ;
 				}
 			) ;
+	} ) ;
+
+	it( "Promise.timeout() foreign promise bug" , () => {
+		var index = 0 ;
+		var times = [ 0 , 10 , 40 , 10 ] ;
+		var results = [] ;
+
+		const asyncFn = async ( value ) => {
+			await Promise.resolveTimeout( times[ index ++ ] , value ) ;
+		} ;
+
+		const timedOutFn = Promise.timeout( 20 , asyncFn ) ;
+
+		return Promise.all( [
+			timedOutFn().then( () => results[ 0 ] = true , () => results[ 0 ] = false ) ,
+			timedOutFn().then( () => results[ 1 ] = true , () => results[ 1 ] = false ) ,
+			timedOutFn().then( () => results[ 2 ] = true , () => results[ 2 ] = false ) ,
+			timedOutFn().then( () => results[ 3 ] = true , () => results[ 3 ] = false )
+		] ).then( () => {
+			expect( results ).to.equal( [ true , true , false , true ] ) ;
+		} ) ;
 	} ) ;
 } ) ;
 
