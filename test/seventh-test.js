@@ -1894,6 +1894,111 @@ describe( "Decorators" , () => {
 	} ) ;
 	
 
+	describe( "Promise.debounceNextTick()" , () => {
+
+		it( "debouncing an async function" , done => {
+			var results = [] ;
+
+			const asyncFn = ( value ) => {
+				results.push( value ) ;
+				var p = Promise.resolveTimeout( 20 , value ) ;
+				return p ;
+			} ;
+
+			const debouncedFn = Promise.debounceNextTick( asyncFn ) ;
+
+			debouncedFn( 'one' ) ;
+			debouncedFn( 'two' ) ;
+			debouncedFn( 'three' ) ;
+			debouncedFn( 'four' ) ;
+
+			setTimeout( () => {
+				debouncedFn( 'five' ) ;
+				debouncedFn( 'six' ) ;
+			} , 10 ) ;
+
+			setTimeout( () => {
+				debouncedFn( 'seven' ) ;
+				debouncedFn( 'eight' ).then( () => {
+					//console.log( results ) ;
+					expect( results ).to.equal( [ 'four' , 'six' , 'eight' ] ) ;
+					done() ;
+				} )
+					.catch( error => done( error ) ) ;
+			} , 40 ) ;
+		} ) ;
+
+		it( "debouncing a sync function" , done => {
+			var results = [] ;
+
+			const syncFn = ( value ) => {
+				results.push( value ) ;
+				return value ;
+				return p ;
+			} ;
+
+			const debouncedFn = Promise.debounceNextTick( syncFn ) ;
+
+			debouncedFn( 'one' ) ;
+			debouncedFn( 'two' ) ;
+			debouncedFn( 'three' ) ;
+			debouncedFn( 'four' ) ;
+
+			setTimeout( () => {
+				debouncedFn( 'five' ) ;
+				debouncedFn( 'six' ) ;
+			} , 10 ) ;
+
+			setTimeout( () => {
+				debouncedFn( 'seven' ) ;
+				debouncedFn( 'eight' ).then( () => {
+					//console.log( results ) ;
+					expect( results ).to.equal( [ 'four' , 'six' , 'eight' ] ) ;
+					done() ;
+				} )
+					.catch( error => done( error ) ) ;
+			} , 40 ) ;
+		} ) ;
+
+		it( "object method support" , done => {
+			var results = [] ;
+
+			const asyncFn = function( value ) {
+				results.push( this.name + ':' + value ) ;
+				var p = Promise.resolveTimeout( 20 , this.name + ':' + value ) ;
+				return p ;
+			} ;
+
+			function Class( name ) { this.name = name ; }
+			Class.prototype.method = Promise.debounceNextTick( asyncFn ) ;
+			
+			var object1 = new Class( 'object1' ) ,
+				object2 = new Class( 'object2' ) ;
+
+			object1.method( 'one' ) ;
+			object2.method( 'one' ) ;
+			object1.method( 'two' ) ;
+			object1.method( 'three' ) ;
+			object2.method( 'two' ) ;
+			object2.method( 'three' ) ;
+			object1.method( 'four' ) ;
+
+			setTimeout( () => {
+				Promise.all( [
+					object1.method( 'five' ) ,
+					object2.method( 'four' ) ,
+					object1.method( 'six' )
+				] ).then( () => {
+					//console.log( results ) ;
+					expect( results ).to.equal( [ 'object1:four' , 'object2:three' , 'object1:six' , 'object2:four' ] ) ;
+					done() ;
+				} )
+					.catch( error => done( error ) ) ;
+			} , 35 ) ;
+		} ) ;
+	} ) ;
+
+
 	describe( "Promise.debounceUpdate()" , () => {
 
 		it( "basic debounce update" , done => {
