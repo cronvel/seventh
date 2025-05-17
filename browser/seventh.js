@@ -1474,11 +1474,19 @@ Promise.reject = function( error ) {
 
 
 
+Promise.prototype.resolveTimeout = Promise.prototype.fulfillTimeout = function( timeout , value ) {
+	setTimeout( () => this.resolve( value ) , timeout ) ;
+} ;
+
 Promise.resolveTimeout = Promise.fulfillTimeout = function( timeout , value ) {
 	return new Promise( resolve => setTimeout( () => resolve( value ) , timeout ) ) ;
 } ;
 
 
+
+Promise.prototype.rejectTimeout = function( timeout , error ) {
+	setTimeout( () => this.reject( error ) , timeout ) ;
+} ;
 
 Promise.rejectTimeout = function( timeout , error ) {
 	return new Promise( ( resolve , reject ) => setTimeout( () => reject( error ) , timeout ) ) ;
@@ -2091,6 +2099,7 @@ Promise.debounceNextTick = ( asyncFn , thisBinding ) => {
 		* delay: `number` a delay before calling again the decoratee
 		* delayFn: async `function` called before calling again the decoratee
 		* waitFn: async `function` called before calling the decoratee (even the first try), use-case: Window.requestAnimationFrame()
+		* waitNextTick: if true, wait for the next tick before updating, it's the same than:  options.waitFn = Promise.resolveNextTick
 */
 Promise.debounceUpdate = ( options , asyncFn , thisBinding ) => {
 	var inWrapper = null ,

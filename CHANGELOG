@@ -1,4 +1,10 @@
 
+v0.9.3
+------
+
+New: Promise#resolveTimeout() and Promise#rejectTimeout()
+
+
 v0.9.2
 ------
 
