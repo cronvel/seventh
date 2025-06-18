@@ -1,4 +1,10 @@
 
+v0.9.4
+------
+
+Compatibility with newer Vanilla Promise API: Promise.withResolvers(), Promise.try() with provided function arguments
+
+
 v0.9.3
 ------
 

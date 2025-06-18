@@ -644,7 +644,7 @@ Promise.some = ( iterable , iterator ) => {
 
 
 /*
-	More closed to Array#filter().
+	More close to Array#filter().
 	The iterator should return truthy if the array element should be kept,
 	or falsy if the element should be filtered out.
 	Any rejection reject the whole promise.
@@ -1023,7 +1023,7 @@ Promise.prototype._exec = function() {
 	try {
 		this.fn(
 			// Don't return anything, it would create nasty bugs! E.g.:
-			// bad: error => this.reject( error_ )
+			// bad: error_ => this.reject( error_ )
 			// good: error_ => { this.reject( error_ ) ; }
 			result_ => { this.resolve( result_ ) ; } ,
 			error_ => { this.reject( error_ ) ; }
@@ -1516,9 +1516,9 @@ Promise.dormant = function( fn ) {
 
 
 // Try-catched Promise.resolve( fn() )
-Promise.try = function( fn ) {
+Promise.try = function( fn , ... args ) {
 	try {
-		return Promise.resolve( fn() ) ;
+		return Promise.resolve( fn( ... args ) ) ;
 	}
 	catch ( error ) {
 		return Promise.reject( error ) ;
@@ -1683,6 +1683,23 @@ Promise.prototype.inspect = function() {
 
 // A shared dummy promise, when you just want to return an immediately thenable
 Promise.resolved = Promise.dummy = Promise.resolve() ;
+
+
+
+
+
+/*
+	Vanilla Promise compatibility.
+*/
+
+
+
+// This method merely achieves what this lib is doing right from the begining:
+// allowing one to pass a promise and process it elsewhere.
+Promise.withResolvers = () => {
+	var promise = new Promise() ;
+	return { promise , resolve: promise.resolve.bind( promise ) , reject: promise.reject.bind( promise ) } ;
+} ;
 
 
 

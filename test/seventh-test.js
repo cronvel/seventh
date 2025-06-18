@@ -2788,6 +2788,24 @@ describe( "Promise.try()" , () => {
 			expect( value ).to.be( 'great!' ) ;
 		} ) ;
 	} ) ;
+
+	it( "Promise.try() should accept function arguments" , () => {
+		return Promise.try( ( a , b ) => 'sum = ' + ( a + b ) , 7 , 8 ).then( value => {
+			expect( value ).to.be( 'sum = 15' ) ;
+		} ) ;
+	} ) ;
+
+	it( "Promise.try() should accept function arguments (async version)" , () => {
+		const method = ( a , b ) => {
+			var promise = new Promise() ;
+			setTimeout( () => promise.resolve( 'sum = ' + ( a + b ) ) , 50 ) ;
+			return promise ;
+		} ;
+
+		return Promise.try( method , 7 , 8 ).then( value => {
+			expect( value ).to.be( 'sum = 15' ) ;
+		} ) ;
+	} ) ;
 } ) ;
 
 
